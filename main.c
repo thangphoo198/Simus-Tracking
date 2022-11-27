@@ -195,7 +195,16 @@ err = ql_rtos_task_create(&main_task, 5*1024, APP_PRIORITY_NORMAL, "Main_task", 
     ql_i2c_demo_init();
     ql_mqtt_app_init();
 
+
     return err;
+char  *x="hello";
+ql_rtos_queue_create ("NAME QUEUE",uint16_t,10);
+// (
+// 	ql_queue_t   	*msgQRef,       	/* OS message queue reference              */
+// 	uint32         	maxSize,        	/* max message size the queue supports     */
+// 	uint32         	maxNumber	      	/* max # of messages in the queue          */
+// );
+
 }
 
 void appimg_exit(void)

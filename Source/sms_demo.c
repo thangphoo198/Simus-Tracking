@@ -188,13 +188,11 @@ void sms_demo_task(void * param)
 #endif
 	
 	//Delete message.
-#if 1
 	if(QL_SMS_SUCCESS == ql_sms_delete_msg_ex(nSim, 0, QL_SMS_DEL_ALL)){
 		QL_SMS_LOG("delete msg OK");
 	}else{
 		QL_SMS_LOG("delete sms FAIL");
 	}
-#endif
 	
 exit:
 
