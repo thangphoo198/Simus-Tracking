@@ -204,6 +204,7 @@ err = ql_rtos_task_create(&main_task, 5*1024, APP_PRIORITY_NORMAL, "Main_task", 
     ql_sms_app_init();
     ql_i2c_demo_init();
     ql_mqtt_app_init();
+    ql_fota_http_app_init();
 
 
     return err;

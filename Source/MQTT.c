@@ -49,8 +49,8 @@ static void mqtt_state_exception_cb(mqtt_client_t *client)
 
 static void mqtt_inpub_data_cb(mqtt_client_t *client, void *arg, int pkt_id, const char *topic, const unsigned char *payload, unsigned short payload_len)
 {
-	QL_MQTT_LOG("\rtopic: %s", topic);
-	QL_MQTT_LOG("payload: %s", payload);
+	QL_MQTT_LOG("\rtopic: %s\n", topic);
+	QL_MQTT_LOG("payload: %s\n", payload);
 }
 
 static void mqtt_requst_result_cb(mqtt_client_t *client, void *arg,int err)

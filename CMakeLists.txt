@@ -252,6 +252,7 @@ add_custom_target(unittests)
         ${SOURCE_TOP_DIR}/Source/MQTT.c
 	${SOURCE_TOP_DIR}/Source/sms_demo.c
 	${SOURCE_TOP_DIR}/Source/I2C_demo.c
+	${SOURCE_TOP_DIR}/Source/fota_http_demo.c
     )
 
 
