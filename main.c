@@ -151,15 +151,16 @@ static void main_task_thread(void *param)
                 Led2^=1;
                 
                 ql_gpio_set_level(GPIO_22, Led2==0?LVL_LOW:LVL_HIGH);
+char *buff;
 
-
+ql_rtos_task_get_userdata(gnss_task,&buff);
 //                 QlOSStatus ql_rtos_task_get_userdata
 // (
 // 	ql_task_t taskRef, /* OS task reference	*/
 // 	void **userData     /* The user data of pointer type */
 // );
 
-                
+
                // ql_uart_write(QL_UART_PORT_1,"\r\r========== DU LIEU GPS : ==========\r",39);
                 break;
 
