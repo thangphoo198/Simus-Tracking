@@ -107,14 +107,14 @@ static void fota_http_info_cfg(fota_http_client_t* fota_http_cli_p)
 		QL_FOTA_HTTP_LOG("fota_http_cli_p is null");
 		return;
 	}
-	QL_FOTA_HTTP_LOG("init file name:[%s]",fota_http_cli_p->fota_packname);
-	QL_FOTA_HTTP_LOG("init file stage:[%d]",fota_http_cli_p->e_stage);
-	QL_FOTA_HTTP_LOG("init file download:[%d]",fota_http_cli_p->http_progress.dload_size);
-	QL_FOTA_HTTP_LOG("init file file_size:[%d]",fota_http_cli_p->http_progress.file_size);
-	QL_FOTA_HTTP_LOG("init file real file_size:[%d]",fota_http_get_fileszie(fota_http_cli_p->fota_packname));
-	QL_FOTA_HTTP_LOG("init file is_show:[%d]",fota_http_cli_p->http_progress.is_show);
-	QL_FOTA_HTTP_LOG("init file last_percent:[%d]",fota_http_cli_p->last_precent);
-	QL_FOTA_HTTP_LOG("init file space:[%d]",fota_http_cli_p->b_is_have_space);
+	QL_FOTA_HTTP_LOG("init file name:[%s]\n",fota_http_cli_p->fota_packname);
+	QL_FOTA_HTTP_LOG("init file stage:[%d]\n",fota_http_cli_p->e_stage);
+	QL_FOTA_HTTP_LOG("init file download:[%d]\n",fota_http_cli_p->http_progress.dload_size);
+	QL_FOTA_HTTP_LOG("init file file_size:[%d]\n",fota_http_cli_p->http_progress.file_size);
+	QL_FOTA_HTTP_LOG("init file real file_size:[%d]\n",fota_http_get_fileszie(fota_http_cli_p->fota_packname));
+	QL_FOTA_HTTP_LOG("init file is_show:[%d]\n",fota_http_cli_p->http_progress.is_show);
+	QL_FOTA_HTTP_LOG("init file last_percent:[%d]\n",fota_http_cli_p->last_precent);
+	QL_FOTA_HTTP_LOG("init file space:[%d]\n",fota_http_cli_p->b_is_have_space);
 }
 
 /***********************************************************
@@ -189,7 +189,7 @@ static void fota_http_event_cb(http_client_t *client, int event, int event_code,
 				                fota_http_cli_p->e_stage = FOTA_HTTP_DOWN_DOWNED;
                             }
                         }
-                        QL_FOTA_HTTP_LOG("content_length:[%d] totalsize=[%d]",content_length ,fota_http_cli_p->http_progress.total_size);
+                        QL_FOTA_HTTP_LOG("content_length:[%d] totalsize=[%d]\n",content_length ,fota_http_cli_p->http_progress.total_size);
     	            }
                     else if (1 == chunk_encode)
                     {
@@ -272,12 +272,12 @@ static int fota_http_write_file(fota_http_client_t* fota_cli_p ,char *data, int 
                 if ( fota_cli_p->last_precent != temp || temp == 100  )
                 {
                     fota_cli_p->last_precent = temp;
-                    QL_FOTA_HTTP_LOG("dload progress:===[%u%%]===total size[%d] file_size[%d] dload size[%d]",temp,fota_cli_p->http_progress.total_size,ql_fsize(fd),fota_cli_p->http_progress.dload_size );
+                    QL_FOTA_HTTP_LOG("dload progress:===[%u%%]===total size[%d] file_size[%d] dload size[%d]\n",temp,fota_cli_p->http_progress.total_size,ql_fsize(fd),fota_cli_p->http_progress.dload_size );
                 }
             }
             else
             {
-                QL_FOTA_HTTP_LOG("dload progress:=== file_size[%d] dload size[%d] ===", ql_fsize(fd), fota_cli_p->http_progress.dload_size);
+                QL_FOTA_HTTP_LOG("dload progress:=== file_size[%d] dload size[%d] ===\n", ql_fsize(fd), fota_cli_p->http_progress.dload_size);
             }
 		}
 
@@ -288,7 +288,7 @@ static int fota_http_write_file(fota_http_client_t* fota_cli_p ,char *data, int 
 			//刷新文件系统
             if(ql_fsync(fd) < QL_FILE_OK)
             {
-                QL_FOTA_HTTP_LOG("sync file failed");
+                QL_FOTA_HTTP_LOG("sync file failed\n");
                 fota_http_close_fd(fota_cli_p);
                 return 0;
             }
@@ -535,17 +535,17 @@ static QFILE fota_http_get_fd(fota_http_client_t* fota_http_cli_p)
 		fota_http_cli_p->http_progress.total_size = 0;
 		fota_http_cli_p->e_stage = FOTA_HTTP_DOWN_INIT;
 		fota_http_cli_p->i_save_size = 0;
-		QL_FOTA_HTTP_LOG("over write file [%s]",fota_http_cli_p->fota_packname);
+		QL_FOTA_HTTP_LOG("over write file [%s]\n",fota_http_cli_p->fota_packname);
 	}
 	else
 	{
 		//其他的情况是追加方式打开文件
 		fota_http_cli_p->fd = ql_fopen(fota_http_cli_p->fota_packname, "ab+");
-		QL_FOTA_HTTP_LOG("add write file [%s]",fota_http_cli_p->fota_packname);
+		QL_FOTA_HTTP_LOG("add write file [%s]\n",fota_http_cli_p->fota_packname);
 	}
 	if ( fota_http_cli_p->fd < 0 )
 	{	
-		QL_FOTA_HTTP_LOG("ql_fopen failed");
+		QL_FOTA_HTTP_LOG("ql_fopen failed\n");
 	}
 	return fota_http_cli_p->fd;
 }
@@ -584,7 +584,7 @@ static int fota_http_evn_request(fota_http_client_t* fota_http_cli_p)
 	//发送http请求前创建存储升级包文件的文件描述符，别忘关闭
 	if ( fota_http_get_fd(fota_http_cli_p) < 0 )
 	{
-		QL_FOTA_HTTP_LOG("range_request http data done ,file_size[%d]",fota_http_cli_p->http_progress.file_size);
+		QL_FOTA_HTTP_LOG("range_request http data done ,file_size[%d]\n",fota_http_cli_p->http_progress.file_size);
 		return -1;
 	}
 	//注网拨号
@@ -681,13 +681,13 @@ static int 	fota_http_download_pacfile(fota_http_client_t* fota_http_cli_p)
 		{
 			//下载完成校验不成功删除文件
 			ql_remove(fota_http_cli_p->fota_packname);
-			QL_FOTA_HTTP_LOG("[%s]package is invalid",fota_http_cli_p->fota_packname);
+			QL_FOTA_HTTP_LOG("[%s]file FW bi loi\n",fota_http_cli_p->fota_packname);
 			return -3;
 		}
 		else
 		{
 			//校验成功
-			QL_FOTA_HTTP_LOG("download is sucess ,system will reset power!");
+			QL_FOTA_HTTP_LOG("tai thanh cong, reset de fota\n");
 			ql_rtos_task_sleep_s(5);
 	        ql_power_reset(RESET_NORMAL);
 		}
@@ -703,29 +703,29 @@ ql_fota_result_e  fota_http_result_process(void)
 	//获取升级结果
 	if ( ql_fota_get_result(&p_fota_result) != QL_FOTA_SUCCESS )
 	{
-		QL_FOTA_HTTP_LOG("ql_fota_get_result failed ");
+		QL_FOTA_HTTP_LOG("ql_fota_get_result failed\n");
 		return QL_FOTA_STATUS_INVALID;
 	}
 
 	if ( p_fota_result == QL_FOTA_FINISHED )
 	{
-		QL_FOTA_HTTP_LOG("update finished");
+		QL_FOTA_HTTP_LOG("update finished\n");
 		ql_fota_file_reset(TRUE);
 		return QL_FOTA_FINISHED;
 	}
 	else if(p_fota_result == QL_FOTA_READY)
 	{
-		QL_FOTA_HTTP_LOG("fota ready bigen power reset ");
+		QL_FOTA_HTTP_LOG("fota ready bigen power reset \n");
 		ql_rtos_task_sleep_s(5);
 		ql_power_reset(RESET_NORMAL);
 	}
 	else if(p_fota_result == QL_FOTA_NOT_EXIST)
 	{
-		QL_FOTA_HTTP_LOG("fota file not exist");
+		QL_FOTA_HTTP_LOG("fota file not exist\n");
 		ql_fota_file_reset(TRUE);
 		return QL_FOTA_NOT_EXIST;
 	}
-	QL_FOTA_HTTP_LOG("fota  result status invalid");
+	QL_FOTA_HTTP_LOG("fota  result status invalid\n");
 	return QL_FOTA_STATUS_INVALID;
 }
 
@@ -752,14 +752,14 @@ void fota_http_app_thread()
 	//下载前初始化
 	if(fota_http_init(&fota_http_cli) != 0)
 	{
-		QL_FOTA_HTTP_LOG("fota http init failed");
+		QL_FOTA_HTTP_LOG("fota http init failed\n");
 		goto exit1;
 	}
 
 	//尝试下载最多十次
 	while( ui_down_times-- )
 	{
-		QL_FOTA_HTTP_LOG("start [%d] times download fota packge",TRY_DOWN_TIMES-ui_down_times);
+		QL_FOTA_HTTP_LOG("start [%d] times download fota packge\n",TRY_DOWN_TIMES-ui_down_times);
 		
 		if ( fota_http_download_pacfile(&fota_http_cli) == 0 )
 		{
@@ -771,7 +771,7 @@ void fota_http_app_thread()
 		{
 			//空间不够，删除文件
 			ql_remove(fota_http_cli.fota_packname);
-			QL_FOTA_HTTP_LOG("have no space");
+			QL_FOTA_HTTP_LOG("have no space\n");
 			break;
 		}
 		//下载失败等待10s重新开始下载
@@ -783,17 +783,16 @@ exit1:
 		fota_http_release();
 		ql_rtos_task_sleep_s(5);
 exit:		
-		QL_FOTA_HTTP_LOG("exit ql_http_fota_demo");
+		QL_FOTA_HTTP_LOG("exit ql_http_fota_demo\n");
 		ql_rtos_task_delete(fota_http_task);
 }
 void ql_fota_http_app_init()
 {
-	QL_FOTA_HTTP_LOG("http fota demo support!");
+	QL_FOTA_HTTP_LOG("http fota demo support!\n");
 	QlOSStatus err = QL_OSI_SUCCESS;
 	err = ql_rtos_task_create(&fota_http_task, 4096*32, 20, "fota_http_app", fota_http_app_thread, NULL, 5);
     if (err != QL_OSI_SUCCESS)
     {
         QL_FOTA_HTTP_LOG("created task failed");
     }
-    QL_FOTA_HTTP_LOG("http fota demo not support!");
 }

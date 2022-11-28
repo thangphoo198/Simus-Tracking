@@ -42,15 +42,22 @@ static void mqtt_connect_result_cb(mqtt_client_t *client, void *arg, mqtt_connec
 
 static void mqtt_state_exception_cb(mqtt_client_t *client)
 {
-	QL_MQTT_LOG("\rmqtt session abnormal disconnect");
+	QL_MQTT_LOG("\rmqtt session abnormal disconnect\n");
 	mqtt_connected = 0;
 }
 
+extern ql_fota_http_app_init();
 
 static void mqtt_inpub_data_cb(mqtt_client_t *client, void *arg, int pkt_id, const char *topic, const unsigned char *payload, unsigned short payload_len)
 {
-	QL_MQTT_LOG("\rtopic: %s\n", topic);
+	QL_MQTT_LOG("\rtopic:=> %s\n", topic);
 	QL_MQTT_LOG("payload: %s\n", payload);
+	if(strcmp("CMD_FOTA",payload)==0)
+	{
+		QL_MQTT_LOG("co lenh FOTA tu APP\n");
+		ql_fota_http_app_init();
+
+	}
 }
 
 static void mqtt_requst_result_cb(mqtt_client_t *client, void *arg,int err)
@@ -96,9 +103,9 @@ static void mqtt_app_thread(void * arg)
 	}
 	if(ret == 0){
 		i = 0;
-		QL_MQTT_LOG("\r====network registered!!!!====");
+		QL_MQTT_LOG("\r====network registered!!!!====\n");
 	}else{
-		QL_MQTT_LOG("\r====network register failure!!!!!====");
+		QL_MQTT_LOG("\r====network register failure!!!!!====\n");
 		//goto exit;
 	}
 

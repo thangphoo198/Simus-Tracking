@@ -22,6 +22,7 @@ LargeBuffer_t GPS_RecData;
 uint8_t GPSDataLen = 0;
 uint8_t InitGSPOK = 0xFF;
 
+
 void GPS_task_thread (void *param){
 	ql_event_t event;
     ql_timer_t gps_timer = NULL;

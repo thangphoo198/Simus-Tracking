@@ -13,7 +13,10 @@
 #include "ql_uart.h"
 #include "ql_power.h"
 
-#include "GNSS.h"
+#include "DataDefine.h"
+
+//#include "GNSS.h"
+#define OUT_LOG DebugPrint
 
 
 #define INIT_CONFIG         101
@@ -114,7 +117,7 @@ static void main_task_thread(void *param)
 // string x="\r du lieu GNSS =>>> \n";
 // ql_uart_write(QL_UART_PORT_1,x,x.length());
 
-    ql_uart_write(QL_UART_PORT_1,"\r\r========== KHOI TAO HE THONG ==========\r",43);
+    OUT_LOG("DANG khoi tao he thong... \n");
 
     // PIN24 GPIO2 (FUNC0)
     ql_pin_set_func(24, 0);
@@ -124,12 +127,12 @@ static void main_task_thread(void *param)
     ql_pin_set_func(6, 4);
     ql_gpio_init(GPIO_22,GPIO_OUTPUT,PULL_NONE,LVL_HIGH);
 
-    ql_uart_write(QL_UART_PORT_1,"\r==main_task_thread==",21);
+    ql_uart_write(QL_UART_PORT_1,"\r",21);
     
     // Init
     SendEventToThread(main_task, INIT_CONFIG);
 
-    SendEventToThread(gnss_task, GPS_INIT_EVENT);
+    SendEventToThread(gnss_task, QL_EVENT_APP_START + 21);
 
     while(1){
         ql_event_try_wait(&event);
@@ -198,13 +201,11 @@ err = ql_rtos_task_create(&main_task, 5*1024, APP_PRIORITY_NORMAL, "Main_task", 
 
 
     /*GNSS task*/
-    err = ql_rtos_task_create(&gnss_task, 5 * 1024, 25, "GNSS_task",  GPS_task_thread, NULL,3);
-   ql_task_t sms_task = NULL;
-    err = ql_rtos_task_create(&sms_task, 4096, APP_PRIORITY_NORMAL, "SMS_TASK", sms_demo_task, NULL, 2);
+    //err = ql_rtos_task_create(&gnss_task, 5 * 1024, 25, "GNSS_task",  GPS_task_thread, NULL,3);
     ql_sms_app_init();
-    ql_i2c_demo_init();
+   // ql_i2c_demo_init();
     ql_mqtt_app_init();
-    ql_fota_http_app_init();
+    //ql_fota_http_app_init();
 
 
     return err;
