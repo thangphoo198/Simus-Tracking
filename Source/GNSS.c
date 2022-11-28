@@ -126,15 +126,23 @@ void GPS_Tick(void){
     if(strstr((char*)GPS_RecData.Buffer,(char*)"RMC") && GPS_RecData.Buffer[GPS_RecData.Index - 2] == '\r'
         && GPS_RecData.Buffer[GPS_RecData.Index - 1] == '\n'){
 
-        char  *x="hello";
-        ql_rtos_queue_create (x,sizeof(x),5);
-        extern QlOSStatus ql_rtos_queue_release(x,sizeof)(X),1,QL_WAIT_FOREVER);
+        // char  *x="hello";
+        // ql_rtos_queue_create (x,sizeof(x),5);
 // (
 //     ql_queue_t		msgQRef,        /* message queue reference                 			*/
 //     uint32         	size,           /* size of the message                     			*/
 //     uint8          	*msgPtr,        /* start address of the data to be sent    			*/
 //     uint32         	timeout         /* QL_WAIT_FOREVER, QL_NO_WAIT, or timeout   	*/
 // );
+
+// QlOSStatus ql_rtos_task_set_userdata
+// (
+// 	ql_task_t taskRef,  /* OS task reference	*/
+// 	void *userData      /* The user data of pointer type */
+// );
+
+
+        ql_rtos_task_set_userdata(gnss_task,GPS_RecData.Buffer);
 
        	ql_uart_write(QL_UART_PORT_1,(uint8_t*)"\rNMEA full: ",12);
        	ql_uart_write(QL_UART_PORT_1,GPS_RecData.Buffer,GPS_RecData.Index);

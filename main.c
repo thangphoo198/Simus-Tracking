@@ -151,6 +151,15 @@ static void main_task_thread(void *param)
                 Led2^=1;
                 
                 ql_gpio_set_level(GPIO_22, Led2==0?LVL_LOW:LVL_HIGH);
+
+
+//                 QlOSStatus ql_rtos_task_get_userdata
+// (
+// 	ql_task_t taskRef, /* OS task reference	*/
+// 	void **userData     /* The user data of pointer type */
+// );
+
+                
                // ql_uart_write(QL_UART_PORT_1,"\r\r========== DU LIEU GPS : ==========\r",39);
                 break;
 
@@ -197,8 +206,8 @@ err = ql_rtos_task_create(&main_task, 5*1024, APP_PRIORITY_NORMAL, "Main_task", 
 
 
     return err;
-char  *x="hello";
-ql_rtos_queue_create ("NAME QUEUE",uint16_t,10);
+// char *x="name queue";
+// ql_rtos_queue_create (x,1024,10);
 // (
 // 	ql_queue_t   	*msgQRef,       	/* OS message queue reference              */
 // 	uint32         	maxSize,        	/* max message size the queue supports     */
