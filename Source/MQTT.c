@@ -268,4 +268,3 @@ int ql_mqtt_app_init(void)
 
 	return err;
 }
-
