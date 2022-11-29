@@ -3,6 +3,7 @@
 
 
 #include "MQTT.h"
+#include "ql_power.h"
 
 
 #define MQTT_CLIENT_IDENTITY        "VT_00001"
@@ -46,18 +47,68 @@ static void mqtt_state_exception_cb(mqtt_client_t *client)
 	mqtt_connected = 0;
 }
 
+extern gui_sms(char *sdt,char* noidung);
 extern ql_fota_http_app_init();
+
 
 static void mqtt_inpub_data_cb(mqtt_client_t *client, void *arg, int pkt_id, const char *topic, const unsigned char *payload, unsigned short payload_len)
 {
 	QL_MQTT_LOG("\rtopic:=> %s\n", topic);
 	QL_MQTT_LOG("payload: %s\n", payload);
-	if(strcmp("CMD_FOTA",payload)==0)
+	if(strlen(payload)>0)
+	{
+		QL_MQTT_LOG("co lenh du lieu tu APP\n");
+		char   val[128] = {0};
+        unsigned char val_len;
+        get_value_in_json("CMD", 3,val, &val_len, payload, strlen(payload));
+		QL_MQTT_LOG("KEY LAY DUOC: %s , do dai:%d\n",(char*)val,val_len);
+
+	if(strcmp(val,"CMD_FOTA")==0)
 	{
 		QL_MQTT_LOG("co lenh FOTA tu APP\n");
+
 		ql_fota_http_app_init();
 
 	}
+	else if(strcmp(val,"GET_VERSION")==0)
+	{
+	char   version_buf[128] = {0};
+	ql_dev_get_firmware_version(version_buf, sizeof(version_buf));
+	QL_MQTT_LOG("Phien phan mem hien tai:  %s\n", version_buf);
+	}
+	else if(strcmp(val,"GET_MODEL")==0)
+	{
+		char   model_buf[128] = {0};
+		ql_dev_get_model(model_buf, sizeof(model_buf));
+		QL_MQTT_LOG("MODEL CHIP:  %s\n", model_buf);
+	}
+	else if(strcmp(val,"GET_TEMP")==0)
+	{
+		uint32_t temp=0;
+		ql_dev_get_temp_value(&temp);
+		QL_MQTT_LOG("TEMP CHIP:  %d\n", temp);
+	}	
+	else if(strcmp(val,"GET_VOL")==0)
+	{
+		uint32_t vol=0;
+		ql_get_battery_vol(&vol);
+		QL_MQTT_LOG("DIEN AP NGUON:  %d\n", vol);
+	}	
+	else if(strcmp(val,"ENTER_SLEEP")==0)
+	{
+		QL_MQTT_LOG("BAT CHE DO NGU SAU 5S:\n");
+		ql_rtos_task_sleep_s(5);
+		ql_autosleep_enable(QL_ALLOW_SLEEP);
+		
+	}
+	else if(strcmp(val,"SMS_PAIR")==0)
+	{
+		gui_sms("+84362319354","EC200U THNG BAO: DA NHAN DC TIN NHAN\n");
+		
+	}		
+
+	}
+
 }
 
 static void mqtt_requst_result_cb(mqtt_client_t *client, void *arg,int err)
@@ -173,7 +224,7 @@ static void mqtt_app_thread(void * arg)
             client_info.client_id = MQTT_CLIENT_IDENTITY;
             client_info.client_user = MQTT_CLIENT_USER;
             client_info.client_pass = MQTT_CLIENT_PASS;
-        QL_MQTT_LOG("\rconnect ssl %d onenet mode %d",case_id,is_user_onenet);
+        QL_MQTT_LOG("\rconnect ssl %d onenet mode %d\n",case_id,is_user_onenet);
 		if(case_id == 0){
 			client_info.ssl_cfg = NULL;
             ret = ql_mqtt_connect(&mqtt_cli, MQTT_CLIENT_SRV_URL, mqtt_connect_result_cb, NULL, (const struct mqtt_connect_client_info_t *)&client_info, mqtt_state_exception_cb);

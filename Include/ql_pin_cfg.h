@@ -34,7 +34,9 @@ extern "C" {
 #include <stdio.h>
 #include "ql_type.h"
 #include "ql_gpio.h"
-//#include "ql_app_feature_config.h"
+
+
+
 #include "quec_pin_index.h"
 
 /*===========================================================================

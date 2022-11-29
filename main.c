@@ -8,6 +8,7 @@
 #include "ql_api_osi.h"
 #include "ql_api_dev.h"
 #include "ql_gpio.h"
+//#include "ql_pin_cfg.h"
 #include "ql_log.h"
 #include "ql_adc.h"
 #include "ql_uart.h"
@@ -16,6 +17,7 @@
 #include "DataDefine.h"
 
 #include "json.h"
+
 
 //#include "GNSS.h"
 #define OUT_LOG DebugPrint
@@ -35,10 +37,15 @@ ql_timer_t main_timer = NULL;
 
 static uint32_t tickCount100MS = 0;
 static uint32_t tickCount1000MS = 0;
-static uint32_t tickCount5000MS = 0;
 
-int adc1_value, adc2_value, adc3_value;
+//int adc1_value, adc2_value, adc3_value;
 static uint8_t Led=0, Led2=0;
+
+#define QL_FUN_NUM_UART_2_CTS      3
+#define QL_FUN_NUM_UART_3_TXD      4
+
+//for ledcfg demo
+#define QL_PIN_NUM_KEYOUT_5        82
 
 void timer_callback(void){
     ql_event_t event;
@@ -137,20 +144,11 @@ static void main_task_thread(void *param)
     SendEventToThread(main_task, INIT_CONFIG);
 
     SendEventToThread(gnss_task, QL_EVENT_APP_START + 21);
+    char   version_buf[128] = {0};
+	ql_dev_get_firmware_version(version_buf, sizeof(version_buf));
+	OUT_LOG("Phien phan mem hien tai:  %s\n", version_buf);
 
-    char val[30];
-    unsigned char val_len;
-    char CMD_FOTA[30]  ="{\"CMD\":\"UPDATE_FOTA\"}";
-    get_value_in_json("CMD",3,&val,&val_len,CMD_FOTA,strlen(CMD_FOTA));
-    if(val !=NULL)
-    {
-         OUT_LOG("do dai: %s\n",val);
-         OUT_LOG(val);
-    }
-    else
-    {
-        OUT_LOG("doc Json failed\n");
-    }
+
 
     while(1){
         ql_event_try_wait(&event);
@@ -199,6 +197,22 @@ extern void mqtt_app_thread(void * arg);
 extern void sms_demo_task(void * param);
 extern void ql_i2c_demo_thread(void *param);
 
+void ql_enter_sleep_cb(void* ctx)
+{   
+    OUT_LOG("enter sleep cb\n");
+    ql_pin_set_func(QL_PIN_NUM_KEYOUT_5, QL_FUN_NUM_UART_2_CTS);  //keyout5 pin need be low level when enter sleep, adjust the function to uart2_rts can do it
+    ql_gpio_set_level(GPIO_12, LVL_HIGH);                         //close mos linked to gnss, to avoid high current in sleep mode
+    ql_gpio_set_level(GPIO_11, LVL_LOW);                          //gpio11 need be low level when enter sleep to reduce leakage current to gnss
+}
+
+//exit sleep callback function is executed after exiting sleep, custom can recover the information before sleep
+//Caution:callback functions cannot run too much code 
+void ql_exit_sleep_cb(void* ctx)
+{   
+    OUT_LOG("exit sleep cb\n");  
+    
+    ql_pin_set_func(QL_PIN_NUM_KEYOUT_5, QL_FUN_NUM_UART_3_TXD);  //keyout5 pin used as gnss uart3_txd function, after exit sleep, set it to uart3_txd
+}
 
 int appimg_enter(void *param)
 {
@@ -208,18 +222,22 @@ int appimg_enter(void *param)
     ql_quec_trace_enable(1);
 
     ql_rtos_sw_dog_disable();
+    //register sleep callback function
+    ql_sleep_register_cb(ql_enter_sleep_cb);
+    //register wakeup callback function
+    ql_wakeup_register_cb(ql_exit_sleep_cb);
 
 
  
     /*Create timer tick*/
- err = ql_rtos_timer_create(&main_timer, main_task, timer_callback, NULL);
+    err = ql_rtos_timer_create(&main_timer, main_task, timer_callback, NULL);
 
     /* main task*/
-err = ql_rtos_task_create(&main_task, 5*1024, APP_PRIORITY_NORMAL, "Main_task", main_task_thread, NULL, 5);
+    err = ql_rtos_task_create(&main_task, 5*1024, APP_PRIORITY_NORMAL, "Main_task", main_task_thread, NULL, 5);
 
 
     /*GNSS task*/
-    //err = ql_rtos_task_create(&gnss_task, 5 * 1024, 25, "GNSS_task",  GPS_task_thread, NULL,3);
+    err = ql_rtos_task_create(&gnss_task, 5 * 1024, 25, "GNSS_task",  GPS_task_thread, NULL,3);
     ql_sms_app_init();
    // ql_i2c_demo_init();
     ql_mqtt_app_init();
