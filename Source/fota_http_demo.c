@@ -27,7 +27,7 @@
 #define QL_FOTA_HTTP_LOG_PUSH(msg, ...) DebugPrint
 #define QL_FOTA_HTTP_LOG DebugPrint
 
-#define TRY_DOWN_TIMES		10
+#define TRY_DOWN_TIMES		5
 #define WRITE_TO_FILESIZE	(1024*5)		
 #define QL_VERSION_MAX 256
 #define HTTP_HEAD_RANGE_LENGTH_MAX  50
@@ -687,8 +687,8 @@ static int 	fota_http_download_pacfile(fota_http_client_t* fota_http_cli_p)
 		else
 		{
 			//校验成功
-			QL_FOTA_HTTP_LOG("tai thanh cong, reset de fota\n");
-			ql_rtos_task_sleep_s(5);
+			QL_FOTA_HTTP_LOG("tai thanh cong, reset MODULE de tien hanh FOTA\n");
+			ql_rtos_task_sleep_s(2);
 	        ql_power_reset(RESET_NORMAL);
 		}
 	}
@@ -733,12 +733,12 @@ ql_fota_result_e  fota_http_result_process(void)
 void fota_http_app_thread()
 {
 
-	ql_rtos_task_sleep_s(5);
+	ql_rtos_task_sleep_s(1);
 #ifdef QL_APP_FEATURE_SDMMC
     QL_FOTA_HTTP_LOG("ql sdmmc mount : %d",ql_sdmmc_mount());
 #endif
 	fota_http_client_t  fota_http_cli;
-	uint8				ui_down_times = TRY_DOWN_TIMES;
+	uint8				ui_down_times = TRY_DOWN_TIMES; //thu lai 5 lan neu that bai
 	char 				version_buf[QL_VERSION_MAX] = {0};
 	//获取升级结果
 	if(fota_http_result_process() == QL_FOTA_FINISHED)
@@ -747,7 +747,8 @@ void fota_http_app_thread()
 	}
 
 	ql_dev_get_firmware_version(version_buf, sizeof(version_buf));
-	QL_FOTA_HTTP_LOG("current version:  %s\n", version_buf);
+	QL_FOTA_HTTP_LOG("Phien phan mem hien tai:  %s\n", version_buf);
+
 	
 	//下载前初始化
 	if(fota_http_init(&fota_http_cli) != 0)

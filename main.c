@@ -15,6 +15,8 @@
 
 #include "DataDefine.h"
 
+#include "json.h"
+
 //#include "GNSS.h"
 #define OUT_LOG DebugPrint
 
@@ -22,6 +24,7 @@
 #define INIT_CONFIG         101
 #define MAIN_TICK_100MS     102
 #define MAIN_TICK_1000MS    103
+
 
 
 ql_task_t main_task = NULL;
@@ -119,6 +122,7 @@ static void main_task_thread(void *param)
 
     OUT_LOG("DANG khoi tao he thong... \n");
 
+
     // PIN24 GPIO2 (FUNC0)
     ql_pin_set_func(24, 0);
     ql_gpio_init(GPIO_2,GPIO_OUTPUT,PULL_NONE,LVL_HIGH);
@@ -133,6 +137,20 @@ static void main_task_thread(void *param)
     SendEventToThread(main_task, INIT_CONFIG);
 
     SendEventToThread(gnss_task, QL_EVENT_APP_START + 21);
+
+    char *val;
+    char *val_len;
+    char * CMD_FOTA  ="{\"CMD\":\"UPDATE_FOTA\"}";
+    get_value_in_json("CMD",3,&val,&val_len,CMD_FOTA,strlen(CMD_FOTA));
+    if(val !=NULL)
+    {
+         OUT_LOG("do dai: %s\n",val);
+         OUT_LOG(val);
+    }
+    else
+    {
+        OUT_LOG("doc Json failed\n");
+    }
 
     while(1){
         ql_event_try_wait(&event);
