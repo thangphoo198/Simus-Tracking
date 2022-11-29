@@ -138,9 +138,9 @@ static void main_task_thread(void *param)
 
     SendEventToThread(gnss_task, QL_EVENT_APP_START + 21);
 
-    char *val;
-    char *val_len;
-    char * CMD_FOTA  ="{\"CMD\":\"UPDATE_FOTA\"}";
+    char val[30];
+    unsigned char val_len;
+    char CMD_FOTA[30]  ="{\"CMD\":\"UPDATE_FOTA\"}";
     get_value_in_json("CMD",3,&val,&val_len,CMD_FOTA,strlen(CMD_FOTA));
     if(val !=NULL)
     {
