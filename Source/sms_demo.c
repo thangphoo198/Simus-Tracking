@@ -30,6 +30,74 @@ ql_sem_t sms_init_sem = NULL;
 ql_sem_t sms_list_sem = NULL;
 
 #define QL_SMS_LOG DebugPrint
+uint8_t nSim = 0;
+uint8_t INDEX_SMS = 0;
+
+#define event_sms 999
+void read_sms(uint8_t index)
+{
+    int nSim = 0;
+    // Read one messages in SIM
+    uint16_t msg_len = 512;
+    char *msg = malloc(msg_len);
+    if (msg == NULL)
+    {
+        QL_SMS_LOG("malloc ql_sms_msg_s fail");
+        // goto exit;
+    }
+    memset(msg, 0, msg_len);
+    // The first parameter specifies that SMS messages are read from SM
+    ql_sms_set_storage(nSim, SM, SM, SM);
+
+    ql_sms_mem_info_t sms_mem = {0};
+    ql_sms_get_storage(nSim, &sms_mem);
+    QL_SMS_LOG("mem1=%d, mem2=%d, mem3=%d", sms_mem.mem1, sms_mem.mem2, sms_mem.mem3);
+
+    // Read SMS messages as text
+    if (QL_SMS_SUCCESS == ql_sms_read_msg(nSim, index, msg, msg_len, TEXT))
+    {
+        QL_SMS_LOG("SMS=> %s\n", msg);
+    }
+    else
+    {
+        QL_SMS_LOG("read sms FAIL xoa SMS TASK\n");
+        ql_rtos_task_delete(NULL);
+    }
+    // Read SMS messages as pdu
+    //  memset(msg ,0 ,msg_len);
+    //  if(QL_SMS_SUCCESS == ql_sms_read_msg(nSim,2, msg, msg_len, PDU)){
+    //  	QL_SMS_LOG("read msg OK, msg=%s", msg);
+    //  }else{
+    //  	QL_SMS_LOG("read sms FAIL");
+    //  }
+
+    // uint8_t datalen = 0;
+    // if(QL_SMS_SUCCESS == ql_sms_get_pdu_datalen((uint8_t *)msg, strlen(msg), 0, &datalen))
+    // {
+    // 	QL_SMS_LOG("pdu data len = %d",datalen);
+    // }
+    ql_rtos_task_sleep_ms(100);
+
+    if (msg)
+        free(msg);
+}
+void read_all_sms()
+{
+    // Read all message in SIM
+    ql_sms_set_storage(nSim, SM, SM, SM); // set sms storage as SIM.
+    if (QL_SMS_SUCCESS == ql_sms_read_msg_list(nSim, TEXT))
+    {
+        if (ql_rtos_semaphore_wait(sms_list_sem, QL_WAIT_FOREVER))
+        {
+            QL_SMS_LOG("sms_list_sem time out");
+        }
+    }
+    else
+    {
+        QL_SMS_LOG("get msg list FAIL");
+    }
+}
+
 void user_sms_event_callback(uint8_t nSim, int event_id, void *ctx)
 {
     switch (event_id)
@@ -43,22 +111,8 @@ void user_sms_event_callback(uint8_t nSim, int event_id, void *ctx)
         QL_SMS_LOG("New SMS: => ");
         ql_sms_new_s *msg = (ql_sms_new_s *)ctx;
         QL_SMS_LOG("sim=%d, index=%d, storage memory=%d\n", nSim, msg->index, msg->mem);
-
-        ql_sms_set_storage(nSim, SM, SM, SM); // set sms storage as SIM.
-        ql_sms_msg_s *mess = (ql_sms_msg_s *)ctx;
-        //     // Read SMS messages as text
-        //  ql_sms_read_msg(nSim, msg->index, &mess->buf, 256, TEXT);
-        //  QL_SMS_LOG("read msg OK, msg=%s",mess->buf);
-
-        if (QL_SMS_SUCCESS == ql_sms_read_msg(nSim, msg->index, &mess->buf, 256, TEXT))
-        {
-            QL_SMS_LOG("read msg OK, msg=%s", msg);
-        }
-        else
-        {
-            QL_SMS_LOG("read sms FAIL");
-        }
-
+        INDEX_SMS = msg->index;
+        SendEventToThread(sms_task, event_sms);
         break;
     }
     case QL_SMS_LIST_IND: {
@@ -82,7 +136,7 @@ void user_sms_event_callback(uint8_t nSim, int event_id, void *ctx)
     }
 }
 
-void gui_sms(char *sdt,char* noidung)
+void gui_sms(char *sdt, char *noidung)
 {
     if (QL_SMS_SUCCESS == ql_sms_send_msg(0, sdt, noidung, GSM))
     {
@@ -95,14 +149,25 @@ void gui_sms(char *sdt,char* noidung)
         QL_SMS_LOG("ql_sms_send_msg FAIL");
     }
 }
+void delete_all_sms()
+{
+    // Delete message.
+    if (QL_SMS_SUCCESS == ql_sms_delete_msg_ex(nSim, 0, QL_SMS_DEL_ALL))
+    {
+        QL_SMS_LOG("delete msg OK\n");
+    }
+    else
+    {
+        QL_SMS_LOG("delete sms FAIL\n");
+    }
+}
 
 void sms_demo_task(void *param)
 {
+    ql_event_t event;
     char addr[20] = {0};
-    uint8_t nSim = 0;
     QL_SMS_LOG("enter");
     ql_sms_callback_register(user_sms_event_callback);
-
     // wait sms ok
     if (ql_rtos_semaphore_wait(sms_init_sem, QL_WAIT_FOREVER))
     {
@@ -111,11 +176,11 @@ void sms_demo_task(void *param)
 
     if (QL_SMS_SUCCESS == ql_sms_get_center_address(nSim, addr, sizeof(addr)))
     {
-        QL_SMS_LOG("ql_sms_get_center_address OK, addr=%s", addr);
+        QL_SMS_LOG("ql_sms_get_center_address OK, addr=%s\n", addr);
     }
     else
     {
-        QL_SMS_LOG("ql_sms_get_center_address FAIL");
+        QL_SMS_LOG("ql_sms_get_center_address FAIL\n");
     }
 
     // Send English text message
@@ -134,69 +199,41 @@ void sms_demo_task(void *param)
     {
         QL_SMS_LOG("ql_sms_get_storage_info FAIL");
     }
-    // Read all message in SIM
-    ql_sms_set_storage(nSim, SM, SM, SM); // set sms storage as SIM.
-    if (QL_SMS_SUCCESS == ql_sms_read_msg_list(nSim, TEXT))
+    // read_sms(3);
+    delete_all_sms();
+    ql_rtos_task_sleep_ms(100);
+    uint8_t in_pre = 0;
+    while (1)
     {
-        if (ql_rtos_semaphore_wait(sms_list_sem, QL_WAIT_FOREVER))
+
+        // if(in_pre!=INDEX_SMS)
+        // {
+
+        //     QL_SMS_LOG("co SMS moi tai:%d\n",INDEX_SMS);
+        //     read_sms(INDEX_SMS);
+        //     ql_rtos_task_sleep_ms(100);
+        //     in_pre=INDEX_SMS;
+        //     //delete_all_sms();
+
+        // }
+        ql_event_try_wait(&event);
+        switch (event.id)
         {
-            QL_SMS_LOG("sms_list_sem time out");
+
+        case event_sms:
+            QL_SMS_LOG("co SMS moi tai:%d\n", INDEX_SMS);
+            read_sms(INDEX_SMS);
+            break;
+        default:
+            break;
+
+            ql_rtos_task_sleep_ms(100);
         }
+
+    exit:
+
+        ql_rtos_task_delete(NULL);
     }
-    else
-    {
-        QL_SMS_LOG("get msg list FAIL");
-    }
-    // //Read SMS messages as ucs2 of string type
-    // if(QL_SMS_SUCCESS == ql_sms_read_msg(nSim,2, msg, msg_len, UCS2_S)){
-    // 	QL_SMS_LOG("read msg OK, msg=%s", msg);
-    // }else{
-    // 	QL_SMS_LOG("read sms FAIL");
-    // }
-    // if (index_new_sms_pre != index_new_sms)
-    // {
-    //     QL_SMS_LOG("CO TIN NHAN MOI:\n");
-    //     uint16_t msg_len = 512;
-    //     char *msg = malloc(msg_len);
-    //     if (msg == NULL)
-    //     {
-    //         QL_SMS_LOG("malloc ql_sms_msg_s fail");
-    //         goto exit;
-    //     }
-    //     memset(msg, 0, msg_len);
-    //     // The first parameter specifies that SMS messages are read from SM
-    //     ql_sms_set_storage(nSim, SM, SM, SM);
-
-    //     ql_sms_mem_info_t sms_mem = {0};
-
-    //     ql_sms_get_storage(nSim, &sms_mem);
-    //     QL_SMS_LOG("mem1=%d, mem2=%d, mem3=%d", sms_mem.mem1, sms_mem.mem2, sms_mem.mem3);
-
-    //     // Read SMS messages as text
-    //     if (QL_SMS_SUCCESS == ql_sms_read_msg(nSim, 2, msg, msg_len, TEXT))
-    //     {
-    //         QL_SMS_LOG("read msg OK, msg=%s", msg);
-    //     }
-    //     else
-    //     {
-    //         QL_SMS_LOG("read sms FAIL");
-    //     }
-    // 	if(msg)free(msg);
-    //
-    // }
-    ql_rtos_task_sleep_ms(500);
-    // ql_rtos_task_sleep_ms(100);
-
-    // Delete message.
-    //  if(QL_SMS_SUCCESS == ql_sms_delete_msg_ex(nSim, 0, QL_SMS_DEL_ALL)){
-    //  	QL_SMS_LOG("delete msg OK");
-    //  }else{
-    //  	QL_SMS_LOG("delete sms FAIL");
-    //  }
-
-exit:
-
-    ql_rtos_task_delete(NULL);
 }
 
 QlOSStatus ql_sms_app_init(void)

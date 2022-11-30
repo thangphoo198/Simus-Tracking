@@ -26,7 +26,7 @@
 
 #define INIT_CONFIG         101
 #define MAIN_TICK_100MS     102
-#define MAIN_TICK_1000MS    103
+#define MAIN_TICK_3000MS    103
 
 
 
@@ -37,7 +37,7 @@ ql_timer_t main_timer = NULL;
 
 
 static uint32_t tickCount100MS = 0;
-static uint32_t tickCount1000MS = 0;
+static uint32_t tickCount3000MS = 0;
 
 //int adc1_value, adc2_value, adc3_value;
 static uint8_t Led=0, Led2=0;
@@ -48,17 +48,18 @@ static uint8_t Led=0, Led2=0;
 //for ledcfg demo
 #define QL_PIN_NUM_KEYOUT_5        82
 
+
 void timer_callback(void){
     ql_event_t event;
 
-    if(++tickCount100MS>10){
+    if(++tickCount100MS>0){
         tickCount100MS=0;
         SendEventToThread(main_task, MAIN_TICK_100MS);    
     }
 
-    if(++tickCount1000MS>100){
-        tickCount1000MS=0;
-        SendEventToThread(main_task, MAIN_TICK_1000MS);    
+    if(++tickCount3000MS>300){
+        tickCount3000MS=0;
+        SendEventToThread(main_task, MAIN_TICK_3000MS);    
     }
 }
 
@@ -119,6 +120,9 @@ uint8_t DebugInit(void){
     return ret;
 }
 
+
+extern print_GPS(char *dat);
+
 static void main_task_thread(void *param)
 {
 
@@ -164,15 +168,16 @@ static void main_task_thread(void *param)
             break;
             case MAIN_TICK_100MS:
                 Led^=1;
-                //ql_gpio_set_level(GPIO_2, Led==0?LVL_LOW:LVL_HIGH);
             break;
             
-            case MAIN_TICK_1000MS:
+            case MAIN_TICK_3000MS:
                 Led2^=1;
-                
+                OUT_LOG("TIMER CT CHINH:\n");
+                char buff[256]={0};
+                print_GPS(&buff);
+                //ql_gpio_set_level(GPIO_2, Led==0?LVL_LOW:LVL_HIGH);
+                OUT_LOG("DU LIEU LAY DC:%s\n",(char*)buff);          
                 ql_gpio_set_level(GPIO_22, Led2==0?LVL_LOW:LVL_HIGH);
-char *buff;
-
 //ql_rtos_task_get_userdata(gnss_task,&buff);
 //                 QlOSStatus ql_rtos_task_get_userdata
 // (

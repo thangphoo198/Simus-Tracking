@@ -57,6 +57,7 @@ static void mqtt_inpub_data_cb(mqtt_client_t *client, void *arg, int pkt_id, con
     QL_MQTT_LOG("payload: %s\n", payload);
     if (strlen(payload) > 0)
     {
+
         QL_MQTT_LOG("co lenh du lieu tu APP\n");
         char val[128] = {0};
         unsigned char val_len;
@@ -76,8 +77,7 @@ static void mqtt_inpub_data_cb(mqtt_client_t *client, void *arg, int pkt_id, con
             QL_MQTT_LOG("Phien phan mem hien tai:  %s\n", version_buf);
             if (mqtt_connected == 1)
             {
-            ql_mqtt_publish(&mqtt_cli, "EC200U_REMOTE", version_buf, strlen(version_buf), 0, 0, mqtt_requst_result_cb, NULL== MQTTCLIENT_WOUNDBLOCK);
-  
+                ql_mqtt_publish(&mqtt_cli, "EC200U_REMOTE", version_buf, strlen(version_buf), 0, 0, mqtt_requst_result_cb, NULL == MQTTCLIENT_WOUNDBLOCK);
             }
         }
         else if (strcmp(val, "GET_MODEL") == 0)
@@ -106,8 +106,20 @@ static void mqtt_inpub_data_cb(mqtt_client_t *client, void *arg, int pkt_id, con
         }
         else if (strcmp(val, "SMS_PAIR") == 0)
         {
-            gui_sms("+84362319354", "EC200U THNG BAO: DA NHAN DC TIN NHAN\n");
+            gui_sms("+84362319354", "EC200U THONG BAO: DA NHAN DC TIN NHAN\n");
         }
+        else if (strcmp(val, "GET_SN") == 0)
+        {
+            char serial_buf[128] = {0};
+			ql_dev_get_sn(&serial_buf, sizeof(serial_buf), 0);
+            ql_dev_get_model(serial_buf, sizeof(serial_buf));
+            QL_MQTT_LOG("Serial Number CHIP:  %s\n", serial_buf);
+            if (mqtt_connected == 1)
+            {
+                ql_mqtt_publish(&mqtt_cli, "EC200U_REMOTE", serial_buf, strlen(serial_buf), 0, 0, mqtt_requst_result_cb, NULL == MQTTCLIENT_WOUNDBLOCK);
+            }
+        }
+        
     }
 }
 
@@ -118,8 +130,7 @@ static void mqtt_disconnect_result_cb(mqtt_client_t *client, void *arg, int err)
     ql_rtos_semaphore_release(mqtt_semp);
 }
 
-
-void pub_mqtt(char* topic,char* mess)
+void pub_mqtt(char *topic, char *mess)
 {
     if (ql_mqtt_publish(&mqtt_cli, topic, mess, strlen(mess), 0, 0, mqtt_requst_result_cb, NULL) == MQTTCLIENT_WOUNDBLOCK)
     {
@@ -267,16 +278,16 @@ static void mqtt_app_thread(void *arg)
         {
             if (ql_mqtt_sub_unsub(&mqtt_cli, "EC200U_REC", 1, mqtt_requst_result_cb, NULL, 1) == MQTTCLIENT_WOUNDBLOCK)
             {
-                QL_MQTT_LOG("\r======wait subscrible result");
+                QL_MQTT_LOG("dang sub topic:EC200U_REC");
                 ql_rtos_semaphore_wait(mqtt_semp, QL_WAIT_FOREVER);
             }
             if (ql_mqtt_publish(&mqtt_cli, "EC200U_REMOTE", "hello", strlen("hello"), 0, 0, mqtt_requst_result_cb, NULL) == MQTTCLIENT_WOUNDBLOCK)
             {
-                QL_MQTT_LOG("\r======wait publish result\n");
+                QL_MQTT_LOG("PUB vao: EC200U_REMOTE \n");
                 ql_rtos_semaphore_wait(mqtt_semp, QL_WAIT_FOREVER);
             }
 
-            ql_rtos_task_sleep_ms(15000);
+            ql_rtos_task_sleep_ms(10000);
         }
     }
     if (mqtt_connected == 1 && ql_mqtt_disconnect(&mqtt_cli, mqtt_disconnect_result_cb, NULL) == MQTTCLIENT_WOUNDBLOCK)
@@ -285,7 +296,7 @@ static void mqtt_app_thread(void *arg)
         ql_rtos_semaphore_wait(mqtt_semp, QL_WAIT_FOREVER);
         ret = ql_mqtt_connect(&mqtt_cli, MQTT_CLIENT_SRV_URL, mqtt_connect_result_cb, NULL, (const struct mqtt_connect_client_info_t *)&client_info, mqtt_state_exception_cb);
     }
-    QL_MQTT_LOG("\r==============mqtt_client_test[%d] end=======%x=========\n", run_num, &mqtt_cli);
+    //  QL_MQTT_LOG("\r==============mqtt_client_test[%d] end=======%x=========\n", run_num, &mqtt_cli);
     ql_mqtt_client_deinit(&mqtt_cli);
     mqtt_connected = 0;
     ql_rtos_task_sleep_s(1);
