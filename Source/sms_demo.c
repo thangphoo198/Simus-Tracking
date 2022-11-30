@@ -28,8 +28,6 @@ WHEN              WHO         WHAT, WHERE, WHY
 ql_task_t sms_task = NULL;
 ql_sem_t sms_init_sem = NULL;
 ql_sem_t sms_list_sem = NULL;
-static int index_new_sms = 0;
-static int index_new_sms_pre = 0;
 
 #define QL_SMS_LOG DebugPrint
 void user_sms_event_callback(uint8_t nSim, int event_id, void *ctx)
@@ -46,7 +44,6 @@ void user_sms_event_callback(uint8_t nSim, int event_id, void *ctx)
         ql_sms_new_s *msg = (ql_sms_new_s *)ctx;
         QL_SMS_LOG("sim=%d, index=%d, storage memory=%d\n", nSim, msg->index, msg->mem);
 
-        index_new_sms = msg->index;
         ql_sms_set_storage(nSim, SM, SM, SM); // set sms storage as SIM.
         ql_sms_msg_s *mess = (ql_sms_msg_s *)ctx;
         //     // Read SMS messages as text

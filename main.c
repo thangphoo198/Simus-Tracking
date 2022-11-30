@@ -17,6 +17,7 @@
 #include "DataDefine.h"
 
 #include "json.h"
+#include "gnss_demo.h" 
 
 
 //#include "GNSS.h"
@@ -30,7 +31,7 @@
 
 
 ql_task_t main_task = NULL;
-ql_task_t gnss_task = NULL;
+//ql_task_t gnss_task = NULL;
 ql_timer_t main_timer = NULL;
 
 
@@ -143,7 +144,7 @@ static void main_task_thread(void *param)
     // Init
     SendEventToThread(main_task, INIT_CONFIG);
 
-    SendEventToThread(gnss_task, QL_EVENT_APP_START + 21);
+    //SendEventToThread(gnss_task, QL_EVENT_APP_START + 21);
     char   version_buf[128] = {0};
 	ql_dev_get_firmware_version(version_buf, sizeof(version_buf));
 	OUT_LOG("Phien phan mem hien tai:  %s\n", version_buf);
@@ -172,7 +173,7 @@ static void main_task_thread(void *param)
                 ql_gpio_set_level(GPIO_22, Led2==0?LVL_LOW:LVL_HIGH);
 char *buff;
 
-ql_rtos_task_get_userdata(gnss_task,&buff);
+//ql_rtos_task_get_userdata(gnss_task,&buff);
 //                 QlOSStatus ql_rtos_task_get_userdata
 // (
 // 	ql_task_t taskRef, /* OS task reference	*/
@@ -196,6 +197,9 @@ extern void GPS_task_thread (void *param);
 extern void mqtt_app_thread(void * arg);
 extern void sms_demo_task(void * param);
 extern void ql_i2c_demo_thread(void *param);
+extern void ql_gnss_demo_thread(void *param);
+//extern ql_gnss_app_init(void);
+
 
 void ql_enter_sleep_cb(void* ctx)
 {   
@@ -237,10 +241,11 @@ int appimg_enter(void *param)
 
 
     /*GNSS task*/
-    err = ql_rtos_task_create(&gnss_task, 5 * 1024, 25, "GNSS_task",  GPS_task_thread, NULL,3);
+    //err = ql_rtos_task_create(&gnss_task, 5 * 1024, 25, "GNSS_task",  GPS_task_thread, NULL,3);
     ql_sms_app_init();
    // ql_i2c_demo_init();
     ql_mqtt_app_init();
+    ql_gnss_app_init();
     //ql_fota_http_app_init();
 
 
