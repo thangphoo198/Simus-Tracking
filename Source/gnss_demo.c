@@ -208,14 +208,22 @@ static void ql_gnss_demo_thread(void *param)
                     }
                     memset(nmea_buff, 0, sizeof(nmea_buff));
                     memcpy(nmea_buff, start, jmin(sizeof(nmea_buff) - 1, end - start - 1));
-                    // QL_GNSSDEMO_LOG("du lieu GPS: %s\r\n", nmea_buff);
+                    QL_GNSSDEMO_LOG("du lieu GPS: %s\r\n", nmea_buff);
                     /* nmea string parse */
                     nmea = nmea_parse(start, end - start + 1, 1);
                     if (nmea)
                     {
                         ret = nmea_value_update(nmea, &g_gps_data);
-                        //	QL_GNSSDEMO_LOG("Vi do la:%.6f,Kinh do:%.6f\n tin hieu:%d,toc do:%.2f",g_gps_data.latitude,g_gps_data.longitude,g_gps_data.gps_signal,g_gps_data.gps_speed);
-                        QL_GNSSDEMO_LOG("tin hieu:%d,toc do:%.2f YEAR:%d \n", g_gps_data.gps_signal, g_gps_data.gps_speed,g_gps_data.time.tm_year);
+                        char *buff;
+                        ret = nmea_parse_rmc(nmea, buff);
+                        QL_GNSSDEMO_LOG(buff);
+                        if (ret)
+                        {
+                            nmea_dbg_log("nmea_parse_rmc failed. \r\n");
+                           // goto _error;
+                        }
+                       // QL_GNSSDEMO_LOG("Vi do la:%.6f,Kinh do:%.6f\n tin hieu:%d,toc do:%.2f",g_gps_data.latitude,g_gps_data.longitude,g_gps_data.gps_signal,g_gps_data.gps_speed);
+                       // QL_GNSSDEMO_LOG("tin hieu:%d,toc do:%.2f YEAR:%d \n", g_gps_data.gps_signal, g_gps_data.gps_speed,g_gps_data.time.tm_year);
                         //  g_gps_data->
                         if (ret)
                         {
