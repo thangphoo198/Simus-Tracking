@@ -71,7 +71,7 @@ WHEN              WHO         WHAT, WHERE, WHY
 static char check()
 {
     uint8_t KQ;
-    int ret = ql_I2cRead(i2c_1, SalveAddr_r_8bit, 0x0F, &KQ, 1);
+    int ret = ql_I2cRead(i2c_2, SalveAddr_r_8bit, 0x0F, &KQ, 1);
     //	kq=IC_Read(W_A_I);
     if (KQ == 0x33)
     {
@@ -86,9 +86,9 @@ static void Acc_Init()
 {
    // ql_rtos_task_sleep_ms(1);
     uint8_t data = 0x57;
-    ql_I2cWrite(i2c_1, SalveAddr_w_8bit, REG1, &data, 1);
+    ql_I2cWrite(i2c_2, SalveAddr_w_8bit, REG1, &data, 1);
     data = 0x18;
-    ql_I2cWrite(i2c_1, SalveAddr_w_8bit, REG4, &data, 1);
+    ql_I2cWrite(i2c_2, SalveAddr_w_8bit, REG4, &data, 1);
     // IC_Write(REG1,0x57);
     // IC_Write(REG4,0x18);
 }
@@ -99,7 +99,7 @@ void ql_i2c_demo_thread(void *param)
     ql_CamInit(320, 240);
     ql_CamPowerOn();
     
-    ql_I2cInit(i2c_1, STANDARD_MODE);
+    ql_I2cInit(i2c_2, STANDARD_MODE);
     Acc_Init();
     if(check())
     {
@@ -116,9 +116,9 @@ void ql_i2c_demo_thread(void *param)
     while(1)
     {
         // QL_APP_I2C_LOG("I2C read_data = 0x%x", read_data);
-        // ql_I2cRead(i2c_1, SalveAddr_r_8bit, 0xf0, &read_data, 1);
+        // ql_I2cRead(i2c_2, SalveAddr_r_8bit, 0xf0, &read_data, 1);
         // QL_APP_I2C_LOG("I2C read_data = 0x%x", read_data);
-        // ql_I2cWrite(i2c_1, SalveAddr_w_8bit, 0x55, &data, 1);
+        // ql_I2cWrite(i2c_2, SalveAddr_w_8bit, 0x55, &data, 1);
         // read_data = 0;
         ql_rtos_task_sleep_ms(200); 
     }

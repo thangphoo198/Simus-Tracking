@@ -33,7 +33,6 @@ ql_sem_t sms_list_sem = NULL;
 uint8_t nSim = 0;
 uint8_t INDEX_SMS = 0;
 
-#define event_sms 999
 void read_sms(uint8_t index)
 {
     int nSim = 0;
@@ -63,19 +62,6 @@ void read_sms(uint8_t index)
         QL_SMS_LOG("read sms FAIL xoa SMS TASK\n");
         ql_rtos_task_delete(NULL);
     }
-    // Read SMS messages as pdu
-    //  memset(msg ,0 ,msg_len);
-    //  if(QL_SMS_SUCCESS == ql_sms_read_msg(nSim,2, msg, msg_len, PDU)){
-    //  	QL_SMS_LOG("read msg OK, msg=%s", msg);
-    //  }else{
-    //  	QL_SMS_LOG("read sms FAIL");
-    //  }
-
-    // uint8_t datalen = 0;
-    // if(QL_SMS_SUCCESS == ql_sms_get_pdu_datalen((uint8_t *)msg, strlen(msg), 0, &datalen))
-    // {
-    // 	QL_SMS_LOG("pdu data len = %d",datalen);
-    // }
     ql_rtos_task_sleep_ms(100);
 
     if (msg)
@@ -112,7 +98,6 @@ void user_sms_event_callback(uint8_t nSim, int event_id, void *ctx)
         ql_sms_new_s *msg = (ql_sms_new_s *)ctx;
         QL_SMS_LOG("sim=%d, index=%d, storage memory=%d\n", nSim, msg->index, msg->mem);
         INDEX_SMS = msg->index;
-        SendEventToThread(sms_task, event_sms);
         break;
     }
     case QL_SMS_LIST_IND: {
@@ -145,7 +130,7 @@ void gui_sms(char *sdt, char *noidung)
     }
     else
     {
-        ql_uart_write(QL_LOG_PORT_UART, "SMS FAIL", 7);
+        QL_SMS_LOG("send SMS FAIL\n");
         QL_SMS_LOG("ql_sms_send_msg FAIL");
     }
 }
@@ -154,17 +139,16 @@ void delete_all_sms()
     // Delete message.
     if (QL_SMS_SUCCESS == ql_sms_delete_msg_ex(nSim, 0, QL_SMS_DEL_ALL))
     {
-        QL_SMS_LOG("delete msg OK\n");
+        QL_SMS_LOG("\ndelete msg OK\n");
     }
     else
     {
-        QL_SMS_LOG("delete sms FAIL\n");
+        QL_SMS_LOG("\ndelete sms FAIL\n");
     }
 }
 
 void sms_demo_task(void *param)
 {
-    ql_event_t event;
     char addr[20] = {0};
     QL_SMS_LOG("enter");
     ql_sms_callback_register(user_sms_event_callback);
@@ -202,39 +186,44 @@ void sms_demo_task(void *param)
     // read_sms(3);
     delete_all_sms();
     ql_rtos_task_sleep_ms(100);
-    uint8_t in_pre = 0;
+    int in_pre = -1;
     while (1)
     {
 
-        // if(in_pre!=INDEX_SMS)
-        // {
-
-        //     QL_SMS_LOG("co SMS moi tai:%d\n",INDEX_SMS);
-        //     read_sms(INDEX_SMS);
-        //     ql_rtos_task_sleep_ms(100);
-        //     in_pre=INDEX_SMS;
-        //     //delete_all_sms();
-
-        // }
-        ql_event_try_wait(&event);
-        switch (event.id)
+        if(INDEX_SMS> in_pre)
         {
 
-        case event_sms:
-            QL_SMS_LOG("co SMS moi tai:%d\n", INDEX_SMS);
+            QL_SMS_LOG("INDEX cu: %d , co SMS moi tai:%d\n",in_pre,INDEX_SMS);
             read_sms(INDEX_SMS);
-            break;
-        default:
-            break;
+            in_pre=INDEX_SMS;
+            //delete_all_sms();
+           // ql_sms_delete_msg(nSim, INDEX_SMS);
+            ql_rtos_task_sleep_ms(100);        
+            //delete_all_sms();
 
-            ql_rtos_task_sleep_ms(100);
+        }
+        else
+        {
+            QL_SMS_LOG("Dang doi SMS\n");
+            ql_rtos_task_sleep_ms(1000);
+        }
+        //ql_event_try_wait(&event);
+        // switch (event.id)
+        // {
+
+        // case event_sms:
+        //     QL_SMS_LOG("co SMS moi tai:%d\n", INDEX_SMS);
+        //     read_sms(INDEX_SMS);
+        //     break;
+        // default:
+        //     break;
+           
         }
 
     exit:
 
         ql_rtos_task_delete(NULL);
     }
-}
 
 QlOSStatus ql_sms_app_init(void)
 {

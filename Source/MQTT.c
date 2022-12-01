@@ -132,10 +132,22 @@ static void mqtt_disconnect_result_cb(mqtt_client_t *client, void *arg, int err)
 
 void pub_mqtt(char *topic, char *mess)
 {
-    if (ql_mqtt_publish(&mqtt_cli, topic, mess, strlen(mess), 0, 0, mqtt_requst_result_cb, NULL) == MQTTCLIENT_WOUNDBLOCK)
+    if (mqtt_connected == 1)
     {
-        QL_MQTT_LOG("\r======wait publish result\n");
-        ql_rtos_semaphore_wait(mqtt_semp, QL_WAIT_FOREVER);
+
+        if (ql_mqtt_publish(&mqtt_cli, topic, mess, strlen(mess), 0, 0, mqtt_requst_result_cb, NULL) == MQTTCLIENT_WOUNDBLOCK)
+        {
+            QL_MQTT_LOG("\rTHANHCONG CHO KET QUA!\n");
+            ql_rtos_semaphore_wait(mqtt_semp, QL_WAIT_FOREVER);
+        }
+        else
+        {
+            QL_MQTT_LOG("that bai\n");
+        }
+    }
+    else
+    {
+        QL_MQTT_LOG("FAIL: MQTT DISCONNECTED!");
     }
 }
 static void mqtt_app_thread(void *arg)
@@ -276,14 +288,9 @@ static void mqtt_app_thread(void *arg)
         ql_mqtt_set_inpub_callback(&mqtt_cli, mqtt_inpub_data_cb, NULL);
         while (mqtt_connected == 1)
         {
-            if (ql_mqtt_sub_unsub(&mqtt_cli, "EC200U_REC", 1, mqtt_requst_result_cb, NULL, 1) == MQTTCLIENT_WOUNDBLOCK)
+            if (ql_mqtt_sub_unsub(&mqtt_cli, "EC200U_REMOTE", 1, mqtt_requst_result_cb, NULL, 1) == MQTTCLIENT_WOUNDBLOCK)
             {
-                QL_MQTT_LOG("dang sub topic:EC200U_REC");
-                ql_rtos_semaphore_wait(mqtt_semp, QL_WAIT_FOREVER);
-            }
-            if (ql_mqtt_publish(&mqtt_cli, "EC200U_REMOTE", "hello", strlen("hello"), 0, 0, mqtt_requst_result_cb, NULL) == MQTTCLIENT_WOUNDBLOCK)
-            {
-                QL_MQTT_LOG("PUB vao: EC200U_REMOTE \n");
+                QL_MQTT_LOG("dang sub topic:EC200U_REMOTE");
                 ql_rtos_semaphore_wait(mqtt_semp, QL_WAIT_FOREVER);
             }
 

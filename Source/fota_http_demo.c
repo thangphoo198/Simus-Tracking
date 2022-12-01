@@ -743,6 +743,7 @@ void fota_http_app_thread()
 	//获取升级结果
 	if(fota_http_result_process() == QL_FOTA_FINISHED)
 	{
+		
 		goto exit;
 	}
 

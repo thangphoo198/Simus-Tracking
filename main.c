@@ -47,7 +47,8 @@ static uint8_t Led=0, Led2=0;
 
 //for ledcfg demo
 #define QL_PIN_NUM_KEYOUT_5        82
-
+char *topic_rec="EC200U_REC";
+char *topic_remote="EC200U_REMOTE";
 
 void timer_callback(void){
     ql_event_t event;
@@ -122,6 +123,7 @@ uint8_t DebugInit(void){
 
 
 extern print_GPS(char *dat);
+extern pub_mqtt(char *topic,char*mess);
 
 static void main_task_thread(void *param)
 {
@@ -175,6 +177,7 @@ static void main_task_thread(void *param)
                 OUT_LOG("TIMER CT CHINH:\n");
                 char buff[256]={0};
                 print_GPS(&buff);
+                pub_mqtt(topic_rec,buff);
                 //ql_gpio_set_level(GPIO_2, Led==0?LVL_LOW:LVL_HIGH);
                 OUT_LOG("DU LIEU LAY DC:%s\n",(char*)buff);          
                 ql_gpio_set_level(GPIO_22, Led2==0?LVL_LOW:LVL_HIGH);
