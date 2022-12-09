@@ -10,6 +10,7 @@
 #include "ql_adc.h"
 #include "ql_uart.h"
 #include "ql_power.h"
+#include "ql_i2c.h"
 
 #include "DataDefine.h"
 
@@ -51,7 +52,7 @@ void timer_callback(void)
         SendEventToThread(main_task, MAIN_TICK_100MS);
     }
 
-    if (++tickCount3000MS > 1000)
+    if (++tickCount3000MS > 200)
     {
         tickCount3000MS = 0;
         SendEventToThread(main_task, MAIN_TICK_3000MS);
@@ -135,14 +136,14 @@ static void main_task_thread(void *param)
     OUT_LOG("Phien phan mem hien tai:  %s\n", version_buf);
     ql_CamInit(320, 240);
     ql_CamPowerOn();
+    ql_I2cInit(i2c_1, STANDARD_MODE);
     Acc_Init();
     if (check())
     {
         OUT_LOG("I2CC OK");
         OUT_LOG("THANH CONG\n");
-        int x = GetData(0x2A, 0x2B);
+        int x = GetData(0x2B, 0x2A);
         OUT_LOG("Du lieu ACC:%d", x);
-
     }
     else
     {
@@ -186,7 +187,20 @@ static void main_task_thread(void *param)
             char buff3[256] = {0};
             print_GPS(&buff);
             strcpy(buff3, buff);
-  //          strcat(buff3, buff2);
+            if (check())
+            {
+                OUT_LOG("I2CC OK");
+                OUT_LOG("THANH CONG\n");
+                int x = GetData(0x19, 0x18);
+                OUT_LOG("Du lieu ACC X:%d\n", x);
+                int y = GetData(0x2D, 0x2C);
+                OUT_LOG("Du lieu ACC Y:%d\n", y);
+            }
+            else
+            {
+                OUT_LOG("i2c failed\n");
+            }
+            //          strcat(buff3, buff2);
             pub_mqtt(topic_rec, buff3);
             // ql_gpio_set_level(GPIO_2, Led==0?LVL_LOW:LVL_HIGH);
             OUT_LOG("DU LIEU LAY DC:%s\n", buff3);

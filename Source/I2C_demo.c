@@ -54,7 +54,10 @@ WHEN              WHO         WHAT, WHERE, WHY
 #define SalveAddr_r_8bit        0x19
 
 #define REG1 0x20//=0101[100Hz]0[HR mode]111[ZYX enable]=01010111b=0x57;
+#define REG2 0x21
+#define REG3 0x22
 #define REG4 0x23//=00011000b [+-4g, High-resolution output mode]=0x18
+#define REG5 0x24
 #define W_A_I 0x0F//phai bang 0x33
 #define OUT_XL 0x28
 #define OUT_XH 0x29
@@ -80,23 +83,20 @@ char check()
 }
 void Acc_Init()
 {
-    ql_I2cInit(i2c_1, STANDARD_MODE);
-   // ql_rtos_task_sleep_ms(1);
-    uint8_t data = 0x57;
-    ql_I2cWrite(i2c_1, SalveAddr_w_8bit, REG1, &data, 1);
-    data = 0x18;
-    ql_I2cWrite(i2c_1, SalveAddr_w_8bit, REG4, &data, 1);
-    // IC_Write(REG1,0x57);
-    // IC_Write(REG4,0x18);
+    ql_rtos_task_sleep_ms(1);
+    ql_I2cWrite(i2c_1, SalveAddr_w_8bit, REG1, 0x57, 1);
+    ql_I2cWrite(i2c_1, SalveAddr_w_8bit, REG2, 0x00, 1);
+    ql_I2cWrite(i2c_1, SalveAddr_w_8bit, REG3, 0x40, 1);
+    ql_I2cWrite(i2c_1, SalveAddr_w_8bit, REG4, 0x00, 1);
+    ql_I2cWrite(i2c_1, SalveAddr_w_8bit, REG1, 0x00, 1);
 }
 
  int GetData(unsigned char Haddress,unsigned char Laddress)
 {
-    char H;
-    char L;
-    int ret = ql_I2cRead(i2c_1, SalveAddr_r_8bit, Haddress, &H, 1);
-    int ret2= ql_I2cRead(i2c_1, SalveAddr_r_8bit, Laddress, &L, 1);
-    QL_LOG("%x %x\n",H,L);
+    uint8_t H,L;
+    ql_I2cRead(i2c_1, SalveAddr_r_8bit, Haddress, &H, 1);
+    ql_I2cRead(i2c_1, SalveAddr_r_8bit, Laddress, &L, 1);
+   // QL_LOG("%x %x\n",H,L);
 	return (H<<8)+L;
 }
 
