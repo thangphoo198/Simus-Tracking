@@ -208,7 +208,7 @@ static void ql_gnss_demo_thread(void *param)
                     }
                     memset(nmea_buff, 0, sizeof(nmea_buff));
                     memcpy(nmea_buff, start, jmin(sizeof(nmea_buff) - 1, end - start - 1));
-                    QL_GNSSDEMO_LOG("du lieu GPS: %s\r\n", nmea_buff);
+                    //QL_GNSSDEMO_LOG("du lieu GPS: %s\r\n", nmea_buff);
                     /* nmea string parse */
                     nmea = nmea_parse(start, end - start + 1, 1);
                     if (nmea)

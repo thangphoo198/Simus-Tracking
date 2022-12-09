@@ -35,6 +35,8 @@
 
 
 
+
+
 ql_task_t fota_http_task = NULL;
 ql_sem_t fota_http_semp = NULL;
 typedef enum 
@@ -621,7 +623,12 @@ static int fota_http_evn_request(fota_http_client_t* fota_http_cli_p)
 		//不设置范围下载字段
 	}
 	//设置url下载地址
-	ql_httpc_setopt(&(fota_http_cli_p->http_cli), HTTP_CLIENT_OPT_URL, HTTP_DLOAD_URL);
+	char URL[200]={0};
+	char ver[100]={0};
+	ql_dev_get_firmware_version(ver, sizeof(ver));
+	sprintf(URL,"http://broker.simus.vn/api/dl/firmware?k=000d1078-7326-11ed-ac26-d6d2c8169f23&s=abcdef&v=%s",ver);
+	QL_FOTA_HTTP_LOG(URL);
+	ql_httpc_setopt(&(fota_http_cli_p->http_cli), HTTP_CLIENT_OPT_URL, URL);
 	//设置sim_id
 	ql_httpc_setopt(&(fota_http_cli_p->http_cli), HTTP_CLIENT_OPT_SIM_ID, fota_http_cli_p->sim_id);
 	//设置cid
