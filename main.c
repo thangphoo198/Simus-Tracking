@@ -58,7 +58,7 @@ void timer_callback(void){
         SendEventToThread(main_task, MAIN_TICK_100MS);    
     }
 
-    if(++tickCount3000MS>300){
+    if(++tickCount3000MS>500){
         tickCount3000MS=0;
         SendEventToThread(main_task, MAIN_TICK_3000MS);    
     }

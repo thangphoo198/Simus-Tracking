@@ -27,7 +27,7 @@ static int mqtt_connected = 0;
 mqtt_client_t mqtt_cli;
 static void mqtt_connect_result_cb(mqtt_client_t *client, void *arg, mqtt_connection_status_e status)
 {
-    QL_MQTT_LOG("\rstatus: %d", status);
+    QL_MQTT_LOG	("\rstatus: %d", status);
     if (status == 0)
     {
         mqtt_connected = 1;
@@ -77,7 +77,7 @@ static void mqtt_inpub_data_cb(mqtt_client_t *client, void *arg, int pkt_id, con
             QL_MQTT_LOG("Phien phan mem hien tai:  %s\n", version_buf);
             if (mqtt_connected == 1)
             {
-                ql_mqtt_publish(&mqtt_cli, "EC200U_REMOTE", version_buf, strlen(version_buf), 0, 0, mqtt_requst_result_cb, NULL == MQTTCLIENT_WOUNDBLOCK);
+                ql_mqtt_publish(&mqtt_cli, "EC200U_REC", version_buf, strlen(version_buf), 0, 0, mqtt_requst_result_cb, NULL == MQTTCLIENT_WOUNDBLOCK);
             }
         }
         else if (strcmp(val, "GET_MODEL") == 0)
@@ -116,7 +116,7 @@ static void mqtt_inpub_data_cb(mqtt_client_t *client, void *arg, int pkt_id, con
             QL_MQTT_LOG("Serial Number CHIP:  %s\n", serial_buf);
             if (mqtt_connected == 1)
             {
-                ql_mqtt_publish(&mqtt_cli, "EC200U_REMOTE", serial_buf, strlen(serial_buf), 0, 0, mqtt_requst_result_cb, NULL == MQTTCLIENT_WOUNDBLOCK);
+                ql_mqtt_publish(&mqtt_cli, "EC200U_REC", serial_buf, strlen(serial_buf), 0, 0, mqtt_requst_result_cb, NULL == MQTTCLIENT_WOUNDBLOCK);
             }
         }
         
