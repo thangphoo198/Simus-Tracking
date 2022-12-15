@@ -102,7 +102,8 @@ static void mqtt_inpub_data_cb(mqtt_client_t *client, void *arg, int pkt_id, con
         {
             QL_MQTT_LOG("BAT CHE DO NGU SAU 5S:\n");
             ql_rtos_task_sleep_s(5);
-            ql_autosleep_enable(QL_ALLOW_SLEEP);
+            ql_power_down(POWD_NORMAL);
+            //ql_autosleep_enable(QL_ALLOW_SLEEP);
         }
         else if (strcmp(val, "SMS_PAIR") == 0)
         {

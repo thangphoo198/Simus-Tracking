@@ -209,15 +209,17 @@ static void ql_gnss_demo_thread(void *param)
                     }
                     memset(nmea_buff, 0, sizeof(nmea_buff));
                     memcpy(nmea_buff, start, jmin(sizeof(nmea_buff) - 1, end - start - 1));
-                    QL_GNSSDEMO_LOG("du lieu GPS: %s\r\n", nmea_buff);
+                   // QL_GNSSDEMO_LOG("du lieu GPS: %s\r\n", nmea_buff);
                     /* nmea string parse */
                     nmea = nmea_parse(start, end - start + 1, 1);
                     if (nmea)
                     {
                         ret = nmea_value_update(nmea, &g_gps_data);
+                        
                         if (ret == 0)
                         {
-                            QL_GNSSDEMO_LOG("DU lieu nmea hop le\n");
+                            //QL_GNSSDEMO_LOG("DU lieu nmea hop le\n");
+                            QL_GNSSDEMO_LOG("Vi do la:%f,Kinh do:%f tin hieu:%d,toc do:%f \n",g_gps_data.latitude,g_gps_data.longitude,g_gps_data.gps_signal,g_gps_data.gps_speed);
 
                             // char *val="$GNRMC,141854.00,A,2100.50925,N,10546.92273,E,0.000,,011222,,,A,V*18";
                             // int ret = nmea_parse_rmc(nmea, val);
@@ -1150,7 +1152,7 @@ struct nmea_s *nmea_parse(char *sentence, int length, int check_checksum)
         nmea_dbg_log("nmea get type unknown! \r\n");
         return NULL;
     }
-    nmea_dbg_log("\n nmea get type success! \r\n");
+   // nmea_dbg_log("\n nmea get type success! \r\n");
 
     sat_type = nmea_satellite_check(sentence);
 
