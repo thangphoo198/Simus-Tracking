@@ -16,6 +16,7 @@
 
 #include "json.h"
 #include "gnss_demo.h"
+#include "cJSON.h"
 
 // #include "GNSS.h"
 #define OUT_LOG DebugPrint
@@ -41,6 +42,82 @@ static uint8_t Led = 0, Led2 = 0;
 #define QL_PIN_NUM_KEYOUT_5 82
 char *topic_rec = "EC200U_REC";
 char *topic_remote = "EC200U_REMOTE";
+
+#define jsonRoot "{\r\n"                                                                             \
+				 "\"imei\": \"8661111111111111\",\r\n"                                               \
+				 "\"Num\": 142,\r\n"                                                                 \
+				 "\"Value\": {\r\n"                                                                  \
+				 "\"name\": \"cx\",\r\n"                                                             \
+				 "\"age\": 18,\r\n"                                                                  \
+				 "\"blog\": \"https://blog.csdn.net/weixin_44570083/article/details/104285283\"\r\n" \
+				 "},\r\n"                                                                            \
+				 "\"hexArry\": [31, 56, 36, 1365, 263]\r\n"                                          \
+				 "}\r\n"
+
+//JSON解析
+
+void cJSON_Parsing()
+{
+	OUT_LOG("[cJSON_Test] cJSON_Parsing Start");
+	cJSON *pJsonRoot = cJSON_Parse(jsonRoot);
+	if (pJsonRoot != NULL)
+	{
+		OUT_LOG("[cJSON_Test] cJSON TRUE");
+		OUT_LOG("[cJSON_Test] cJSON:%s", jsonRoot);
+	}
+	else
+	{
+		OUT_LOG("[cJSON_Test] cJSON ERROR");
+	}
+	cJSON *pimeiAdress = cJSON_GetObjectItem(pJsonRoot, "imei");
+	if (pimeiAdress)
+	{
+		if (cJSON_IsString(pimeiAdress))
+			OUT_LOG("[cJSON_Test] get imeiAdress:%s", pimeiAdress->valuestring);
+	}
+	else
+		OUT_LOG("[cJSON_Test] get imeiAdress failed");
+}
+
+
+void cJSON_Generate()
+{
+	//取一下本地的station的mac地址，保存在全局变量tempMessage
+	OUT_LOG("[cJSON_Test] cJSON_Generate Start");
+	cJSON *pRoot = cJSON_CreateObject();
+
+	//新增一个字段imei到根点，数值是tempMessage
+	char tempMessage[] = "8661111111111111";
+	cJSON_AddStringToObject(pRoot, "imei", tempMessage);
+
+	//新增一个字段number到根点，数值是2
+	cJSON_AddNumberToObject(pRoot, "number", 2020);
+
+	cJSON *pValue = cJSON_CreateObject();
+	cJSON_AddStringToObject(pValue, "name", "cx");
+	cJSON_AddNumberToObject(pValue, "age", 17);
+	cJSON_AddItemToObject(pRoot, "value", pValue);
+
+	//数组初始化
+	int hex[5] = {11, 12, 13, 14, 15};
+	cJSON *pHex = cJSON_CreateIntArray(hex, 5); //创建一个长度为5的int型的数组json元素
+	cJSON_AddItemToObject(pRoot, "hex", pHex);	//将数组元素添加进pRoot
+
+	char *s = cJSON_Print(pRoot);
+	OUT_LOG("[cJSON_Test] creatJson:%s", s);
+	//释放内存
+	cJSON_free((void *)s);
+
+	//释放内存
+	//cJSON_Delete(pHex);
+	//释放内存
+	//cJSON_Delete(pValue);
+	//释放内存
+	cJSON_Delete(pRoot);
+	OUT_LOG("[cJSON_Test] cJSON_Generate Stop");
+}
+
+
 
 void timer_callback(void)
 {
@@ -138,6 +215,7 @@ static void main_task_thread(void *param)
     ql_CamPowerOn();
     ql_I2cInit(i2c_1, STANDARD_MODE);
     Acc_Init();
+    cJSON_Parsing();
     if (check())
     {
         OUT_LOG("I2CC OK");
