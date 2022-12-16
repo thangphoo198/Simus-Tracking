@@ -54,7 +54,6 @@ char *topic_remote = "EC200U_REMOTE";
 				 "\"hexArry\": [31, 56, 36, 1365, 263]\r\n"                                          \
 				 "}\r\n"
 
-//JSON解析
 
 void cJSON_Parsing()
 {
@@ -80,42 +79,35 @@ void cJSON_Parsing()
 }
 
 
-void cJSON_Generate()
-{
-	//取一下本地的station的mac地址，保存在全局变量tempMessage
-	OUT_LOG("[cJSON_Test] cJSON_Generate Start");
-	cJSON *pRoot = cJSON_CreateObject();
+// void cJSON_Generate()
+// {
+// 	OUT_LOG("[cJSON_Test] cJSON_Generate Start");
+// 	cJSON *pRoot = cJSON_CreateObject();
 
-	//新增一个字段imei到根点，数值是tempMessage
-	char tempMessage[] = "8661111111111111";
-	cJSON_AddStringToObject(pRoot, "imei", tempMessage);
+// 	char tempMessage[] = "8661111111111111";
+// 	cJSON_AddStringToObject(pRoot, "imei", tempMessage);
 
-	//新增一个字段number到根点，数值是2
-	cJSON_AddNumberToObject(pRoot, "number", 2020);
+// 	//新增一个字段number到根点，数值是2
+// 	cJSON_AddNumberToObject(pRoot, "number", 2020);
 
-	cJSON *pValue = cJSON_CreateObject();
-	cJSON_AddStringToObject(pValue, "name", "cx");
-	cJSON_AddNumberToObject(pValue, "age", 17);
-	cJSON_AddItemToObject(pRoot, "value", pValue);
+// 	cJSON *pValue = cJSON_CreateObject();
+// 	cJSON_AddStringToObject(pValue, "name", "cx");
+// 	cJSON_AddNumberToObject(pValue, "age", 17);
+// 	cJSON_AddItemToObject(pRoot, "value", pValue);
 
-	//数组初始化
-	int hex[5] = {11, 12, 13, 14, 15};
-	cJSON *pHex = cJSON_CreateIntArray(hex, 5); //创建一个长度为5的int型的数组json元素
-	cJSON_AddItemToObject(pRoot, "hex", pHex);	//将数组元素添加进pRoot
+// 	//数组初始化
+// 	int hex[5] = {11, 12, 13, 14, 15};
+// 	cJSON *pHex = cJSON_CreateIntArray(hex, 5); //创建一个长度为5的int型的数组json元素
+// 	cJSON_AddItemToObject(pRoot, "hex", pHex);	//将数组元素添加进pRoot
 
-	char *s = cJSON_Print(pRoot);
-	OUT_LOG("[cJSON_Test] creatJson:%s", s);
-	//释放内存
-	cJSON_free((void *)s);
+// 	char *s = cJSON_Print(pRoot);
+// 	OUT_LOG("[cJSON_Test] creatJson:%s\n", s);
+// 	//释放内存
+// 	cJSON_free((void *)s);
 
-	//释放内存
-	//cJSON_Delete(pHex);
-	//释放内存
-	//cJSON_Delete(pValue);
-	//释放内存
-	cJSON_Delete(pRoot);
-	OUT_LOG("[cJSON_Test] cJSON_Generate Stop");
-}
+// 	cJSON_Delete(pRoot);
+// 	OUT_LOG("[cJSON_Test] cJSON_Generate Stop");
+// }
 
 
 
@@ -216,6 +208,7 @@ static void main_task_thread(void *param)
     ql_I2cInit(i2c_1, STANDARD_MODE);
     Acc_Init();
     cJSON_Parsing();
+    cJSON_Generate();
     if (check())
     {
         OUT_LOG("I2CC OK");
