@@ -216,23 +216,6 @@ static void main_task_thread(void *param)
     char version_buf[128] = {0};
     ql_dev_get_firmware_version(version_buf, sizeof(version_buf));
     OUT_LOG("Phien phan mem hien tai:  %s\n", version_buf);
-<<<<<<< HEAD
-    // ql_CamInit(320, 240);
-    // ql_CamPowerOn();
-    // Acc_Init();
-    // if (check())
-    // {
-    //     OUT_LOG("I2C OK");
-    //     OUT_LOG("THANH CONG\n");
-    //     // int x = GetData(0x2B, 0x2A);
-
-    //     // if(x!=0) OUT_LOG("Du lieu ACC:%d", x);
-    // }
-    // else
-    // {
-    //     OUT_LOG("i2c failed\n");
-    // }
-=======
     ql_CamInit(320, 240);
     ql_CamPowerOn();
     ql_I2cInit(i2c_1, STANDARD_MODE);
@@ -249,7 +232,6 @@ static void main_task_thread(void *param)
     {
         OUT_LOG("i2c failed\n");
     }
->>>>>>> 1497f6cd1ed21d32c94509739ceafdc232387e15
     // PIN24 GPIO2 (FUNC0)
     ql_pin_set_func(41, 0);
     ql_pin_set_func(42, 0);
@@ -265,21 +247,21 @@ static void main_task_thread(void *param)
     // Init
     SendEventToThread(main_task, INIT_CONFIG);
 
-    acc_init();
-    if (acc_check())
-    {
-        OUT_LOG("I2C OK");
-        OUT_LOG("THANH CONG\n");
-        // int x = GetData(0x2B, 0x2A);
+    // acc_init();
+    // if (acc_check())
+    // {
+    //     OUT_LOG("I2C OK");
+    //     OUT_LOG("THANH CONG\n");
+    //     // int x = GetData(0x2B, 0x2A);
 
-        // if(x!=0) OUT_LOG("Du lieu ACC:%d", x);
-    }
-    else
-    {
-        OUT_LOG("i2c failed\n");
-    }
+    //     // if(x!=0) OUT_LOG("Du lieu ACC:%d", x);
+    // }
+    // else
+    // {
+    //     OUT_LOG("i2c failed\n");
+    // }
 
-    // SendEventToThread(gnss_task, QL_EVENT_APP_START + 21);
+
 
     while (1)
     {
@@ -301,18 +283,6 @@ static void main_task_thread(void *param)
             Led2 ^= 1;
             OUT_LOG("TIMER CT CHINH:\n");
             char buff[256] = {0};
-            if (acc_check())
-            {
-                OUT_LOG("I2C OK");
-                OUT_LOG("THANH CONG\n");
-                // int x = GetData(0x2B, 0x2A);
-
-                // if(x!=0) OUT_LOG("Du lieu ACC:%d", x);
-            }
-            else
-            {
-                OUT_LOG("i2cthat bai\n");
-            }
 
             //  int x,y,z;
             // char buff3[256] = {0};
