@@ -31,7 +31,7 @@
 #define WRITE_TO_FILESIZE	(1024*5)		
 #define QL_VERSION_MAX 256
 #define HTTP_HEAD_RANGE_LENGTH_MAX  50
-#define HTTP_DLOAD_URL                      "http://broker.simus.vn/api/dl/firmware?k=cbce729c-6f07-11ed-9b65-d6d2c8169f23&s=abcdef&v=1.0"
+#define HTTP_DLOAD_URL                      "http://broker.simus.vn/api/dl/firmware?k=000d1078-7326-11ed-ac26-d6d2c8169f23&s=abcdef&v=1.0"
 
 
 

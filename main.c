@@ -121,7 +121,7 @@ void timer_callback(void)
         SendEventToThread(main_task, MAIN_TICK_100MS);
     }
 
-    if (++tickCount3000MS > 200)
+    if (++tickCount3000MS > 500)
     {
         tickCount3000MS = 0;
         SendEventToThread(main_task, MAIN_TICK_3000MS);
@@ -188,12 +188,17 @@ uint8_t DebugInit(void)
 extern print_GPS(char *dat);
 extern pub_mqtt(char *topic, char *mess);
 extern GetData(unsigned char Haddress, unsigned char Laddress);
+extern print_ACC();
+extern void GPS_task_thread(void *param);
+extern void mqtt_app_thread(void *arg);
+extern void sms_demo_task(void *param);
+extern void ql_i2c_demo_thread(void *param);
+extern void ql_gnss_demo_thread(void *param);
+extern void get_data(unsigned char *h, unsigned char *m, unsigned char *s);
 
 static void main_task_thread(void *param)
 {
-
     ql_event_t event;
-
     DebugInit();
     // string x="\r du lieu GNSS =>>> \n";
     // ql_uart_write(QL_UART_PORT_1,x,x.length());
@@ -221,6 +226,8 @@ static void main_task_thread(void *param)
         OUT_LOG("i2c failed\n");
     }
     // PIN24 GPIO2 (FUNC0)
+    ql_pin_set_func(41, 0);
+    ql_pin_set_func(42, 0);
     ql_pin_set_func(24, 0);
     ql_gpio_init(GPIO_2, GPIO_OUTPUT, PULL_NONE, LVL_HIGH);
 
@@ -233,7 +240,21 @@ static void main_task_thread(void *param)
     // Init
     SendEventToThread(main_task, INIT_CONFIG);
 
-    // SendEventToThread(gnss_task, QL_EVENT_APP_START + 21);
+    // acc_init();
+    // if (acc_check())
+    // {
+    //     OUT_LOG("I2C OK");
+    //     OUT_LOG("THANH CONG\n");
+    //     // int x = GetData(0x2B, 0x2A);
+
+    //     // if(x!=0) OUT_LOG("Du lieu ACC:%d", x);
+    // }
+    // else
+    // {
+    //     OUT_LOG("i2c failed\n");
+    // }
+
+
 
     while (1)
     {
@@ -255,36 +276,29 @@ static void main_task_thread(void *param)
             Led2 ^= 1;
             OUT_LOG("TIMER CT CHINH:\n");
             char buff[256] = {0};
-            char buff3[256] = {0};
-            print_GPS(&buff);
-            strcpy(buff3, buff);
-            if (check())
-            {
-                OUT_LOG("I2CC OK");
-                OUT_LOG("THANH CONG\n");
-                int x = GetData(0x19, 0x18);
-                OUT_LOG("Du lieu ACC X:%d\n", x);
-                int y = GetData(0x2D, 0x2C);
-                OUT_LOG("Du lieu ACC Y:%d\n", y);
-            }
-            else
-            {
-                OUT_LOG("i2c failed\n");
-            }
-            //          strcat(buff3, buff2);
-            pub_mqtt(topic_rec, buff3);
+
+            //  int x,y,z;
+            // char buff3[256] = {0};
+            // print_GPS(&buff);
+            // strcpy(buff3, buff);
+            //     if (check())
+            //     {
+            //         OUT_LOG("I2CC OK");
+            //         //print_ACC();
+            //         x=GetData(0x29,0x28);
+            //         y=GetData(0x2B,0X2A);
+            //         z=GetData(0X2D,0X2C);
+            //         OUT_LOG("x: %d y:%d z:%d\n",x,y,z);
+            //    }
+            //     else
+            //     {
+            //         OUT_LOG("i2c failed\n");
+            //     }
+            // //          strcat(buff3, buff2);
+            // pub_mqtt(topic_rec, buff);
             // ql_gpio_set_level(GPIO_2, Led==0?LVL_LOW:LVL_HIGH);
-            OUT_LOG("DU LIEU LAY DC:%s\n", buff3);
+            // OUT_LOG("DU LIEU LAY DC:%s\n", buff3);
             ql_gpio_set_level(GPIO_22, Led2 == 0 ? LVL_LOW : LVL_HIGH);
-            // ql_rtos_task_get_userdata(gnss_task,&buff);
-            //                  QlOSStatus ql_rtos_task_get_userdata
-            //  (
-
-            // 	ql_task_t taskRef, /* OS task reference	*/
-            // 	void **userData     /* The user data of pointer type */
-            // );
-
-            // ql_uart_write(QL_UART_PORT_1,"\r\r========== DU LIEU GPS : ==========\r",39);
             break;
 
         default:
@@ -299,8 +313,6 @@ extern void mqtt_app_thread(void *arg);
 extern void sms_demo_task(void *param);
 extern void ql_i2c_demo_thread(void *param);
 extern void ql_gnss_demo_thread(void *param);
-extern Acc_Init();
-extern check();
 
 // extern ql_gnss_app_init(void);
 
@@ -344,8 +356,8 @@ int appimg_enter(void *param)
     // err = ql_rtos_task_create(&gnss_task, 5 * 1024, 25, "GNSS_task",  GPS_task_thread, NULL,3);
     // ql_sms_app_init();
     // ql_i2c_demo_init();
-    ql_mqtt_app_init();
-    // ql_gnss_app_init();
+    // ql_mqtt_app_init();
+    //   ql_gnss_app_init();
     // ql_fota_http_app_init();
 
     return err;

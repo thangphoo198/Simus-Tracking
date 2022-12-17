@@ -64,7 +64,11 @@ static void mqtt_inpub_data_cb(mqtt_client_t *client, void *arg, int pkt_id, con
         if (cJSON_IsString(cmd))
         {
             char *val = cmd->valuestring;
+<<<<<<< HEAD
             QL_MQTT_LOG("[cJSON_Test] get imeiAdress:%s", val);
+=======
+            QL_MQTT_LOG("get CMD :%s", val);
+>>>>>>> 3fe06e0bf63bddce127d66558b1448de252346cf
             if (strcmp(val, "CMD_FOTA") == 0)
             {
                 QL_MQTT_LOG("co lenh FOTA tu APP\n");
@@ -122,6 +126,7 @@ static void mqtt_inpub_data_cb(mqtt_client_t *client, void *arg, int pkt_id, con
             }
         }
     }
+    cJSON_Delete(pJsonRoot);
 }
 
 static void mqtt_disconnect_result_cb(mqtt_client_t *client, void *arg, int err)
