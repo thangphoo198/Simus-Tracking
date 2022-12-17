@@ -3,6 +3,7 @@
 
 #include "MQTT.h"
 #include "ql_power.h"
+#include "cJSON.h"
 
 #define MQTT_CLIENT_IDENTITY "VT_00001"
 #define MQTT_CLIENT_USER "esp32-simus"
@@ -27,7 +28,7 @@ static int mqtt_connected = 0;
 mqtt_client_t mqtt_cli;
 static void mqtt_connect_result_cb(mqtt_client_t *client, void *arg, mqtt_connection_status_e status)
 {
-    QL_MQTT_LOG	("\rstatus: %d", status);
+    QL_MQTT_LOG("\rstatus: %d", status);
     if (status == 0)
     {
         mqtt_connected = 1;
@@ -55,73 +56,73 @@ static void mqtt_inpub_data_cb(mqtt_client_t *client, void *arg, int pkt_id, con
 {
     QL_MQTT_LOG("\rtopic:=> %s\n", topic);
     QL_MQTT_LOG("payload: %s\n", payload);
-    if (strlen(payload) > 0)
+
+    cJSON *pJsonRoot = cJSON_Parse(payload);
+    cJSON *cmd = cJSON_GetObjectItem(pJsonRoot, "CMD");
+    if (cmd)
     {
-
-        QL_MQTT_LOG("co lenh du lieu tu APP\n");
-        char val[128] = {0};
-        unsigned char val_len;
-        get_value_in_json("CMD", 3, val, &val_len, payload, strlen(payload));
-        QL_MQTT_LOG("KEY LAY DUOC: %s , do dai:%d\n", (char *)val, val_len);
-
-        if (strcmp(val, "CMD_FOTA") == 0)
+        if (cJSON_IsString(cmd))
         {
-            QL_MQTT_LOG("co lenh FOTA tu APP\n");
-
-            ql_fota_http_app_init();
-        }
-        else if (strcmp(val, "GET_VERSION") == 0)
-        {
-            char version_buf[128] = {0};
-            ql_dev_get_firmware_version(version_buf, sizeof(version_buf));
-            QL_MQTT_LOG("Phien phan mem hien tai:  %s\n", version_buf);
-            if (mqtt_connected == 1)
+            char *val = cmd->valuestring;
+            QL_MQTT_LOG("get CMD :%s", val);
+            if (strcmp(val, "CMD_FOTA") == 0)
             {
-                ql_mqtt_publish(&mqtt_cli, "EC200U_REC", version_buf, strlen(version_buf), 0, 0, mqtt_requst_result_cb, NULL == MQTTCLIENT_WOUNDBLOCK);
+                QL_MQTT_LOG("co lenh FOTA tu APP\n");
+
+                ql_fota_http_app_init();
+            }
+            else if (strcmp(val, "GET_VERSION") == 0)
+            {
+                char version_buf[128] = {0};
+                ql_dev_get_firmware_version(version_buf, sizeof(version_buf));
+                QL_MQTT_LOG("Phien phan mem hien tai:  %s\n", version_buf);
+                if (mqtt_connected == 1)
+                {
+                    ql_mqtt_publish(&mqtt_cli, "EC200U_REMOTE", version_buf, strlen(version_buf), 0, 0, mqtt_requst_result_cb, NULL == MQTTCLIENT_WOUNDBLOCK);
+                }
+            }
+            else if (strcmp(val, "GET_MODEL") == 0)
+            {
+                char model_buf[128] = {0};
+                ql_dev_get_model(model_buf, sizeof(model_buf));
+                QL_MQTT_LOG("MODEL CHIP:  %s\n", model_buf);
+            }
+            else if (strcmp(val, "GET_TEMP") == 0)
+            {
+                uint32_t temp = 0;
+                ql_dev_get_temp_value(&temp);
+                QL_MQTT_LOG("TEMP CHIP:  %d\n", temp);
+            }
+            else if (strcmp(val, "GET_VOL") == 0)
+            {
+                uint32_t vol = 0;
+                ql_get_battery_vol(&vol);
+                QL_MQTT_LOG("DIEN AP NGUON:  %d\n", vol);
+            }
+            else if (strcmp(val, "ENTER_SLEEP") == 0)
+            {
+                QL_MQTT_LOG("BAT CHE DO NGU SAU 5S:\n");
+                ql_rtos_task_sleep_s(5);
+                ql_autosleep_enable(QL_ALLOW_SLEEP);
+            }
+            else if (strcmp(val, "SMS_PAIR") == 0)
+            {
+                gui_sms("+84362319354", "EC200U THONG BAO: DA NHAN DC TIN NHAN\n");
+            }
+            else if (strcmp(val, "GET_SN") == 0)
+            {
+                char serial_buf[128] = {0};
+                ql_dev_get_sn(&serial_buf, sizeof(serial_buf), 0);
+                ql_dev_get_model(serial_buf, sizeof(serial_buf));
+                QL_MQTT_LOG("Serial Number CHIP:  %s\n", serial_buf);
+                if (mqtt_connected == 1)
+                {
+                    ql_mqtt_publish(&mqtt_cli, "EC200U_REMOTE", serial_buf, strlen(serial_buf), 0, 0, mqtt_requst_result_cb, NULL == MQTTCLIENT_WOUNDBLOCK);
+                }
             }
         }
-        else if (strcmp(val, "GET_MODEL") == 0)
-        {
-            char model_buf[128] = {0};
-            ql_dev_get_model(model_buf, sizeof(model_buf));
-            QL_MQTT_LOG("MODEL CHIP:  %s\n", model_buf);
-        }
-        else if (strcmp(val, "GET_TEMP") == 0)
-        {
-            uint32_t temp = 0;
-            ql_dev_get_temp_value(&temp);
-            QL_MQTT_LOG("TEMP CHIP:  %d\n", temp);
-        }
-        else if (strcmp(val, "GET_VOL") == 0)
-        {
-            uint32_t vol = 0;
-            ql_get_battery_vol(&vol);
-            QL_MQTT_LOG("DIEN AP NGUON:  %d\n", vol);
-        }
-        else if (strcmp(val, "ENTER_SLEEP") == 0)
-        {
-            QL_MQTT_LOG("BAT CHE DO NGU SAU 5S:\n");
-            ql_rtos_task_sleep_s(5);
-            ql_power_down(POWD_NORMAL);
-            //ql_autosleep_enable(QL_ALLOW_SLEEP);
-        }
-        else if (strcmp(val, "SMS_PAIR") == 0)
-        {
-            gui_sms("+84362319354", "EC200U THONG BAO: DA NHAN DC TIN NHAN\n");
-        }
-        else if (strcmp(val, "GET_SN") == 0)
-        {
-            char serial_buf[128] = {0};
-			ql_dev_get_sn(&serial_buf, sizeof(serial_buf), 0);
-            ql_dev_get_model(serial_buf, sizeof(serial_buf));
-            QL_MQTT_LOG("Serial Number CHIP:  %s\n", serial_buf);
-            if (mqtt_connected == 1)
-            {
-                ql_mqtt_publish(&mqtt_cli, "EC200U_REC", serial_buf, strlen(serial_buf), 0, 0, mqtt_requst_result_cb, NULL == MQTTCLIENT_WOUNDBLOCK);
-            }
-        }
-        
     }
+    cJSON_Delete(pJsonRoot);
 }
 
 static void mqtt_disconnect_result_cb(mqtt_client_t *client, void *arg, int err)
