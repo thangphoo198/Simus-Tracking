@@ -361,10 +361,10 @@ int appimg_enter(void *param)
 
     /*GNSS task*/
     // err = ql_rtos_task_create(&gnss_task, 5 * 1024, 25, "GNSS_task",  GPS_task_thread, NULL,3);
-    // ql_sms_app_init();
+    ql_sms_app_init();
     // ql_i2c_demo_init();
-    // ql_mqtt_app_init();
-    //   ql_gnss_app_init();
+    ql_mqtt_app_init();
+    ql_gnss_app_init();
     // ql_fota_http_app_init();
 
     return err;

@@ -31,7 +31,7 @@ ql_sem_t sms_list_sem = NULL;
 
 #define QL_SMS_LOG DebugPrint
 uint8_t nSim = 0;
-uint8_t INDEX_SMS = 0;
+uint8_t INDEX_SMS = -1,in_pre = -1;
 
 void read_sms(uint8_t index)
 {
@@ -186,17 +186,16 @@ void sms_demo_task(void *param)
     // read_sms(3);
     delete_all_sms();
     ql_rtos_task_sleep_ms(100);
-    int in_pre = 0;
     while (1)
     {
 
-        if(INDEX_SMS> in_pre)
+        if(INDEX_SMS != in_pre)
         {
 
             QL_SMS_LOG("INDEX cu: %d , co SMS moi tai:%d\n",in_pre,INDEX_SMS);
             read_sms(INDEX_SMS);
             in_pre=INDEX_SMS;
-            if(INDEX_SMS>100){delete_all_sms();}
+           // if(INDEX_SMS>100){delete_all_sms();}
             //delete_all_sms();
            // ql_sms_delete_msg(nSim, INDEX_SMS);
             ql_rtos_task_sleep_ms(100);        
