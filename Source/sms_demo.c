@@ -199,6 +199,7 @@ void sms_demo_task(void *param)
             //delete_all_sms();
            // ql_sms_delete_msg(nSim, INDEX_SMS);
             ql_rtos_task_sleep_ms(100);        
+            
             //delete_all_sms();
 
         }
