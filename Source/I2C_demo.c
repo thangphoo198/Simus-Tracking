@@ -36,7 +36,6 @@ WHEN              WHO         WHAT, WHERE, WHY
 #include "ql_api_camera.h"
 #include "ql_i2c.h"
 #include "I2C_demo.h"
-#include "i2c.h"
 
 /*===========================================================================
  * Macro Definition

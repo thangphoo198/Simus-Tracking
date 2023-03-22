@@ -209,42 +209,42 @@ static void ql_gnss_demo_thread(void *param)
                     }
                     memset(nmea_buff, 0, sizeof(nmea_buff));
                     memcpy(nmea_buff, start, jmin(sizeof(nmea_buff) - 1, end - start - 1));
-                   // QL_GNSSDEMO_LOG("du lieu GPS: %s\r\n", nmea_buff);
+                    QL_GNSSDEMO_LOG("\r \n GPS:=> %s\r\n", nmea_buff);
                     /* nmea string parse */
                     nmea = nmea_parse(start, end - start + 1, 1);
                     if (nmea)
                     {
                         ret = nmea_value_update(nmea, &g_gps_data);
                         
-                        if (ret == 0)
-                        {
-                            //QL_GNSSDEMO_LOG("DU lieu nmea hop le\n");
-                            QL_GNSSDEMO_LOG("Vi do la:%f,Kinh do:%f tin hieu:%d,toc do:%f \n",g_gps_data.latitude,g_gps_data.longitude,g_gps_data.gps_signal,g_gps_data.gps_speed);
+                        // if (ret == 0)
+                        // {
+                        //     //QL_GNSSDEMO_LOG("DU lieu nmea hop le\n");
+                        //     QL_GNSSDEMO_LOG("Vi do la:%f,Kinh do:%f tin hieu:%d,toc do:%f \n",g_gps_data.latitude,g_gps_data.longitude,g_gps_data.gps_signal,g_gps_data.gps_speed);
 
-                            // char *val="$GNRMC,141854.00,A,2100.50925,N,10546.92273,E,0.000,,011222,,,A,V*18";
-                            // int ret = nmea_parse_rmc(nmea, val);
-                            // if(ret==0)
-                            // {
-                            // int x= nmea_value_update(nmea, &g_gps_data);
-                            // if(x==0)
-                            // {
+                        //     // char *val="$GNRMC,141854.00,A,2100.50925,N,10546.92273,E,0.000,,011222,,,A,V*18";
+                        //     // int ret = nmea_parse_rmc(nmea, val);
+                        //     // if(ret==0)
+                        //     // {
+                        //     // int x= nmea_value_update(nmea, &g_gps_data);
+                        //     // if(x==0)
+                        //     // {
 
-                            //     QL_GNSSDEMO_LOG("KINH DO:%f,%f VI DO\n",g_gps_data.latitude,g_gps_data.longitude);
-                            // }
-                            // }
-                            // else
-                            // {
-                            //      QL_GNSSDEMO_LOG("update failed\n");
+                        //     //     QL_GNSSDEMO_LOG("KINH DO:%f,%f VI DO\n",g_gps_data.latitude,g_gps_data.longitude);
+                        //     // }
+                        //     // }
+                        //     // else
+                        //     // {
+                        //     //      QL_GNSSDEMO_LOG("update failed\n");
 
-                            // }
+                        //     // }
                             
-                        }
-                        else
-                        {
-                            nmea_dbg_log("nmea_parse_rmc failed. \r\n");
-                            // goto _error;
-                            QL_GNSSDEMO_LOG("nmea_value_update error GSV:%s\r\n", nmea_buff);
-                        }
+                        // }
+                        // else
+                        // {
+                        //     nmea_dbg_log("nmea_parse_rmc failed. \r\n");
+                        //     // goto _error;
+                        //     QL_GNSSDEMO_LOG("nmea_value_update error GSV:%s\r\n", nmea_buff);
+                        // }
                         // QL_GNSSDEMO_LOG("Vi do la:%.6f,Kinh do:%.6f\n tin hieu:%d,toc do:%.2f",g_gps_data.latitude,g_gps_data.longitude,g_gps_data.gps_signal,g_gps_data.gps_speed);
                         // QL_GNSSDEMO_LOG("tin hieu:%d,toc do:%.2f YEAR:%d \n", g_gps_data.gps_signal, g_gps_data.gps_speed,g_gps_data.time.tm_year);
                         //  g_gps_data->
