@@ -54,6 +54,7 @@ char *topic_remote = "EC200U_REMOTE";
 				 "\"hexArry\": [31, 56, 36, 1365, 263]\r\n"                                          \
 				 "}\r\n"
 
+//JSON解析
 
 void cJSON_Parsing()
 {
@@ -79,35 +80,42 @@ void cJSON_Parsing()
 }
 
 
-// void cJSON_Generate()
-// {
-// 	OUT_LOG("[cJSON_Test] cJSON_Generate Start");
-// 	cJSON *pRoot = cJSON_CreateObject();
+void cJSON_Generate()
+{
+	//取一下本地的station的mac地址，保存在全局变量tempMessage
+	OUT_LOG("[cJSON_Test] cJSON_Generate Start");
+	cJSON *pRoot = cJSON_CreateObject();
 
-// 	char tempMessage[] = "8661111111111111";s
-// 	cJSON_AddStringToObject(pRoot, "imei", tempMessage);
+	//新增一个字段imei到根点，数值是tempMessage
+	char tempMessage[] = "8661111111111111";
+	cJSON_AddStringToObject(pRoot, "imei", tempMessage);
 
-// 	//新增一个字段number到根点，数值是2
-// 	cJSON_AddNumberToObject(pRoot, "number", 2020);
+	//新增一个字段number到根点，数值是2
+	cJSON_AddNumberToObject(pRoot, "number", 2020);
 
-// 	cJSON *pValue = cJSON_CreateObject();
-// 	cJSON_AddStringToObject(pValue, "name", "cx");
-// 	cJSON_AddNumberToObject(pValue, "age", 17);
-// 	cJSON_AddItemToObject(pRoot, "value", pValue);
+	cJSON *pValue = cJSON_CreateObject();
+	cJSON_AddStringToObject(pValue, "name", "cx");
+	cJSON_AddNumberToObject(pValue, "age", 17);
+	cJSON_AddItemToObject(pRoot, "value", pValue);
 
-// 	//数组初始化
-// 	int hex[5] = {11, 12, 13, 14, 15};
-// 	cJSON *pHex = cJSON_CreateIntArray(hex, 5); //创建一个长度为5的int型的数组json元素
-// 	cJSON_AddItemToObject(pRoot, "hex", pHex);	//将数组元素添加进pRoot
+	//数组初始化
+	int hex[5] = {11, 12, 13, 14, 15};
+	cJSON *pHex = cJSON_CreateIntArray(hex, 5); //创建一个长度为5的int型的数组json元素
+	cJSON_AddItemToObject(pRoot, "hex", pHex);	//将数组元素添加进pRoot
 
-// 	char *s = cJSON_Print(pRoot);
-// 	OUT_LOG("[cJSON_Test] creatJson:%s\n", s);
-// 	//释放内存
-// 	cJSON_free((void *)s);
+	char *s = cJSON_Print(pRoot);
+	OUT_LOG("[cJSON_Test] creatJson:%s", s);
+	//释放内存
+	cJSON_free((void *)s);
 
-// 	cJSON_Delete(pRoot);
-// 	OUT_LOG("[cJSON_Test] cJSON_Generate Stop");
-// }
+	//释放内存
+	//cJSON_Delete(pHex);
+	//释放内存
+	//cJSON_Delete(pValue);
+	//释放内存
+	cJSON_Delete(pRoot);
+	OUT_LOG("[cJSON_Test] cJSON_Generate Stop");
+}
 
 
 
@@ -188,36 +196,43 @@ uint8_t DebugInit(void)
 extern print_GPS(char *dat);
 extern pub_mqtt(char *topic, char *mess);
 extern GetData(unsigned char Haddress, unsigned char Laddress);
+extern print_ACC();
+extern void GPS_task_thread(void *param);
+extern void mqtt_app_thread(void *arg);
+extern void sms_demo_task(void *param);
+extern void ql_i2c_demo_thread(void *param);
+extern void ql_gnss_demo_thread(void *param);
+extern void get_data(unsigned char *h, unsigned char *m, unsigned char *s);
 
 static void main_task_thread(void *param)
 {
-
     ql_event_t event;
-
     DebugInit();
     // string x="\r du lieu GNSS =>>> \n";
     // ql_uart_write(QL_UART_PORT_1,x,x.length());
+
     char version_buf[128] = {0};
     ql_dev_get_firmware_version(version_buf, sizeof(version_buf));
-    OUT_LOG("Phien phan mem hien tai:  %s\n", version_buf);
+    OUT_LOG("\nPhien phan mem hien tai:  %s\n", version_buf);
     //ql_CamInit(320, 240);
    // ql_CamPowerOn();
     //ql_I2cInit(i2c_1, STANDARD_MODE);
    // Acc_Init();
     cJSON_Parsing();
-   // cJSON_Generate();
-    // if (check())
-    // {
-    //     OUT_LOG("I2CC OK");
-    //     OUT_LOG("THANH CONG\n");
-    //     int x = GetData(0x2B, 0x2A);
-    //     OUT_LOG("Du lieu ACC:%d", x);
-    // }
-    // else
-    // {
-    //     OUT_LOG("i2c failed\n");
-    // }
+    if (check())
+    {
+        OUT_LOG("I2CC OK");
+        OUT_LOG("THANH CONG\n");
+        int x = GetData(0x2B, 0x2A);
+        OUT_LOG("Du lieu ACC:%d", x);
+    }
+    else
+    {
+        OUT_LOG("i2c failed\n");
+    }
     // PIN24 GPIO2 (FUNC0)
+    ql_pin_set_func(41, 0);
+    ql_pin_set_func(42, 0);
     ql_pin_set_func(24, 0);
     ql_gpio_init(GPIO_2, GPIO_OUTPUT, PULL_NONE, LVL_HIGH);
 
@@ -230,7 +245,21 @@ static void main_task_thread(void *param)
     // Init
     SendEventToThread(main_task, INIT_CONFIG);
 
-    // SendEventToThread(gnss_task, QL_EVENT_APP_START + 21);
+    // acc_init();
+    // if (acc_check())
+    // {
+    //     OUT_LOG("I2C OK");
+    //     OUT_LOG("THANH CONG\n");
+    //     // int x = GetData(0x2B, 0x2A);
+
+    //     // if(x!=0) OUT_LOG("Du lieu ACC:%d", x);
+    // }
+    // else
+    // {
+    //     OUT_LOG("i2c failed\n");
+    // }
+
+
 
     while (1)
     {
@@ -250,15 +279,12 @@ static void main_task_thread(void *param)
 
         case MAIN_TICK_3000MS:
             Led2 ^= 1;
-            OUT_LOG("TIMER CT CHINH:\n");
-            char buff[256] = {0};
-            char buff3[256] = {0};
-            print_GPS(&buff);
-            strcpy(buff3, buff);
-            //          strcat(buff3, buff2);
-            pub_mqtt(topic_rec, buff3);
+            OUT_LOG("\nTIMER CT CHINH:\n");
+            //char buff[256] = {0};
+           // print_GPS(&buff);
+            //pub_mqtt(topic_rec, buff);
             // ql_gpio_set_level(GPIO_2, Led==0?LVL_LOW:LVL_HIGH);
-            OUT_LOG("DU LIEU LAY DC:%s\n", buff3);
+            // OUT_LOG("DU LIEU LAY DC:%s\n", buff3);
             ql_gpio_set_level(GPIO_22, Led2 == 0 ? LVL_LOW : LVL_HIGH);
             break;
 
@@ -274,8 +300,6 @@ extern void mqtt_app_thread(void *arg);
 extern void sms_demo_task(void *param);
 extern void ql_i2c_demo_thread(void *param);
 extern void ql_gnss_demo_thread(void *param);
-extern Acc_Init();
-extern check();
 
 // extern ql_gnss_app_init(void);
 
@@ -317,9 +341,8 @@ int appimg_enter(void *param)
 
     /*GNSS task*/
     // err = ql_rtos_task_create(&gnss_task, 5 * 1024, 25, "GNSS_task",  GPS_task_thread, NULL,3);
-     ql_sms_app_init();
+    ql_sms_app_init();
     // ql_i2c_demo_init();
-
     ql_mqtt_app_init();
     ql_gnss_app_init();
     // ql_fota_http_app_init();

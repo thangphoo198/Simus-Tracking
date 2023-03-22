@@ -33,17 +33,18 @@ char gnss_device_info[100] = {0};
 static uint32 prev_ms_gsv = 0;
 
 unsigned char nmea_buff[256];
+unsigned char nmea_buff2[256];
 static bool tick_overflow = FALSE;
 /*===========================================================================
  * Functions
  ===========================================================================*/
-
+extern pub_mqtt(char *topic, char *mess);
 void print_GPS(char *dat)
 {
     int i = 0;
     for (i = 0; i < strlen(nmea_buff); i++)
     {
-        dat[i] = nmea_buff[i];
+        dat[i] = nmea_buff2[i];
     }
 }
 
@@ -209,52 +210,31 @@ static void ql_gnss_demo_thread(void *param)
                     }
                     memset(nmea_buff, 0, sizeof(nmea_buff));
                     memcpy(nmea_buff, start, jmin(sizeof(nmea_buff) - 1, end - start - 1));
-                    QL_GNSSDEMO_LOG("\r \n GPS:=> %s\r\n", nmea_buff);
+                    //QL_GNSSDEMO_LOG("\r \n GPS:=> %s\r\n", nmea_buff);
                     /* nmea string parse */
-                    nmea = nmea_parse(start, end - start + 1, 1);
-                    if (nmea)
+                   // nmea = nmea_parse(start, end - start + 1, 1);
+                    nmea_type x = nmea_get_type(start);
+                    if(x== NMEA_RMC || x== NMEA_GGA)
                     {
-                        ret = nmea_value_update(nmea, &g_gps_data);
+                        nmea = nmea_parse(start, end - start + 1, 1);                      
+                        QL_GNSSDEMO_LOG("\nGPS=>:%s\n",nmea_buff);
                         
-                        // if (ret == 0)
-                        // {
-                        //     //QL_GNSSDEMO_LOG("DU lieu nmea hop le\n");
-                        //     QL_GNSSDEMO_LOG("Vi do la:%f,Kinh do:%f tin hieu:%d,toc do:%f \n",g_gps_data.latitude,g_gps_data.longitude,g_gps_data.gps_signal,g_gps_data.gps_speed);
-
-                        //     // char *val="$GNRMC,141854.00,A,2100.50925,N,10546.92273,E,0.000,,011222,,,A,V*18";
-                        //     // int ret = nmea_parse_rmc(nmea, val);
-                        //     // if(ret==0)
-                        //     // {
-                        //     // int x= nmea_value_update(nmea, &g_gps_data);
-                        //     // if(x==0)
-                        //     // {
-
-                        //     //     QL_GNSSDEMO_LOG("KINH DO:%f,%f VI DO\n",g_gps_data.latitude,g_gps_data.longitude);
-                        //     // }
-                        //     // }
-                        //     // else
-                        //     // {
-                        //     //      QL_GNSSDEMO_LOG("update failed\n");
-
-                        //     // }
-                            
-                        // }
-                        // else
-                        // {
-                        //     nmea_dbg_log("nmea_parse_rmc failed. \r\n");
-                        //     // goto _error;
-                        //     QL_GNSSDEMO_LOG("nmea_value_update error GSV:%s\r\n", nmea_buff);
-                        // }
-                        // QL_GNSSDEMO_LOG("Vi do la:%.6f,Kinh do:%.6f\n tin hieu:%d,toc do:%.2f",g_gps_data.latitude,g_gps_data.longitude,g_gps_data.gps_signal,g_gps_data.gps_speed);
-                        // QL_GNSSDEMO_LOG("tin hieu:%d,toc do:%.2f YEAR:%d \n", g_gps_data.gps_signal, g_gps_data.gps_speed,g_gps_data.time.tm_year);
-                        //  g_gps_data->
-                        if (nmea->data)
+                      // if(strlen(nmea_buff) > 50) { pub_mqtt("EC200U_REC", nmea_buff);}
+                        if (nmea)
                         {
-                            free(nmea->data);
-                            nmea->data = NULL;
+                            // nmea = nmea_parse(start, end - start + 1, 1);
+                            ret = nmea_value_update(nmea, &g_gps_data);
+
+                            //QL_GNSSDEMO_PUSH("kinh do:%f",g_gps_data);
+
+                            if (nmea->data)
+                            {
+                                free(nmea->data);
+                                nmea->data = NULL;
+                            }
+                            free(nmea);
+                            nmea = NULL;
                         }
-                        free(nmea);
-                        nmea = NULL;
                     }
                     if (end == buffer + total_bytes)
                     {
