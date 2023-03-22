@@ -6,14 +6,14 @@
 #include "cJSON.h"
 
 #define MQTT_CLIENT_IDENTITY "VT_00001"
-#define MQTT_CLIENT_USER "esp32-simus"
+#define MQTT_CLIENT_USER "esp32-iot"
 #define MQTT_CLIENT_PASS "thang123"
 
 #define MQTT_CLIENT_ONENET_DEVICENAME "SmartDevice"
 #define MQTT_CLIENT_ONENET_VERSION "2022-11-22"
 
-#define MQTT_CLIENT_SRV_URL "mqtt://broker.simus.vn:1883"        // onenet
-#define MQTT_CLIENT_ONENET_SSL_URL "mqtt://broker.simus.vn:1883" // onenet SSL
+#define MQTT_CLIENT_SRV_URL "mqtt://103.200.20.78:1883"        // onenet
+#define MQTT_CLIENT_ONENET_SSL_URL "mqtt://103.200.20.78:1883" // onenet SSL
 
 #define MQTT_TOPIC_SUB "MQTT_SUB"
 #define MQTT_TOPIC_PUB "MQTT_PUB"
@@ -64,11 +64,7 @@ static void mqtt_inpub_data_cb(mqtt_client_t *client, void *arg, int pkt_id, con
         if (cJSON_IsString(cmd))
         {
             char *val = cmd->valuestring;
-<<<<<<< HEAD
-            QL_MQTT_LOG("[cJSON_Test] get imeiAdress:%s", val);
-=======
             QL_MQTT_LOG("get CMD :%s", val);
->>>>>>> 3fe06e0bf63bddce127d66558b1448de252346cf
             if (strcmp(val, "CMD_FOTA") == 0)
             {
                 QL_MQTT_LOG("co lenh FOTA tu APP\n");
@@ -82,7 +78,7 @@ static void mqtt_inpub_data_cb(mqtt_client_t *client, void *arg, int pkt_id, con
                 QL_MQTT_LOG("Phien phan mem hien tai:  %s\n", version_buf);
                 if (mqtt_connected == 1)
                 {
-                    ql_mqtt_publish(&mqtt_cli, "EC200U_REMOTE", version_buf, strlen(version_buf), 0, 0, mqtt_requst_result_cb, NULL == MQTTCLIENT_WOUNDBLOCK);
+                    ql_mqtt_publish(&mqtt_cli, "EC200U_REC", version_buf, strlen(version_buf), 0, 0, mqtt_requst_result_cb, NULL == MQTTCLIENT_WOUNDBLOCK);
                 }
             }
             else if (strcmp(val, "GET_MODEL") == 0)
@@ -111,7 +107,15 @@ static void mqtt_inpub_data_cb(mqtt_client_t *client, void *arg, int pkt_id, con
             }
             else if (strcmp(val, "SMS_PAIR") == 0)
             {
-                gui_sms("+84362319354", "EC200U THONG BAO: DA NHAN DC TIN NHAN\n");
+                cJSON *sdt = cJSON_GetObjectItem(pJsonRoot, "SDT");
+                char *val1 = sdt->valuestring;
+
+                cJSON *info = cJSON_GetObjectItem(pJsonRoot, "INFO");
+                char *val2 = info->valuestring;
+
+                gui_sms(val1, val2);
+                
+
             }
             else if (strcmp(val, "GET_SN") == 0)
             {

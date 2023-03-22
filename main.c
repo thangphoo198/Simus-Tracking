@@ -115,13 +115,13 @@ void timer_callback(void)
 {
     ql_event_t event;
 
-    if (++tickCount100MS > 0)
+    if (++tickCount100MS > 10)
     {
         tickCount100MS = 0;
         SendEventToThread(main_task, MAIN_TICK_100MS);
     }
 
-    if (++tickCount3000MS > 200)
+    if (++tickCount3000MS > 1000)
     {
         tickCount3000MS = 0;
         SendEventToThread(main_task, MAIN_TICK_3000MS);
@@ -197,29 +197,26 @@ static void main_task_thread(void *param)
     DebugInit();
     // string x="\r du lieu GNSS =>>> \n";
     // ql_uart_write(QL_UART_PORT_1,x,x.length());
-
-    OUT_LOG("DANG khoi tao he thong... \n");
-
     char version_buf[128] = {0};
     ql_dev_get_firmware_version(version_buf, sizeof(version_buf));
     OUT_LOG("Phien phan mem hien tai:  %s\n", version_buf);
-    ql_CamInit(320, 240);
-    ql_CamPowerOn();
-    ql_I2cInit(i2c_1, STANDARD_MODE);
-    Acc_Init();
+    //ql_CamInit(320, 240);
+   // ql_CamPowerOn();
+    //ql_I2cInit(i2c_1, STANDARD_MODE);
+   // Acc_Init();
     cJSON_Parsing();
-    cJSON_Generate();
-    if (check())
-    {
-        OUT_LOG("I2CC OK");
-        OUT_LOG("THANH CONG\n");
-        int x = GetData(0x2B, 0x2A);
-        OUT_LOG("Du lieu ACC:%d", x);
-    }
-    else
-    {
-        OUT_LOG("i2c failed\n");
-    }
+   // cJSON_Generate();
+    // if (check())
+    // {
+    //     OUT_LOG("I2CC OK");
+    //     OUT_LOG("THANH CONG\n");
+    //     int x = GetData(0x2B, 0x2A);
+    //     OUT_LOG("Du lieu ACC:%d", x);
+    // }
+    // else
+    // {
+    //     OUT_LOG("i2c failed\n");
+    // }
     // PIN24 GPIO2 (FUNC0)
     ql_pin_set_func(24, 0);
     ql_gpio_init(GPIO_2, GPIO_OUTPUT, PULL_NONE, LVL_HIGH);
@@ -258,33 +255,11 @@ static void main_task_thread(void *param)
             char buff3[256] = {0};
             print_GPS(&buff);
             strcpy(buff3, buff);
-            if (check())
-            {
-                OUT_LOG("I2CC OK");
-                OUT_LOG("THANH CONG\n");
-                int x = GetData(0x19, 0x18);
-                OUT_LOG("Du lieu ACC X:%d\n", x);
-                int y = GetData(0x2D, 0x2C);
-                OUT_LOG("Du lieu ACC Y:%d\n", y);
-            }
-            else
-            {
-                OUT_LOG("i2c failed\n");
-            }
             //          strcat(buff3, buff2);
             pub_mqtt(topic_rec, buff3);
             // ql_gpio_set_level(GPIO_2, Led==0?LVL_LOW:LVL_HIGH);
             OUT_LOG("DU LIEU LAY DC:%s\n", buff3);
             ql_gpio_set_level(GPIO_22, Led2 == 0 ? LVL_LOW : LVL_HIGH);
-            // ql_rtos_task_get_userdata(gnss_task,&buff);
-            //                  QlOSStatus ql_rtos_task_get_userdata
-            //  (
-
-            // 	ql_task_t taskRef, /* OS task reference	*/
-            // 	void **userData     /* The user data of pointer type */
-            // );
-
-            // ql_uart_write(QL_UART_PORT_1,"\r\r========== DU LIEU GPS : ==========\r",39);
             break;
 
         default:
@@ -342,11 +317,11 @@ int appimg_enter(void *param)
 
     /*GNSS task*/
     // err = ql_rtos_task_create(&gnss_task, 5 * 1024, 25, "GNSS_task",  GPS_task_thread, NULL,3);
-    // ql_sms_app_init();
-    // ql_i2c_demo_init();fsa'
+     ql_sms_app_init();
+    // ql_i2c_demo_init();
 
     ql_mqtt_app_init();
-    // ql_gnss_app_init();
+    ql_gnss_app_init();
     // ql_fota_http_app_init();
 
     return err;
