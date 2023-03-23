@@ -276,6 +276,7 @@ extern void ql_i2c_demo_thread(void *param);
 extern void ql_gnss_demo_thread(void *param);
 extern Acc_Init();
 extern check();
+//extern void lbs_app_thread(void * arg);
 
 // extern ql_gnss_app_init(void);
 
@@ -322,6 +323,9 @@ int appimg_enter(void *param)
 
     ql_mqtt_app_init();
     ql_gnss_app_init();
+    ql_lbs_app_init();
+
+    //err = ql_rtos_task_create(&lbs_task, 16*1024, 23, "lbs_app", lbs_app_thread, NULL, 5);
     // ql_fota_http_app_init();
 
     return err;
