@@ -44,6 +44,7 @@ static void mqtt_state_exception_cb(mqtt_client_t *client)
 
 extern gui_sms(char *sdt, char *noidung);
 extern ql_fota_http_app_init();
+extern print_GPS(char *dat);
 
 static void mqtt_requst_result_cb(mqtt_client_t *client, void *arg, int err)
 {
@@ -81,6 +82,26 @@ static void mqtt_inpub_data_cb(mqtt_client_t *client, void *arg, int pkt_id, con
                     ql_mqtt_publish(&mqtt_cli, "EC200U_REC", version_buf, strlen(version_buf), 0, 0, mqtt_requst_result_cb, NULL == MQTTCLIENT_WOUNDBLOCK);
                 }
             }
+            else if (strcmp(val, "GET_GPS") == 0)
+            {
+                char buf[256] = {0};
+                print_GPS(buf);
+                if (strlen(buf)>50 )
+                {
+                if(mqtt_connected == 1)
+                {
+                    ql_mqtt_publish(&mqtt_cli, "EC200U_REC", buf, strlen(buf), 0, 0, mqtt_requst_result_cb, NULL == MQTTCLIENT_WOUNDBLOCK);
+                }
+                else
+                {
+                if(mqtt_connected == 1)
+                {
+                    ql_mqtt_publish(&mqtt_cli, "EC200U_REC", "khong co GPS!", 15, 0, 0, mqtt_requst_result_cb, NULL == MQTTCLIENT_WOUNDBLOCK);
+                }
+
+            }
+
+            
             else if (strcmp(val, "GET_MODEL") == 0)
             {
                 char model_buf[128] = {0};
