@@ -104,7 +104,7 @@ void cJSON_Generate()
 	cJSON_AddItemToObject(pRoot, "hex", pHex);	//将数组元素添加进pRoot
 
 	char *s = cJSON_Print(pRoot);
-	OUT_LOG("[cJSON_Test] creatJson:%s", s);
+	OUT_LOG("\n[cJSON_Test] creatJson:%s\n", s);
 	//释放内存
 	cJSON_free((void *)s);
 
@@ -219,17 +219,6 @@ static void main_task_thread(void *param)
     //ql_I2cInit(i2c_1, STANDARD_MODE);
    // Acc_Init();
     cJSON_Parsing();
-    if (check())
-    {
-        OUT_LOG("I2CC OK");
-        OUT_LOG("THANH CONG\n");
-        int x = GetData(0x2B, 0x2A);
-        OUT_LOG("Du lieu ACC:%d", x);
-    }
-    else
-    {
-        OUT_LOG("i2c failed\n");
-    }
     // PIN24 GPIO2 (FUNC0)
     ql_pin_set_func(41, 0);
     ql_pin_set_func(42, 0);
@@ -347,7 +336,6 @@ int appimg_enter(void *param)
     // ql_i2c_demo_init();
     ql_mqtt_app_init();
     ql_gnss_app_init();
-    ql_lbs_app_init();
 
     //err = ql_rtos_task_create(&lbs_task, 16*1024, 23, "lbs_app", lbs_app_thread, NULL, 5);
     // ql_fota_http_app_init();
@@ -357,4 +345,5 @@ int appimg_enter(void *param)
 
 void appimg_exit(void)
 {
+
 }

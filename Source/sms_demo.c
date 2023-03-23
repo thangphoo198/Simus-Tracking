@@ -32,6 +32,7 @@ ql_sem_t sms_list_sem = NULL;
 #define QL_SMS_LOG DebugPrint
 uint8_t nSim = 0;
 uint8_t INDEX_SMS = -1,in_pre = -1;
+extern pub_mqtt(char *topic, char *mess);
 
 void read_sms(uint8_t index)
 {
@@ -56,6 +57,7 @@ void read_sms(uint8_t index)
     if (QL_SMS_SUCCESS == ql_sms_read_msg(nSim, index, msg, msg_len, TEXT))
     {
         QL_SMS_LOG("SMS=> %s\n", msg);
+        pub_mqtt("EC200U_REC",msg);
     }
     else
     {
@@ -195,6 +197,8 @@ void sms_demo_task(void *param)
             QL_SMS_LOG("INDEX cu: %d , co SMS moi tai:%d\n",in_pre,INDEX_SMS);
             read_sms(INDEX_SMS);
             in_pre=INDEX_SMS;
+
+            
            // if(INDEX_SMS>100){delete_all_sms();}
             //delete_all_sms();
            // ql_sms_delete_msg(nSim, INDEX_SMS);
