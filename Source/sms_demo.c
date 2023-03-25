@@ -56,7 +56,7 @@ void read_sms(uint8_t index)
     // Read SMS messages as text
     if (QL_SMS_SUCCESS == ql_sms_read_msg(nSim, index, msg, msg_len, TEXT))
     {
-        QL_SMS_LOG("SMS=> %s\n", msg);
+        QL_SMS_LOG("SMS=> %s\n Length:%d", msg,strlen(msg));
         pub_mqtt("EC200U_REC",msg);
     }
     else
