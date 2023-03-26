@@ -13,6 +13,7 @@
 #include "ql_power.h"
 #include "cJSON.h"
 #include "ql_api_nw.h"
+#include "ql_fs.h"
 #define MQTT_CLIENT_IDENTITY "VT_00001"
 #define MQTT_CLIENT_USER "esp32-iot"
 #define MQTT_CLIENT_PASS "thang123"
@@ -37,70 +38,66 @@ static int mqtt_connected = 0;
 mqtt_client_t mqtt_cli;
 ql_nw_cell_info_s cell_info;
 ql_nw_seclection_info_s select_info;
-//extern uint8_t NSIM = 0;
+// extern uint8_t NSIM = 0;
 uint16_t sim_cid;
 int profile_idx = 1;
 
-#define QL_LBS_LOG		DebugPrint
-//#define QL_LBS_LOG_PUSH(msg, ...)	    DebugPrint
+#define QL_LBS_LOG DebugPrint
+// #define QL_LBS_LOG_PUSH(msg, ...)	    DebugPrint
 
 static ql_task_t lbs_task = NULL;
 
-static lbs_client_hndl  lbs_cli = 0;
-static ql_sem_t  lbs_semp;
+static lbs_client_hndl lbs_cli = 0;
+static ql_sem_t lbs_semp;
 
+static lbs_basic_info_t basic_info = {
+    .type = 1,
+    .encrypt = 1,
+    .key_index = 1,
+    .pos_format = 1,
+    .loc_method = 4};
 
-static lbs_basic_info_t  basic_info = {
-     .type = 1,
-     .encrypt = 1,
-     .key_index = 1,
-     .pos_format = 1,
-     .loc_method = 4
-};
-
-static lbs_auth_info_t  auth_info = {
-     .user_name = "quectel",
-     .user_pwd = "123456",
-     .token = "1111111122222222",//"A693EDC90C42E624",
-     .imei = "861687000001091",
-     .rand = 2346
-};
+static lbs_auth_info_t auth_info = {
+    .user_name = "quectel",
+    .user_pwd = "123456",
+    .token = "1111111122222222", //"A693EDC90C42E624",
+    .imei = "861687000001091",
+    .rand = 2346};
 
 static lbs_cell_info_t lbs_cell_info[] = {
-    {
-      .radio = 3,
-      .mcc = 460,
-      .mnc = 0,
-      .lac_id = 0x550B,
-      .cell_id = 0xF2D4A48,
-      .signal = 0,
-      .tac = 3,
-      .bcch = 0,
-      .bsic = 0,
-      .uarfcndl = 0,
-      .psc = 0,
-      .rsrq = 0,
-      .pci = 0,
-      .earfcn = 0
-    }
-};
+    {.radio = 3,
+     .mcc = 460,
+     .mnc = 0,
+     .lac_id = 0x550B,
+     .cell_id = 0xF2D4A48,
+     .signal = 0,
+     .tac = 3,
+     .bcch = 0,
+     .bsic = 0,
+     .uarfcndl = 0,
+     .psc = 0,
+     .rsrq = 0,
+     .pci = 0,
+     .earfcn = 0}};
 
 static void lbs_result_cb(lbs_response_data_t *response_data)
 {
-	int i = 0;
-	if(NULL == response_data || lbs_cli != response_data->hndl)
-	{
-		return;
-	}
+    int i = 0;
+    if (NULL == response_data || lbs_cli != response_data->hndl)
+    {
+        return;
+    }
 
-	QL_LBS_LOG("lbs result: %08X", response_data->result);
-	if(response_data->result == QL_LBS_OK){
-		for(i = 0; i < response_data->pos_num; i++){
-			QL_LBS_LOG("Location[%d]: %f, %f, %d\n", i, response_data->pos_info[i].longitude, 
-						response_data->pos_info[i].latitude, response_data->pos_info[i].accuracy);
-		}
-	}
-	ql_rtos_semaphore_release(lbs_semp);
+    QL_LBS_LOG("lbs result: %08X", response_data->result);
+    if (response_data->result == QL_LBS_OK)
+    {
+        for (i = 0; i < response_data->pos_num; i++)
+        {
+            QL_LBS_LOG("Location[%d]: %f, %f, %d\n", i, response_data->pos_info[i].longitude,
+                       response_data->pos_info[i].latitude, response_data->pos_info[i].accuracy);
+        }
+    }
+    ql_rtos_semaphore_release(lbs_semp);
 }
 
 static void mqtt_connect_result_cb(mqtt_client_t *client, void *arg, mqtt_connection_status_e status)
@@ -132,9 +129,7 @@ static void mqtt_requst_result_cb(mqtt_client_t *client, void *arg, int err)
 
 static void mqtt_inpub_data_cb(mqtt_client_t *client, void *arg, int pkt_id, const char *topic, const unsigned char *payload, unsigned short payload_len)
 {
-    QL_MQTT_LOG("\rtopic:=> %s\n", topic);
-    QL_MQTT_LOG("payload: %s\n", payload);
-
+    QL_MQTT_LOG("topic:%s payload: %s\n", topic, payload);
     cJSON *pJsonRoot = cJSON_Parse(payload);
     cJSON *cmd = cJSON_GetObjectItem(pJsonRoot, "CMD");
     if (cmd)
@@ -162,30 +157,28 @@ static void mqtt_inpub_data_cb(mqtt_client_t *client, void *arg, int pkt_id, con
             else if (strcmp(val, "SMS_KTTK") == 0)
             {
                 char version_buf[128] = {0};
-                gui_sms("191","KTTK");
-            }           
+                gui_sms("191", "KTTK");
+            }
             else if (strcmp(val, "GET_GPS") == 0)
             {
                 char buf[256] = {0};
                 print_GPS(buf);
-                if (strlen(buf)>50 )
+                if (strlen(buf) > 50)
                 {
-                if(mqtt_connected == 1)
-                {
-                    ql_mqtt_publish(&mqtt_cli, "EC200U_REC", buf, strlen(buf), 0, 0, mqtt_requst_result_cb, NULL == MQTTCLIENT_WOUNDBLOCK);
-                }
+                    if (mqtt_connected == 1)
+                    {
+                        ql_mqtt_publish(&mqtt_cli, "EC200U_REC", buf, strlen(buf), 0, 0, mqtt_requst_result_cb, NULL == MQTTCLIENT_WOUNDBLOCK);
+                    }
                 }
                 else
                 {
-                if(mqtt_connected == 1)
-                {
-                    ql_mqtt_publish(&mqtt_cli, "EC200U_REC", "khong co GPS!", 15, 0, 0, mqtt_requst_result_cb, NULL == MQTTCLIENT_WOUNDBLOCK);
+                    if (mqtt_connected == 1)
+                    {
+                        ql_mqtt_publish(&mqtt_cli, "EC200U_REC", "khong co GPS!", 15, 0, 0, mqtt_requst_result_cb, NULL == MQTTCLIENT_WOUNDBLOCK);
+                    }
                 }
-                }
-
             }
 
-            
             else if (strcmp(val, "GET_MODEL") == 0)
             {
                 char model_buf[128] = {0};
@@ -219,8 +212,6 @@ static void mqtt_inpub_data_cb(mqtt_client_t *client, void *arg, int pkt_id, con
                 char *val2 = info->valuestring;
 
                 gui_sms(val1, val2);
-                
-
             }
             else if (strcmp(val, "GET_SN") == 0)
             {
@@ -232,21 +223,40 @@ static void mqtt_inpub_data_cb(mqtt_client_t *client, void *arg, int pkt_id, con
                 {
                     ql_mqtt_publish(&mqtt_cli, "EC200U_REMOTE", serial_buf, strlen(serial_buf), 0, 0, mqtt_requst_result_cb, NULL == MQTTCLIENT_WOUNDBLOCK);
                 }
-            }  
-             else if (strcmp(val, "GET_SIM") == 0)
+            }
+            else if (strcmp(val, "GET_SIM") == 0)
             {
-                unsigned char csq=0;
+                unsigned char csq = 0;
                 int ret;
                 ql_nw_get_csq(NSIM, &csq);
                 QL_MQTT_LOG("ret=0x%x, csq:%d", ret, csq);
-                //read_sim_info();
+                // read_sim_info();
             }
-              else if (strcmp(val, "SMS_DELALL") == 0)
+            else if (strcmp(val, "SMS_DELALL") == 0)
             {
                 delete_all_sms();
+            }
+             else if (strcmp(val, "NWM_SAVE") == 0)
+            {
+                cJSON *info = cJSON_GetObjectItem(pJsonRoot, "INFO");
+                char *val2 = info->valuestring;
+                int err = ql_cust_nvm_fwrite(val2, strlen(val2), 1);
+                if (err)
+                {
+                    QL_MQTT_LOG("Ghi thanh cong\n");
+                }
             }           
+            else if (strcmp(val, "NWM_READ") == 0)
+            {
+                char buffer[100] = {0};
+                int err = ql_cust_nvm_fread(buffer, 100, 1);
+                if (err)
+                {
+                    QL_MQTT_LOG("du lieu doc dc:%s", buffer);
+                }
             }
         }
+    }
     cJSON_Delete(pJsonRoot);
 }
 
@@ -286,10 +296,8 @@ static void mqtt_app_thread(void *arg)
     struct mqtt_connect_client_info_t client_info = {0};
     int is_user_onenet = 0;
 
-
     ql_rtos_task_sleep_s(10);
     ql_rtos_semaphore_create(&mqtt_semp, 0);
-
 
     char *client_id = (char *)malloc(256);
     char *client_user = (char *)malloc(256);
@@ -453,72 +461,75 @@ exit:
 
 void read_sim_info()
 {
-        lbs_option_t  user_option;
-        if(ql_nw_get_cell_info(NSIM, &cell_info)!=QL_NW_SUCCESS)
-        {
-            QL_LBS_LOG("===============lbs get cell info fail===============\n");
-        }
-       int ret = ql_nw_get_selection(NSIM, &select_info);	
-        if(ret != 0){
-    		QL_LBS_LOG("ql_nw_get_selection ret: %d", ret);
-	    }
-        QL_LBS_LOG("nw_act_type=%d",select_info.act);
-        if(select_info.act==QL_NW_ACCESS_TECH_GSM)
-        {
-			QL_LBS_LOG("\n mang GMS\n");
-            lbs_cell_info[0].radio=1;
-            lbs_cell_info[0].mcc = cell_info.gsm_info[0].mcc;
-            lbs_cell_info[0].mnc = cell_info.gsm_info[0].mnc;
-            lbs_cell_info[0].cell_id = cell_info.gsm_info[0].cid;
-            lbs_cell_info[0].lac_id = cell_info.gsm_info[0].lac;
-            lbs_cell_info[0].bsic = cell_info.gsm_info[0].bsic;
-            lbs_cell_info[0].uarfcndl = cell_info.gsm_info[0].arfcn;
-            lbs_cell_info[0].bcch = cell_info.gsm_info[0].arfcn;
-            lbs_cell_info[0].signal=cell_info.gsm_info[0].rssi;
-        }
-        else if(select_info.act==QL_NW_ACCESS_TECH_E_UTRAN)
-        {
-			QL_LBS_LOG("\n mang LTE\n");
-            lbs_cell_info[0].radio=3;
-            lbs_cell_info[0].mcc = cell_info.lte_info[0].mcc;
-            lbs_cell_info[0].mnc = cell_info.lte_info[0].mnc;
-            lbs_cell_info[0].cell_id = cell_info.lte_info[0].cid;
-            lbs_cell_info[0].lac_id = cell_info.lte_info[0].tac;
-            lbs_cell_info[0].tac = cell_info.lte_info[0].tac;
-            lbs_cell_info[0].pci = cell_info.lte_info[0].pci;
-            lbs_cell_info[0].earfcn = cell_info.lte_info[0].earfcn;
-            lbs_cell_info[0].bcch = cell_info.lte_info[0].earfcn;
-            lbs_cell_info[0].signal=cell_info.lte_info[0].rssi;
-        }
-        else
-        {
-            QL_LBS_LOG("\n Thoat \n");
-        }
-        // QL_LBS_LOG("cell infoinfo: radio=%d,mcc=%d,mnc=%d,lac_id=%x,cell_id=%x,signal=%d,tac =%x,bcch=%d,bsic=%d,uarfcndl=%d,psc=%d,rsrq=%d,pci=%d,earfcn=%d",\
+    lbs_option_t user_option;
+    if (ql_nw_get_cell_info(NSIM, &cell_info) != QL_NW_SUCCESS)
+    {
+        QL_LBS_LOG("===============lbs get cell info fail===============\n");
+    }
+    int ret = ql_nw_get_selection(NSIM, &select_info);
+    if (ret != 0)
+    {
+        QL_LBS_LOG("ql_nw_get_selection ret: %d", ret);
+    }
+    QL_LBS_LOG("nw_act_type=%d", select_info.act);
+    if (select_info.act == QL_NW_ACCESS_TECH_GSM)
+    {
+        QL_LBS_LOG("\n mang GMS\n");
+        lbs_cell_info[0].radio = 1;
+        lbs_cell_info[0].mcc = cell_info.gsm_info[0].mcc;
+        lbs_cell_info[0].mnc = cell_info.gsm_info[0].mnc;
+        lbs_cell_info[0].cell_id = cell_info.gsm_info[0].cid;
+        lbs_cell_info[0].lac_id = cell_info.gsm_info[0].lac;
+        lbs_cell_info[0].bsic = cell_info.gsm_info[0].bsic;
+        lbs_cell_info[0].uarfcndl = cell_info.gsm_info[0].arfcn;
+        lbs_cell_info[0].bcch = cell_info.gsm_info[0].arfcn;
+        lbs_cell_info[0].signal = cell_info.gsm_info[0].rssi;
+    }
+    else if (select_info.act == QL_NW_ACCESS_TECH_E_UTRAN)
+    {
+        QL_LBS_LOG("\n mang LTE\n");
+        lbs_cell_info[0].radio = 3;
+        lbs_cell_info[0].mcc = cell_info.lte_info[0].mcc;
+        lbs_cell_info[0].mnc = cell_info.lte_info[0].mnc;
+        lbs_cell_info[0].cell_id = cell_info.lte_info[0].cid;
+        lbs_cell_info[0].lac_id = cell_info.lte_info[0].tac;
+        lbs_cell_info[0].tac = cell_info.lte_info[0].tac;
+        lbs_cell_info[0].pci = cell_info.lte_info[0].pci;
+        lbs_cell_info[0].earfcn = cell_info.lte_info[0].earfcn;
+        lbs_cell_info[0].bcch = cell_info.lte_info[0].earfcn;
+        lbs_cell_info[0].signal = cell_info.lte_info[0].rssi;
+    }
+    else
+    {
+        QL_LBS_LOG("\n Thoat \n");
+    }
+    // QL_LBS_LOG("cell infoinfo: radio=%d,mcc=%d,mnc=%d,lac_id=%x,cell_id=%x,signal=%d,tac =%x,bcch=%d,bsic=%d,uarfcndl=%d,psc=%d,rsrq=%d,pci=%d,earfcn=%d",\
         // lbs_cell_info[0].radio,lbs_cell_info[0].mcc,lbs_cell_info[0].mnc,lbs_cell_info[0].lac_id,lbs_cell_info[0].cell_id,lbs_cell_info[0].signal,lbs_cell_info[0].tac,\
         // lbs_cell_info[0].bcch,lbs_cell_info[0].bsic,lbs_cell_info[0].uarfcndl,lbs_cell_info[0].psc,lbs_cell_info[0].rsrq,lbs_cell_info[0].pci,lbs_cell_info[0].earfcn);
-        char buff[256];
-        sprintf(buff,"cell infoinfo: radio=%d,mcc=%d,mnc=%d,lac_id=%x,cell_id=%x,signal=%d,tac =%x,bcch=%d,bsic=%d,uarfcndl=%d,psc=%d,rsrq=%d,pci=%d,earfcn=%d",\
-        lbs_cell_info[0].radio,lbs_cell_info[0].mcc,lbs_cell_info[0].mnc,lbs_cell_info[0].lac_id,lbs_cell_info[0].cell_id,lbs_cell_info[0].signal,lbs_cell_info[0].tac,\
-        lbs_cell_info[0].bcch,lbs_cell_info[0].bsic,lbs_cell_info[0].uarfcndl,lbs_cell_info[0].psc,lbs_cell_info[0].rsrq,lbs_cell_info[0].pci,lbs_cell_info[0].earfcn);
-        QL_LBS_LOG(buff);
-        pub_mqtt("EC200U_REC",buff);
-		memset(&user_option, 0x00, sizeof(lbs_option_t));
-		user_option.pdp_cid = profile_idx;
-		user_option.sim_id = 0;
-		user_option.req_timeout = 60;
-		user_option.basic_info = &basic_info;
-		user_option.auth_info = &auth_info;
-		user_option.cell_num = 1;
-		user_option.cell_info = &lbs_cell_info[0];
+    char buff[256];
+    sprintf(buff, "cell infoinfo: radio=%d,mcc=%d,mnc=%d,lac_id=%x,cell_id=%x,signal=%d,tac =%x,bcch=%d,bsic=%d,uarfcndl=%d,psc=%d,rsrq=%d,pci=%d,earfcn=%d",
+            lbs_cell_info[0].radio, lbs_cell_info[0].mcc, lbs_cell_info[0].mnc, lbs_cell_info[0].lac_id, lbs_cell_info[0].cell_id, lbs_cell_info[0].signal, lbs_cell_info[0].tac,
+            lbs_cell_info[0].bcch, lbs_cell_info[0].bsic, lbs_cell_info[0].uarfcndl, lbs_cell_info[0].psc, lbs_cell_info[0].rsrq, lbs_cell_info[0].pci, lbs_cell_info[0].earfcn);
+    QL_LBS_LOG(buff);
+    pub_mqtt("EC200U_REC", buff);
+    memset(&user_option, 0x00, sizeof(lbs_option_t));
+    user_option.pdp_cid = profile_idx;
+    user_option.sim_id = 0;
+    user_option.req_timeout = 60;
+    user_option.basic_info = &basic_info;
+    user_option.auth_info = &auth_info;
+    user_option.cell_num = 1;
+    user_option.cell_info = &lbs_cell_info[0];
 
-		if(QL_LBS_OK == ql_lbs_get_position(&lbs_cli, "www.queclocator.com", &user_option, lbs_result_cb, NULL)){
-			ql_rtos_semaphore_wait(lbs_semp, QL_WAIT_FOREVER);
-		}else{
-			QL_LBS_LOG("lbs failed");
-		}
-		//ql_rtos_task_sleep_s(1);
-	
+    if (QL_LBS_OK == ql_lbs_get_position(&lbs_cli, "www.queclocator.com", &user_option, lbs_result_cb, NULL))
+    {
+        ql_rtos_semaphore_wait(lbs_semp, QL_WAIT_FOREVER);
+    }
+    else
+    {
+        QL_LBS_LOG("lbs failed");
+    }
+    // ql_rtos_task_sleep_s(1);
 }
 extern delete_all_sms();
 int ql_mqtt_app_init(void)
