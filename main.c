@@ -10,7 +10,6 @@
 #include "ql_adc.h"
 #include "ql_uart.h"
 #include "ql_power.h"
-#include "ql_i2c.h"
 
 #include "DataDefine.h"
 
@@ -211,14 +210,14 @@ static void main_task_thread(void *param)
     // string x="\r du lieu GNSS =>>> \n";
     // ql_uart_write(QL_UART_PORT_1,x,x.length());
 
-    char version_buf[128] = {0};
-    ql_dev_get_firmware_version(version_buf, sizeof(version_buf));
-    OUT_LOG("\nPhien phan mem hien tai:  %s\n", version_buf);
+    // char version_buf[128] = {0};
+    // ql_dev_get_firmware_version(version_buf, sizeof(version_buf));
+    // OUT_LOG("\nPhien phan mem hien tai:  %s\n", version_buf);
     //ql_CamInit(320, 240);
    // ql_CamPowerOn();
     //ql_I2cInit(i2c_1, STANDARD_MODE);
    // Acc_Init();
-    cJSON_Parsing();
+   // cJSON_Parsing();
     // PIN24 GPIO2 (FUNC0)
     ql_pin_set_func(41, 0);
     ql_pin_set_func(42, 0);
@@ -231,23 +230,8 @@ static void main_task_thread(void *param)
 
     ql_uart_write(QL_UART_PORT_1, "\r", 21);
 
-    // Init
+
     SendEventToThread(main_task, INIT_CONFIG);
-
-    // acc_init();
-    // if (acc_check())
-    // {
-    //     OUT_LOG("I2C OK");
-    //     OUT_LOG("THANH CONG\n");
-    //     // int x = GetData(0x2B, 0x2A);
-
-    //     // if(x!=0) OUT_LOG("Du lieu ACC:%d", x);
-    // }
-    // else
-    // {
-    //     OUT_LOG("i2c failed\n");
-    // }
-
 
 
     while (1)
@@ -336,6 +320,7 @@ int appimg_enter(void *param)
     // ql_i2c_demo_init();
     ql_mqtt_app_init();
     ql_gnss_app_init();
+    ql_i2c_demo_init();
 
     //err = ql_rtos_task_create(&lbs_task, 16*1024, 23, "lbs_app", lbs_app_thread, NULL, 5);
     // ql_fota_http_app_init();

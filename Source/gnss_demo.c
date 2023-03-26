@@ -217,15 +217,17 @@ static void ql_gnss_demo_thread(void *param)
                     if(x== NMEA_RMC || x== NMEA_GGA)
                     {
                         nmea = nmea_parse(start, end - start + 1, 1);                      
-                        QL_GNSSDEMO_LOG("\nGPS=>:%s\n",nmea_buff);
+                       // QL_GNSSDEMO_LOG("\nGPS=>:%s\n",nmea_buff);
                         
                       // if(strlen(nmea_buff) > 50) { pub_mqtt("EC200U_REC", nmea_buff);}
                         if (nmea)
                         {
                             // nmea = nmea_parse(start, end - start + 1, 1);
                             ret = nmea_value_update(nmea, &g_gps_data);
+                            char buff[100]={0};
+                            sprintf(buff,"\n kinh do:%f vi do:%f van toc:%f tin hieu:%d\n",g_gps_data.latitude,g_gps_data.longitude,g_gps_data.gps_speed,g_gps_data.gps_signal);
 
-                            //QL_GNSSDEMO_PUSH("kinh do:%f",g_gps_data);
+                            QL_GNSSDEMO_LOG(buff);
 
                             if (nmea->data)
                             {
