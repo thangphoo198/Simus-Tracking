@@ -228,9 +228,9 @@ static void mqtt_inpub_data_cb(mqtt_client_t *client, void *arg, int pkt_id, con
             {
                 unsigned char csq = 0;
                 int ret;
-                ql_nw_get_csq(NSIM, &csq);
-                QL_MQTT_LOG("ret=0x%x, csq:%d", ret, csq);
-                // read_sim_info();
+               // ql_nw_get_csq(NSIM, &csq);
+               // QL_MQTT_LOG("ret=0x%x, csq:%d", ret, csq);
+                read_sim_info();
             }
             else if (strcmp(val, "SMS_DELALL") == 0)
             {
@@ -302,9 +302,6 @@ static void mqtt_app_thread(void *arg)
     char *client_id = (char *)malloc(256);
     char *client_user = (char *)malloc(256);
     char *client_pass = (char *)malloc(256);
-
-    QL_MQTT_LOG("\r========== mqtt demo start ==========");
-    QL_MQTT_LOG("\rwait for network register done");
 
     while ((ret = ql_network_register_wait(NSIM, 120)) != 0 && i < 10)
     {
@@ -521,7 +518,7 @@ void read_sim_info()
     user_option.cell_num = 1;
     user_option.cell_info = &lbs_cell_info[0];
 
-    if (QL_LBS_OK == ql_lbs_get_position(&lbs_cli, "www.queclocator.com", &user_option, lbs_result_cb, NULL))
+    if (QL_LBS_OK == ql_lbs_get_position(&lbs_cli, "wwww.opencellid.org", &user_option, lbs_result_cb, NULL))
     {
         ql_rtos_semaphore_wait(lbs_semp, QL_WAIT_FOREVER);
     }
@@ -529,6 +526,7 @@ void read_sim_info()
     {
         QL_LBS_LOG("lbs failed");
     }
+    ql_rtos_semaphore_delete(lbs_semp);
     // ql_rtos_task_sleep_s(1);
 }
 extern delete_all_sms();

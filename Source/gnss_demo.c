@@ -212,23 +212,18 @@ static void ql_gnss_demo_thread(void *param)
                     memcpy(nmea_buff, start, jmin(sizeof(nmea_buff) - 1, end - start - 1));
                     //QL_GNSSDEMO_LOG("\r \n GPS:=> %s\r\n", nmea_buff);
                     /* nmea string parse */
-                   // nmea = nmea_parse(start, end - start + 1, 1);
-                    nmea_type x = nmea_get_type(start);
-                    if(x== NMEA_RMC || x== NMEA_GGA)
-                    {
-                        nmea = nmea_parse(start, end - start + 1, 1);                      
-                       // QL_GNSSDEMO_LOG("\nGPS=>:%s\n",nmea_buff);
-                        
-                      // if(strlen(nmea_buff) > 50) { pub_mqtt("EC200U_REC", nmea_buff);}
+                   nmea = nmea_parse(start, end - start + 1, 1);
                         if (nmea)
                         {
                             // nmea = nmea_parse(start, end - start + 1, 1);
                             ret = nmea_value_update(nmea, &g_gps_data);
+                            float lat= g_gps_data.latitude;                            
+                            if(lat!=g_gps_data.latitude)
+                            {
                             char buff[100]={0};
-                            sprintf(buff,"\n kinh do:%f vi do:%f van toc:%f tin hieu:%d\n",g_gps_data.latitude,g_gps_data.longitude,g_gps_data.gps_speed,g_gps_data.gps_signal);
-
+                            sprintf(buff,"\n%f,%f SPEED:%f tin hieu:%d vetinh:%d time:%d\n",g_gps_data.latitude,g_gps_data.longitude,g_gps_data.gps_speed,g_gps_data.avg_cnr,g_gps_data.satellites_num,g_gps_data.UTC);
                             QL_GNSSDEMO_LOG(buff);
-
+                            }
                             if (nmea->data)
                             {
                                 free(nmea->data);
@@ -237,7 +232,6 @@ static void ql_gnss_demo_thread(void *param)
                             free(nmea);
                             nmea = NULL;
                         }
-                    }
                     if (end == buffer + total_bytes)
                     {
                         total_bytes = 0;

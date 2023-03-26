@@ -194,7 +194,6 @@ static void main_task_thread(void *param)
 {
     ql_event_t event;
     DebugInit();
-<<<<<<< HEAD
     // string x="\r du lieu GNSS =>>> \n";
     // ql_uart_write(QL_UART_PORT_1,x,x.length());
 
@@ -206,8 +205,6 @@ static void main_task_thread(void *param)
     //ql_I2cInit(i2c_1, STANDARD_MODE);
    // Acc_Init();
    // cJSON_Parsing();
-=======
->>>>>>> 20a5da5509084fade269fa9b4fffb47dbf5bc131
     // PIN24 GPIO2 (FUNC0)
     ql_pin_set_func(24, 0);
     ql_gpio_init(GPIO_2, GPIO_OUTPUT, PULL_NONE, LVL_HIGH);
@@ -221,10 +218,6 @@ static void main_task_thread(void *param)
 
     SendEventToThread(main_task, INIT_CONFIG);
 
-<<<<<<< HEAD
-
-=======
->>>>>>> 20a5da5509084fade269fa9b4fffb47dbf5bc131
     while (1)
     {
         ql_event_try_wait(&event);
