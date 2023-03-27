@@ -80,25 +80,25 @@ static lbs_cell_info_t lbs_cell_info[] = {
      .pci = 0,
      .earfcn = 0}};
 
-static void lbs_result_cb(lbs_response_data_t *response_data)
-{
-    int i = 0;
-    if (NULL == response_data || lbs_cli != response_data->hndl)
-    {
-        return;
-    }
+// static void lbs_result_cb(lbs_response_data_t *response_data)
+// {
+//     int i = 0;
+//     if (NULL == response_data || lbs_cli != response_data->hndl)
+//     {
+//         return;
+//     }
 
-    QL_LBS_LOG("lbs result: %08X", response_data->result);
-    if (response_data->result == QL_LBS_OK)
-    {
-        for (i = 0; i < response_data->pos_num; i++)
-        {
-            QL_LBS_LOG("Location[%d]: %f, %f, %d\n", i, response_data->pos_info[i].longitude,
-                       response_data->pos_info[i].latitude, response_data->pos_info[i].accuracy);
-        }
-    }
-    ql_rtos_semaphore_release(lbs_semp);
-}
+//     QL_LBS_LOG("lbs result: %08X", response_data->result);
+//     if (response_data->result == QL_LBS_OK)
+//     {
+//         for (i = 0; i < response_data->pos_num; i++)
+//         {
+//             QL_LBS_LOG("Location[%d]: %f, %f, %d\n", i, response_data->pos_info[i].longitude,
+//                        response_data->pos_info[i].latitude, response_data->pos_info[i].accuracy);
+//         }
+//     }
+//     ql_rtos_semaphore_release(lbs_semp);
+// }
 
 static void mqtt_connect_result_cb(mqtt_client_t *client, void *arg, mqtt_connection_status_e status)
 {
@@ -156,8 +156,10 @@ static void mqtt_inpub_data_cb(mqtt_client_t *client, void *arg, int pkt_id, con
             }
             else if (strcmp(val, "SMS_KTTK") == 0)
             {
+                
                 char version_buf[128] = {0};
                 gui_sms("191", "KTTK");
+                delete_all_sms();
             }
             else if (strcmp(val, "GET_GPS") == 0)
             {
@@ -500,33 +502,29 @@ void read_sim_info()
     {
         QL_LBS_LOG("\n Thoat \n");
     }
-    // QL_LBS_LOG("cell infoinfo: radio=%d,mcc=%d,mnc=%d,lac_id=%x,cell_id=%x,signal=%d,tac =%x,bcch=%d,bsic=%d,uarfcndl=%d,psc=%d,rsrq=%d,pci=%d,earfcn=%d",\
-        // lbs_cell_info[0].radio,lbs_cell_info[0].mcc,lbs_cell_info[0].mnc,lbs_cell_info[0].lac_id,lbs_cell_info[0].cell_id,lbs_cell_info[0].signal,lbs_cell_info[0].tac,\
-        // lbs_cell_info[0].bcch,lbs_cell_info[0].bsic,lbs_cell_info[0].uarfcndl,lbs_cell_info[0].psc,lbs_cell_info[0].rsrq,lbs_cell_info[0].pci,lbs_cell_info[0].earfcn);
-    char buff[256];
-    sprintf(buff, "cell infoinfo: radio=%d,mcc=%d,mnc=%d,lac_id=%x,cell_id=%x,signal=%d,tac =%x,bcch=%d,bsic=%d,uarfcndl=%d,psc=%d,rsrq=%d,pci=%d,earfcn=%d",
-            lbs_cell_info[0].radio, lbs_cell_info[0].mcc, lbs_cell_info[0].mnc, lbs_cell_info[0].lac_id, lbs_cell_info[0].cell_id, lbs_cell_info[0].signal, lbs_cell_info[0].tac,
-            lbs_cell_info[0].bcch, lbs_cell_info[0].bsic, lbs_cell_info[0].uarfcndl, lbs_cell_info[0].psc, lbs_cell_info[0].rsrq, lbs_cell_info[0].pci, lbs_cell_info[0].earfcn);
+    char buff[100];
+    sprintf(buff, "cell infoinfo: radio=%d,mcc=%d,mnc=%d,lac_id=%x,cell_id=%x,signal=%d",
+            lbs_cell_info[0].radio, lbs_cell_info[0].mcc, lbs_cell_info[0].mnc, (int)lbs_cell_info[0].lac_id, (int)lbs_cell_info[0].cell_id, lbs_cell_info[0].signal);
     QL_LBS_LOG(buff);
     pub_mqtt("EC200U_REC", buff);
-    memset(&user_option, 0x00, sizeof(lbs_option_t));
-    user_option.pdp_cid = profile_idx;
-    user_option.sim_id = 0;
-    user_option.req_timeout = 60;
-    user_option.basic_info = &basic_info;
-    user_option.auth_info = &auth_info;
-    user_option.cell_num = 1;
-    user_option.cell_info = &lbs_cell_info[0];
+    // memset(&user_option, 0x00, sizeof(lbs_option_t));
+    // user_option.pdp_cid = profile_idx;
+    // user_option.sim_id = 0;
+    // user_option.req_timeout = 60;
+    // user_option.basic_info = &basic_info;
+    // user_option.auth_info = &auth_info;
+    // user_option.cell_num = 1;
+    // user_option.cell_info = &lbs_cell_info[0];
 
-    if (QL_LBS_OK == ql_lbs_get_position(&lbs_cli, "wwww.opencellid.org", &user_option, lbs_result_cb, NULL))
-    {
-        ql_rtos_semaphore_wait(lbs_semp, QL_WAIT_FOREVER);
-    }
-    else
-    {
-        QL_LBS_LOG("lbs failed");
-    }
-    ql_rtos_semaphore_delete(lbs_semp);
+    // if (QL_LBS_OK == ql_lbs_get_position(&lbs_cli, "wwww.opencellid.org", &user_option, lbs_result_cb, NULL))
+    // {
+    //     ql_rtos_semaphore_wait(lbs_semp, QL_WAIT_FOREVER);
+    // }
+    // else
+    // {
+    //     QL_LBS_LOG("lbs failed");
+    // }
+   // ql_rtos_semaphore_delete(lbs_semp);
     // ql_rtos_task_sleep_s(1);
 }
 extern delete_all_sms();
@@ -534,7 +532,7 @@ int ql_mqtt_app_init(void)
 {
     QlOSStatus err = QL_OSI_SUCCESS;
 
-    err = ql_rtos_task_create(&mqtt_task, 16 * 1024, 23, "mqtt_app", mqtt_app_thread, NULL, 5);
+    err = ql_rtos_task_create(&mqtt_task, 16 * 1024, 24, "mqtt_app", mqtt_app_thread, NULL, 5);
     if (err != QL_OSI_SUCCESS)
     {
         QL_MQTT_LOG("\rmqtt_app init failed");

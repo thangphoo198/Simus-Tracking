@@ -85,7 +85,7 @@ char check()
     uint8_t KQ = 0;
     ql_I2cRead(i2c_1, SalveAddr_r_8bit, W_A_I, &KQ, 1);
     //	kq=IC_Read(W_A_I);
-    QL_I2C_LOG("\nWAIT :0x%x\n", KQ);
+    //QL_I2C_LOG("\nWAIT :0x%x\n", KQ);
     if (KQ == 0x33) //0x68
     {
         return 1;

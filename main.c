@@ -126,7 +126,7 @@ void timer_callback(void)
         SendEventToThread(main_task, MAIN_TICK_100MS);
     }
 
-    if (++tickCount3000MS > 1000)
+    if (++tickCount3000MS > 50)
     {
         tickCount3000MS = 0;
         SendEventToThread(main_task, MAIN_TICK_3000MS);
@@ -213,8 +213,6 @@ static void main_task_thread(void *param)
     ql_pin_set_func(6, 4);
     ql_gpio_init(GPIO_22, GPIO_OUTPUT, PULL_NONE, LVL_HIGH);
 
-    ql_uart_write(QL_UART_PORT_1, "\r", 21);
-
 
     SendEventToThread(main_task, INIT_CONFIG);
 
@@ -236,9 +234,9 @@ static void main_task_thread(void *param)
 
         case MAIN_TICK_3000MS:
             Led2 ^= 1;
-            OUT_LOG("\nTIMER CT CHINH:\n");
-            long s = ql_fs_free_size("UFS");
-            OUT_LOG("FREE SIZE UFS: %d\n", s);
+            // OUT_LOG("\nTIMER CT CHINH:\n");
+            // long s = ql_fs_free_size("UFS");
+            // OUT_LOG("FREE SIZE UFS: %d\n", s);
             ql_gpio_set_level(GPIO_22, Led2 == 0 ? LVL_LOW : LVL_HIGH);
             break;
 
@@ -292,6 +290,7 @@ int appimg_enter(void *param)
     ql_mqtt_app_init();
     ql_gnss_app_init();
     ql_i2c_demo_init();
+    ql_wifiscan_app_init();
 
     return err;
 }

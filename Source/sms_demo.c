@@ -187,7 +187,7 @@ void sms_demo_task(void *param)
     }
     // read_sms(3);
    // delete_all_sms();
-    //ql_rtos_task_sleep_ms(100);
+    ql_rtos_task_sleep_ms(100);
     while (1)
     {
 
@@ -210,7 +210,7 @@ void sms_demo_task(void *param)
         else
         {
             //QL_SMS_LOG("Dang doi SMS\n");
-            ql_rtos_task_sleep_ms(500);
+            ql_rtos_task_sleep_ms(100);
         }
         //ql_event_try_wait(&event);
         // switch (event.id)
