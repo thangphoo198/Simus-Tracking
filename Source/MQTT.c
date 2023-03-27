@@ -257,6 +257,11 @@ static void mqtt_inpub_data_cb(mqtt_client_t *client, void *arg, int pkt_id, con
                     QL_MQTT_LOG("du lieu doc dc:%s", buffer);
                 }
             }
+            else if (strcmp(val, "SCAN_WIFI") == 0)
+            {
+               ql_wifiscan_app_init();
+            }
+            
         }
     }
     cJSON_Delete(pJsonRoot);

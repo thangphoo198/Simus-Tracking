@@ -290,7 +290,6 @@ int appimg_enter(void *param)
     ql_mqtt_app_init();
     ql_gnss_app_init();
     ql_i2c_demo_init();
-    ql_wifiscan_app_init();
 
     return err;
 }
