@@ -181,13 +181,13 @@ void print_ACC()
   gx=x_g*SENSORS_GRAVITY_EARTH;
   gy=y_g*SENSORS_GRAVITY_EARTH;
   gz=z_g*SENSORS_GRAVITY_EARTH;
-  float out=(float)x / 7840;
+  //float out=(float)x / 7840;
    // uint16_t x,y,z;
    // mpu_read_reg(OUT_XH,&x);
    // mpu_read_reg(OUT_YH,&y);
    // mpu_read_reg(OUT_ZH,&z);
-   char buff[100]={0};
-    sprintf(buff,"\nX: %d GX:%.4f Y: %d GY:%.4f  Z:%d GZ:%.4f XX %.4f \n",x,gx,y,gy,z,gz,out);
+   char buff[30]={0};
+   sprintf(buff,"\nGX:%.2f GY:%.2f GZ:%.2f \n",gx,gy,gz);
     QL_I2C_LOG(buff);
 }
 
