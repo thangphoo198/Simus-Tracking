@@ -224,7 +224,7 @@ static void main_task_thread(void *param)
         {
 
         case INIT_CONFIG:
-            ql_uart_write(QL_USB_PORT_MODEM, "\r==>Init Configs", 16);
+            ql_uart_write(QL_USB_PORT_MODEM, "\r==>Init Configs\n", 16);
             ql_rtos_timer_start(main_timer, 2, 1);
 
             break;
@@ -234,7 +234,6 @@ static void main_task_thread(void *param)
 
         case MAIN_TICK_3000MS:
             Led2 ^= 1;
-            ql_uart_write(QL_USB_PORT_MODEM, "\r==>Init Configs", 16);
             // OUT_LOG("\nTIMER CT CHINH:\n");
             // long s = ql_fs_free_size("UFS");
             // OUT_LOG("FREE SIZE UFS: %d\n", s);

@@ -29,6 +29,7 @@ WHEN			  WHO		  WHAT, WHERE, WHY
 #include "ql_wifi_scan.h"
 #include "wifi_scan_demo.h"
 #include "DataDefine.h"
+#include "cJSON.h"
 
 /*===========================================================================
  *Definition
@@ -48,7 +49,6 @@ WHEN			  WHO		  WHAT, WHERE, WHY
  ===========================================================================*/
 ql_task_t ql_wifiscan_app_task = NULL;
 
-
 extern pub_mqtt(char *topic, char *mess);
 void ql_wifiscan_ap_info_output(uint16_t ap_cnt, ql_wifi_ap_info_s *p_ap_infos)
 {
@@ -56,37 +56,54 @@ void ql_wifiscan_ap_info_output(uint16_t ap_cnt, ql_wifi_ap_info_s *p_ap_infos)
     {
         return;
     }
-    char str1[50];
-    char str2[50];
-    char str3[50];
-    char str4[200];
+    cJSON *root, *cars, *car;
+    //char buff[100]={0};
+    root = cJSON_CreateObject();
+    cars = cJSON_CreateArray();
+   /* add cars array to root */
+   cJSON_AddStringToObject(root, "RES", "SCAN_WIFI");
+   cJSON_AddItemToObject(root, "WIFI_INFO", cars);
+
     for (uint16_t n = 0; n < ap_cnt; n++)
-    {
-        if (n == 0)
-        {
-            sprintf(str1, "\nap: mac=%x%lx, rssi=%d dBm, channel: %d\n",
-                    p_ap_infos->bssid_high, p_ap_infos->bssid_low, p_ap_infos->rssival, p_ap_infos->channel);
-        }
-        else if (n == 1)
-        {
-            sprintf(str2, "\nap: mac=%x%lx, rssi=%d dBm, channel: %d\n",
-                    p_ap_infos->bssid_high, p_ap_infos->bssid_low, p_ap_infos->rssival, p_ap_infos->channel);
-        }
-         else if (n == 3)
-        {
-            sprintf(str3, "\nap: mac=%x%lx, rssi=%d dBm, channel: %d\n",
-                    p_ap_infos->bssid_high, p_ap_infos->bssid_low, p_ap_infos->rssival, p_ap_infos->channel);
-        }       
-        // QL_WIFISACN_DEMO_LOG("\nap: mac=%x%lx, rssi=%d dBm, channel: %d\n",
-        //                      p_ap_infos->bssid_high, p_ap_infos->bssid_low, p_ap_infos->rssival, p_ap_infos->channel);
+    {   
+        // QL_WIFISACN_DEMO_LOG("MAC=%x%lx,RSSI=%d dBm,CHANEL=%d\n",
+        // p_ap_infos->bssid_high, p_ap_infos->bssid_low, p_ap_infos->rssival, p_ap_infos->channel);
+      //  sprintf(buff,"MAC=%x%lx RSSI=%d CHANNEL=%d",
+        //p_ap_infos->bssid_high, p_ap_infos->bssid_low, p_ap_infos->rssival, p_ap_infos->channel);
+        char macbuff[20],rssi_buf[4],channel_buf[3];
+        int8_t rssi=p_ap_infos->rssival;
+        uint8_t channel=p_ap_infos->channel;
+        sprintf(macbuff,"%x%lx",p_ap_infos->bssid_high, p_ap_infos->bssid_low);
+        // sprintf(rssi_buf,"%d",p_ap_infos->rssival);
+        // sprintf(channel_buf,"%d",p_ap_infos->channel);
+       //  cJSON_AddItemToObject(root,
+       //cJSON_AddItemToObject(pRoot, "WiFi", cJSON_CreateString(buff));
+    //    cJSON_AddItemToArray(wifi_arr, wifi_list = cJSON_CreateObject());
+    //    cJSON_AddItemToObject(wifi_list, "WiFi", cJSON_CreateString(buff));
+        cJSON_AddItemToArray(cars, car = cJSON_CreateObject());
+        cJSON_AddItemToObject(car, "MAC", cJSON_CreateString(macbuff));
+        cJSON_AddItemToObject(car, "RSSI", cJSON_CreateNumber(rssi));
+        cJSON_AddItemToObject(car, "CHANNEL", cJSON_CreateNumber(channel));
         p_ap_infos++;
+        
     }
-    strcpy(str4, str1);
-    strcat(str4, str2);
-    strcat(str4, str3);\
-    QL_WIFISACN_DEMO_LOG("WiFi data:");
-    QL_WIFISACN_DEMO_LOG(str4);
-    pub_mqtt("EC200U_REC",str4);
+    // cJSON_AddItemToArray(wifi_arr, pRoot);
+    // QL_WIFISACN_DEMO_LOG("\n");
+    // cJSON_AddNumberToObject(pRoot, "number", 2020);
+    // cJSON *pValue = cJSON_CreateObject();
+    // cJSON_AddStringToObject(pValue, "name", "cx");
+    // cJSON_AddNumberToObject(pValue, "age", 17);
+    // cJSON_AddItemToObject(pRoot, "value", pValue);
+   // int hex[5] = {11, 12, 13, 14, 15};
+    // cJSON *pHex = cJSON_CreateIntArray(wifi_high, strlen(wifi_high)); // 创建一个长度为5的int型的数组json元素
+    // cJSON_AddItemToObject(pRoot, "macAddress", pHex);  // 将数组元素添加进pRoot
+    // cJSON *sig= cJSON_CreateIntArray(signal, strlen(signal)); // 创建一个长度为5的int型的数组json元素
+    // cJSON_AddItemToObject(pRoot, "signalStrength", sig);  // 将数组元素添加进pRoot
+    
+    char *out= cJSON_Print(root);
+    QL_WIFISACN_DEMO_LOG("\n%s\n", out);
+    pub_mqtt("EC200U_REC",out);
+    
 }
 
 //all memory of msg_buf and it's sub item will be released by core after the call of callback.
@@ -106,8 +123,8 @@ void ql_wifiscan_app_callback(ql_wifiscan_ind_msg_s *msg_buf)
             ql_wifiscan_result_s *scan_result = msg_buf->msg_data;
             QL_WIFISACN_DEMO_LOG("ap_cnt=%d", scan_result->ap_cnt);
             ql_wifiscan_ap_info_output(scan_result->ap_cnt, scan_result->ap_infos);
-        }
 
+        }
         ql_event_t scan_event = {0};
         scan_event.id = QUEC_WIFISCAN_EVENT_ASYNC_IND;
         ql_rtos_event_send(ql_wifiscan_app_task, &scan_event);
@@ -211,6 +228,7 @@ static void ql_wifiscan_app_thread(void *param)
 		if(event.id == QUEC_WIFISCAN_EVENT_ASYNC_IND)
         {
             ql_wifiscan_close();//close the wifiscan device fot the async scan
+            QL_WIFISACN_DEMO_LOG("\n thoat scan wifi\n");
            // ql_rtos_task_sleep_ms(15000);
 
             // next cycle demo
@@ -233,4 +251,3 @@ void ql_wifiscan_app_init(void)
 		QL_WIFISACN_DEMO_LOG("demo task created failed");
 	}
 }
-

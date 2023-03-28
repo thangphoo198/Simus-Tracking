@@ -158,7 +158,7 @@ void mpu_read_reg(uint8 RegAddr, uint16 *p_value)
 }
 
 
-int GetData(unsigned char Haddress, unsigned char Laddress)
+int32_t GetData(unsigned char Haddress, unsigned char Laddress)
 {
     uint8_t H, L;
     ql_I2cRead(i2c_1, SalveAddr_r_8bit, Haddress, &H, 1);
