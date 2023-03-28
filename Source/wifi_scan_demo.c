@@ -49,27 +49,44 @@ WHEN			  WHO		  WHAT, WHERE, WHY
 ql_task_t ql_wifiscan_app_task = NULL;
 
 
-/*===========================================================================
- * Struct
- ===========================================================================*/
-
-
-/*===========================================================================
- * Functions
- ===========================================================================*/
+extern pub_mqtt(char *topic, char *mess);
 void ql_wifiscan_ap_info_output(uint16_t ap_cnt, ql_wifi_ap_info_s *p_ap_infos)
 {
     if (NULL == p_ap_infos)
     {
         return;
     }
-    
-    for(uint16_t n=0; n<ap_cnt; n++)
+    char str1[50];
+    char str2[50];
+    char str3[50];
+    char str4[200];
+    for (uint16_t n = 0; n < ap_cnt; n++)
     {
-        QL_WIFISACN_DEMO_LOG("ap: mac=%x%lx, rssi=%i dBm, channel: %u",
-                 p_ap_infos->bssid_high, p_ap_infos->bssid_low, p_ap_infos->rssival, p_ap_infos->channel);
+        if (n == 0)
+        {
+            sprintf(str1, "\nap: mac=%x%lx, rssi=%d dBm, channel: %d\n",
+                    p_ap_infos->bssid_high, p_ap_infos->bssid_low, p_ap_infos->rssival, p_ap_infos->channel);
+        }
+        else if (n == 1)
+        {
+            sprintf(str2, "\nap: mac=%x%lx, rssi=%d dBm, channel: %d\n",
+                    p_ap_infos->bssid_high, p_ap_infos->bssid_low, p_ap_infos->rssival, p_ap_infos->channel);
+        }
+         else if (n == 3)
+        {
+            sprintf(str3, "\nap: mac=%x%lx, rssi=%d dBm, channel: %d\n",
+                    p_ap_infos->bssid_high, p_ap_infos->bssid_low, p_ap_infos->rssival, p_ap_infos->channel);
+        }       
+        // QL_WIFISACN_DEMO_LOG("\nap: mac=%x%lx, rssi=%d dBm, channel: %d\n",
+        //                      p_ap_infos->bssid_high, p_ap_infos->bssid_low, p_ap_infos->rssival, p_ap_infos->channel);
         p_ap_infos++;
     }
+    strcpy(str4, str1);
+    strcat(str4, str2);
+    strcat(str4, str3);\
+    QL_WIFISACN_DEMO_LOG("WiFi data:");
+    QL_WIFISACN_DEMO_LOG(str4);
+    pub_mqtt("EC200U_REC",str4);
 }
 
 //all memory of msg_buf and it's sub item will be released by core after the call of callback.
@@ -81,7 +98,7 @@ void ql_wifiscan_app_callback(ql_wifiscan_ind_msg_s *msg_buf)
         return;
     }
     
-    QL_WIFISACN_DEMO_LOG("id=0x%X, err=%d, buf=%p", msg_buf->msg_id, msg_buf->msg_err_code, msg_buf->msg_data);
+    QL_WIFISACN_DEMO_LOG("\nid=0x%X, err=%d, buf=%p\n", msg_buf->msg_id, msg_buf->msg_err_code, msg_buf->msg_data);
     if (QUEC_WIFISCAN_EVENT_DO == msg_buf->msg_id)
     {
         if ((QL_WIFISCAN_SUCCESS == msg_buf->msg_err_code) && (NULL != msg_buf->msg_data))
@@ -178,9 +195,9 @@ void ql_wifiscan_synchro_complete_flow(void)
 
 static void ql_wifiscan_app_thread(void *param)
 {
-    ql_rtos_task_sleep_ms(15000);// sleep some time, then to do demo
+    //ql_rtos_task_sleep_ms(15000);// sleep some time, then to do demo
     ql_wifiscan_synchro_complete_flow();
-    ql_rtos_task_sleep_ms(5000);
+    ql_rtos_task_sleep_ms(100);
     ql_wifiscan_async_start();//start a async scan, and it should trigger one event sent at callback
     
     while(1)
@@ -194,12 +211,14 @@ static void ql_wifiscan_app_thread(void *param)
 		if(event.id == QUEC_WIFISCAN_EVENT_ASYNC_IND)
         {
             ql_wifiscan_close();//close the wifiscan device fot the async scan
-            ql_rtos_task_sleep_ms(15000);
+           // ql_rtos_task_sleep_ms(15000);
 
             // next cycle demo
-            ql_wifiscan_synchro_complete_flow();
-            ql_rtos_task_sleep_ms(5000);
-            ql_wifiscan_async_start();
+           // ql_wifiscan_synchro_complete_flow();
+           // ql_rtos_task_sleep_ms(5000);
+            //ql_rtos_semaphore_delete(mqtt_semp);
+            ql_rtos_task_delete(ql_wifiscan_app_task);
+            //ql_wifiscan_async_start();
         }
     }
 }
