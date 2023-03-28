@@ -178,13 +178,13 @@ uint8_t DebugInit(void)
     uartConfig.parity_bit = 0;
     uartConfig.stop_bit = 1;
 
-    ql_uart_set_dcbconfig(QL_UART_PORT_1, &uartConfig);
+    ql_uart_set_dcbconfig(QL_USB_PORT_MODEM, &uartConfig);
 
-    ret = ql_uart_open(QL_UART_PORT_1);
+    ret = ql_uart_open(QL_USB_PORT_MODEM);
 
     if (ret == 0)
     {
-        ret = ql_uart_register_cb(QL_UART_PORT_1, Uart1_rev_callback);
+        ret = ql_uart_register_cb(QL_USB_PORT_MODEM, Uart1_rev_callback);
     }
 
     return ret;
@@ -224,7 +224,7 @@ static void main_task_thread(void *param)
         {
 
         case INIT_CONFIG:
-            ql_uart_write(QL_UART_PORT_1, "\r==>Init Configs", 16);
+            ql_uart_write(QL_USB_PORT_MODEM, "\r==>Init Configs", 16);
             ql_rtos_timer_start(main_timer, 2, 1);
 
             break;
@@ -234,6 +234,7 @@ static void main_task_thread(void *param)
 
         case MAIN_TICK_3000MS:
             Led2 ^= 1;
+            ql_uart_write(QL_USB_PORT_MODEM, "\r==>Init Configs", 16);
             // OUT_LOG("\nTIMER CT CHINH:\n");
             // long s = ql_fs_free_size("UFS");
             // OUT_LOG("FREE SIZE UFS: %d\n", s);
@@ -271,7 +272,7 @@ int appimg_enter(void *param)
 {
     QlOSStatus err;
     ql_dev_cfg_wdt(0);
-    ql_log_set_port(2);
+    ql_log_set_port(0);
     ql_quec_trace_enable(1);
 
     ql_rtos_sw_dog_disable();
