@@ -7,7 +7,6 @@
 
 #include "ql_log.h"
 #include "ql_api_datacall.h"
-#include "ql_lbs_client.h"
 
 #include "MQTT.h"
 #include "ql_power.h"
@@ -463,75 +462,6 @@ exit:
     return;
 }
 
-void read_sim_info()
-{
-    lbs_option_t user_option;
-    if (ql_nw_get_cell_info(NSIM, &cell_info) != QL_NW_SUCCESS)
-    {
-        QL_LBS_LOG("===============lbs get cell info fail===============\n");
-    }
-    int ret = ql_nw_get_selection(NSIM, &select_info);
-    if (ret != 0)
-    {
-        QL_LBS_LOG("ql_nw_get_selection ret: %d", ret);
-    }
-    QL_LBS_LOG("nw_act_type=%d", select_info.act);
-    if (select_info.act == QL_NW_ACCESS_TECH_GSM)
-    {
-        QL_LBS_LOG("\n mang GMS\n");
-        lbs_cell_info[0].radio = 1;
-        lbs_cell_info[0].mcc = cell_info.gsm_info[0].mcc;
-        lbs_cell_info[0].mnc = cell_info.gsm_info[0].mnc;
-        lbs_cell_info[0].cell_id = cell_info.gsm_info[0].cid;
-        lbs_cell_info[0].lac_id = cell_info.gsm_info[0].lac;
-        lbs_cell_info[0].bsic = cell_info.gsm_info[0].bsic;
-        lbs_cell_info[0].uarfcndl = cell_info.gsm_info[0].arfcn;
-        lbs_cell_info[0].bcch = cell_info.gsm_info[0].arfcn;
-        lbs_cell_info[0].signal = cell_info.gsm_info[0].rssi;
-    }
-    else if (select_info.act == QL_NW_ACCESS_TECH_E_UTRAN)
-    {
-        QL_LBS_LOG("\n mang LTE\n");
-        lbs_cell_info[0].radio = 3;
-        lbs_cell_info[0].mcc = cell_info.lte_info[0].mcc;
-        lbs_cell_info[0].mnc = cell_info.lte_info[0].mnc;
-        lbs_cell_info[0].cell_id = cell_info.lte_info[0].cid;
-        lbs_cell_info[0].lac_id = cell_info.lte_info[0].tac;
-        lbs_cell_info[0].tac = cell_info.lte_info[0].tac;
-        lbs_cell_info[0].pci = cell_info.lte_info[0].pci;
-        lbs_cell_info[0].earfcn = cell_info.lte_info[0].earfcn;
-        lbs_cell_info[0].bcch = cell_info.lte_info[0].earfcn;
-        lbs_cell_info[0].signal = cell_info.lte_info[0].rssi;
-    }
-    else
-    {
-        QL_LBS_LOG("\n Thoat \n");
-    }
-    char buff[100];
-    sprintf(buff, "cell infoinfo: radio=%d,mcc=%d,mnc=%d,lac_id=%x,cell_id=%x,signal=%d",
-            lbs_cell_info[0].radio, lbs_cell_info[0].mcc, lbs_cell_info[0].mnc, (int)lbs_cell_info[0].lac_id, (int)lbs_cell_info[0].cell_id, lbs_cell_info[0].signal);
-    QL_LBS_LOG(buff);
-    pub_mqtt("EC200U_REC", buff);
-    // memset(&user_option, 0x00, sizeof(lbs_option_t));
-    // user_option.pdp_cid = profile_idx;
-    // user_option.sim_id = 0;
-    // user_option.req_timeout = 60;
-    // user_option.basic_info = &basic_info;
-    // user_option.auth_info = &auth_info;
-    // user_option.cell_num = 1;
-    // user_option.cell_info = &lbs_cell_info[0];
-
-    // if (QL_LBS_OK == ql_lbs_get_position(&lbs_cli, "wwww.opencellid.org", &user_option, lbs_result_cb, NULL))
-    // {
-    //     ql_rtos_semaphore_wait(lbs_semp, QL_WAIT_FOREVER);
-    // }
-    // else
-    // {
-    //     QL_LBS_LOG("lbs failed");
-    // }
-   // ql_rtos_semaphore_delete(lbs_semp);
-    // ql_rtos_task_sleep_s(1);
-}
 extern delete_all_sms();
 int ql_mqtt_app_init(void)
 {
