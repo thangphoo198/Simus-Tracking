@@ -9,7 +9,8 @@
 #ifndef MAIN_H_
 #define MAIN_H_
 #include "ql_gnss.h"
-static char *GPS_info;
+char *GPS_info;
+char *SIM_info;
 static ql_gnss_data_t g_gps_data;
 static char imei[64];
 #define NSIM 0

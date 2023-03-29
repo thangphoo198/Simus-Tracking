@@ -123,7 +123,7 @@ void timer_callback(void)
         SendEventToThread(main_task, MAIN_TICK_100MS);
     }
 
-    if (++tickCount3000MS > 50)
+    if (++tickCount3000MS > 2000)
     {
         tickCount3000MS = 0;
         SendEventToThread(main_task, MAIN_TICK_3000MS);
@@ -184,14 +184,13 @@ uint8_t DebugInit(void)
         ret = ql_uart_register_cb(QL_USB_PORT_MODEM, Uart1_rev_callback);
     }
 
-    return ret;
+    return ret; 
 }
 
 static void main_task_thread(void *param)
 {
     ql_event_t event;
     DebugInit();
-    ql_dev_get_imei(imei, 64, NSIM);
     ql_pin_set_func(24, 0);
     ql_gpio_init(GPIO_2, GPIO_OUTPUT, PULL_NONE, LVL_HIGH);
 
@@ -219,9 +218,14 @@ static void main_task_thread(void *param)
 
         case MAIN_TICK_3000MS:
             Led2 ^= 1;
-            // OUT_LOG("\nTIMER CT CHINH:\n");
-            // long s = ql_fs_free_size("UFS");
-            // OUT_LOG("FREE SIZE UFS: %d\n", s);
+         //   send_gps();
+         if (strlen(GPS_info)>120)
+         {
+            OUT_LOG(GPS_info);
+            pub_mqtt(topic_rec,GPS_info);
+         }
+         // long s = ql_fs_free_size("UFS");
+            OUT_LOG("\ntime chinh\n");
             ql_gpio_set_level(GPIO_22, Led2 == 0 ? LVL_LOW : LVL_HIGH);
             break;
 
@@ -232,7 +236,26 @@ static void main_task_thread(void *param)
     }
 }
 
-// extern print_GPS(char *dat);
+
+// void send_gps()
+// {
+//     float lat = g_gps_data.latitude;
+//     float lng = g_gps_data.longitude;
+//     uint8_t speed;
+//     cJSON *pRoot = cJSON_CreateObject();
+//     cJSON_AddStringToObject(pRoot, "RES", "GET_GPS");
+//     // cJSON_AddNumberToObject(pRoot, "lat", g_gps_data.latitude);
+//     speed = (int8_t)g_gps_data.gps_speed;
+//     int16_t signal = g_gps_data.avg_cnr;
+//     cJSON *pValue = cJSON_CreateObject();
+//     cJSON_AddNumberToObject(pValue, "lat", lat);
+//     cJSON_AddNumberToObject(pValue, "lng", lng);
+//     cJSON_AddNumberToObject(pValue, "speed", speed);
+//     cJSON_AddNumberToObject(pValue, "signal", signal);
+//     cJSON_AddItemToObject(pRoot, "GPS_INFO", pValue);
+//     char *GPS = cJSON_Print(pRoot);
+//     pub_mqtt(topic_rec,GPS);
+// }
 extern pub_mqtt(char *topic, char *mess);
 
 int appimg_enter(void *param)
@@ -247,7 +270,7 @@ int appimg_enter(void *param)
     err = ql_rtos_timer_create(&main_timer, main_task, timer_callback, NULL);
 
     /* main task*/
-    err = ql_rtos_task_create(&main_task, 5 * 1024, APP_PRIORITY_NORMAL, "Main_task", main_task_thread, NULL, 5);
+    err = ql_rtos_task_create(&main_task, 10 * 1024, APP_PRIORITY_NORMAL, "Main_task", main_task_thread, NULL, 5);
 
     ql_sms_app_init();
     ql_mqtt_app_init();

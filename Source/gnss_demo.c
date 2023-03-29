@@ -8,7 +8,7 @@
 #include "DataDefine.h"
 
 #include "gnss_demo.h"
-
+#include "cJSON.h"
 #include "ql_uart.h"
 #include "main.h"
 /*===========================================================================
@@ -218,8 +218,22 @@ static void ql_gnss_demo_thread(void *param)
                             // nmea = nmea_parse(start, end - start + 1, 1);
                             ret = nmea_value_update(nmea, &g_gps_data);
                             char buff[100]={0};
-                            sprintf(buff,"\n%f,%f SPEED:%f tin hieu:%d vetinh:%d time:%d\n",g_gps_data.latitude,g_gps_data.longitude,g_gps_data.gps_speed,g_gps_data.avg_cnr,g_gps_data.satellites_num,g_gps_data.UTC);
-                          //  QL_GNSSDEMO_LOG(buff);
+                            char buff_time[50]={0};
+   sprintf(buff_time,"%d-%d/%d/20%d",g_gps_data.UTC+70000,g_gps_data.time.tm_mday,g_gps_data.time.tm_mon,g_gps_data.time.tm_year);
+                            sprintf(buff,"\n%f,%f speed%f sig:%d num:%d time:%d\n",g_gps_data.latitude,g_gps_data.longitude,g_gps_data.gps_speed,g_gps_data.avg_cnr,g_gps_data.satellites_num,g_gps_data.UTC);
+                            cJSON *pRoot = cJSON_CreateObject();
+                            cJSON_AddStringToObject(pRoot, "RES", "GET_GPS");
+                            // cJSON_AddNumberToObject(pRoot, "lat", g_gps_data.latitude);
+                            cJSON *pValue = cJSON_CreateObject();
+                            cJSON_AddNumberToObject(pValue, "lat", g_gps_data.latitude);
+                            cJSON_AddNumberToObject(pValue, "lng", g_gps_data.longitude);
+                            cJSON_AddNumberToObject(pValue, "speed", (int)g_gps_data.gps_speed);
+                            cJSON_AddNumberToObject(pValue, "signal", g_gps_data.avg_cnr);
+                            cJSON_AddStringToObject(pValue, "time", buff_time);
+                            cJSON_AddItemToObject(pRoot, "GPS_INFO", pValue);
+                            GPS_info = cJSON_Print(pRoot);
+                            //QL_GNSSDEMO_LOG(GPS_info);
+                            QL_GNSSDEMO_LOG(buff);
                             if (nmea->data)
                             {
                                 free(nmea->data);
@@ -253,7 +267,7 @@ void ql_gnss_app_init(void)
 {
     QlOSStatus err = QL_OSI_SUCCESS;
 
-    err = ql_rtos_task_create(&gnss_task, 4096, APP_PRIORITY_NORMAL, "ql_gnssdemo", ql_gnss_demo_thread, NULL, 5);
+    err = ql_rtos_task_create(&gnss_task, 16*4096, APP_PRIORITY_NORMAL, "ql_gnssdemo", ql_gnss_demo_thread, NULL, 5);
     if (err != QL_OSI_SUCCESS)
     {
         QL_GNSSDEMO_LOG("gnss demo task created failed");
