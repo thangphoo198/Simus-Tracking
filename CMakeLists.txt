@@ -253,7 +253,6 @@ add_custom_target(unittests)
 	${SOURCE_TOP_DIR}/Source/sms_demo.c
 	${SOURCE_TOP_DIR}/Source/I2C_demo.c
 	${SOURCE_TOP_DIR}/Source/fota_http_demo.c
-	${SOURCE_TOP_DIR}/Source/json.c
 	${SOURCE_TOP_DIR}/Source/gnss_demo.c
 	${SOURCE_TOP_DIR}/Source/cJSON.c
 	${SOURCE_TOP_DIR}/Source/wifi_scan_demo.c

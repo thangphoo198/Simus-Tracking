@@ -10,6 +10,7 @@
 #include "gnss_demo.h"
 
 #include "ql_uart.h"
+#include "main.h"
 /*===========================================================================
  * Macro Definition
  ===========================================================================*/
@@ -27,7 +28,6 @@
  * Variate
  ===========================================================================*/
 ql_task_t gnss_task = NULL;
-ql_gnss_data_t g_gps_data = {0};
 nmeasrc_sentences nmea_handle = {0};
 char gnss_device_info[100] = {0};
 static uint32 prev_ms_gsv = 0;
@@ -217,13 +217,9 @@ static void ql_gnss_demo_thread(void *param)
                         {
                             // nmea = nmea_parse(start, end - start + 1, 1);
                             ret = nmea_value_update(nmea, &g_gps_data);
-                            float lat= g_gps_data.latitude;                            
-                            if(lat!=g_gps_data.latitude)
-                            {
                             char buff[100]={0};
                             sprintf(buff,"\n%f,%f SPEED:%f tin hieu:%d vetinh:%d time:%d\n",g_gps_data.latitude,g_gps_data.longitude,g_gps_data.gps_speed,g_gps_data.avg_cnr,g_gps_data.satellites_num,g_gps_data.UTC);
                             QL_GNSSDEMO_LOG(buff);
-                            }
                             if (nmea->data)
                             {
                                 free(nmea->data);

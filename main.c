@@ -12,8 +12,6 @@
 #include "ql_power.h"
 
 #include "DataDefine.h"
-
-#include "json.h"
 #include "gnss_demo.h"
 #include "cJSON.h"
 #include "ql_fs.h"
@@ -247,7 +245,7 @@ static void main_task_thread(void *param)
     }
 }
 
-extern print_GPS(char *dat);
+//extern print_GPS(char *dat);
 extern pub_mqtt(char *topic, char *mess);
 
 void ql_enter_sleep_cb(void *ctx)
