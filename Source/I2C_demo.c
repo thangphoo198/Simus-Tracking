@@ -169,9 +169,9 @@ int32_t GetData(unsigned char Haddress, unsigned char Laddress)
 
 void print_ACC()
 {
-  int x = GetData(OUT_XH,OUT_XL);
-  int y = GetData(OUT_YH,OUT_YL);
-  int z = GetData(OUT_ZH,OUT_ZL);
+  int32_t x = GetData(OUT_XH,OUT_XL);
+  int32_t y = GetData(OUT_YH,OUT_YL);
+  int32_t z = GetData(OUT_ZH,OUT_ZL);
   float x_g,y_g,z_g;
   int lsb_value = 8; // +-4g
   x_g = lsb_value * ((float)x / LIS3DH_LSB16_TO_KILO_LSB10);
@@ -181,13 +181,13 @@ void print_ACC()
   gx=x_g*SENSORS_GRAVITY_EARTH;
   gy=y_g*SENSORS_GRAVITY_EARTH;
   gz=z_g*SENSORS_GRAVITY_EARTH;
-  //float out=(float)x / 7840;
+  float out=(float)x / 7840;
    // uint16_t x,y,z;
    // mpu_read_reg(OUT_XH,&x);
    // mpu_read_reg(OUT_YH,&y);
    // mpu_read_reg(OUT_ZH,&z);
-   char buff[30]={0};
-   sprintf(buff,"\nGX:%.2f GY:%.2f GZ:%.2f \n",gx,gy,gz);
+   char buff[100]={0};
+    sprintf(buff,"\nX: %d GX:%.4f Y: %d GY:%.4f  Z:%d GZ:%.4f XX %.4f \n",x,gx,y,gy,z,gz,out);
     QL_I2C_LOG(buff);
 }
 
@@ -206,7 +206,7 @@ void ql_i2c_demo_thread(void *param)
         }
         else
         {
-            QL_I2C_LOG("i2c failed\n");
+            QL_I2C_LOG("\ni2c failed\n");
         }
         // QL_APP_I2C_LOG("I2C read_data = 0x%x", read_data);
         // ql_I2cRead(i2c_1, SalveAddr_r_8bit, 0xf0, &read_data, 1);

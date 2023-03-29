@@ -15,6 +15,7 @@
 #include "gnss_demo.h"
 #include "cJSON.h"
 #include "ql_fs.h"
+#include "main.h"
 
 // #include "GNSS.h"
 #define OUT_LOG DebugPrint
@@ -38,8 +39,6 @@ static uint8_t Led = 0, Led2 = 0;
 
 // for ledcfg demo
 #define QL_PIN_NUM_KEYOUT_5 82
-char *topic_rec = "EC200U_REC";
-char *topic_remote = "EC200U_REMOTE";
 
 #define jsonRoot "{\r\n"                                                                             \
                  "\"imei\": \"8661111111111111\",\r\n"                                               \
@@ -54,65 +53,65 @@ char *topic_remote = "EC200U_REMOTE";
 
 // JSON解析
 
-void cJSON_Parsing()
-{
-    OUT_LOG("[cJSON_Test] cJSON_Parsing Start");
-    cJSON *pJsonRoot = cJSON_Parse(jsonRoot);
-    if (pJsonRoot != NULL)
-    {
-        OUT_LOG("[cJSON_Test] cJSON TRUE");
-        OUT_LOG("[cJSON_Test] cJSON:%s", jsonRoot);
-    }
-    else
-    {
-        OUT_LOG("[cJSON_Test] cJSON ERROR");
-    }
-    cJSON *pimeiAdress = cJSON_GetObjectItem(pJsonRoot, "imei");
-    if (pimeiAdress)
-    {
-        if (cJSON_IsString(pimeiAdress))
-            OUT_LOG("[cJSON_Test] get imeiAdress:%s", pimeiAdress->valuestring);
-    }
-    else
-        OUT_LOG("[cJSON_Test] get imeiAdress failed");
-}
+// void cJSON_Parsing()
+// {
+//     OUT_LOG("[cJSON_Test] cJSON_Parsing Start");
+//     cJSON *pJsonRoot = cJSON_Parse(jsonRoot);
+//     if (pJsonRoot != NULL)
+//     {
+//         OUT_LOG("[cJSON_Test] cJSON TRUE");
+//         OUT_LOG("[cJSON_Test] cJSON:%s", jsonRoot);
+//     }
+//     else
+//     {
+//         OUT_LOG("[cJSON_Test] cJSON ERROR");
+//     }
+//     cJSON *pimeiAdress = cJSON_GetObjectItem(pJsonRoot, "imei");
+//     if (pimeiAdress)
+//     {
+//         if (cJSON_IsString(pimeiAdress))
+//             OUT_LOG("[cJSON_Test] get imeiAdress:%s", pimeiAdress->valuestring);
+//     }
+//     else
+//         OUT_LOG("[cJSON_Test] get imeiAdress failed");
+// }
 
-void cJSON_Generate()
-{
-    // 取一下本地的station的mac地址，保存在全局变量tempMessage
-    OUT_LOG("[cJSON_Test] cJSON_Generate Start");
-    cJSON *pRoot = cJSON_CreateObject();
+// void cJSON_Generate()
+// {
+//     // 取一下本地的station的mac地址，保存在全局变量tempMessage
+//     OUT_LOG("[cJSON_Test] cJSON_Generate Start");
+//     cJSON *pRoot = cJSON_CreateObject();
 
-    // 新增一个字段imei到根点，数值是tempMessage
-    char tempMessage[] = "8661111111111111";
-    cJSON_AddStringToObject(pRoot, "imei", tempMessage);
+//     // 新增一个字段imei到根点，数值是tempMessage
+//     char tempMessage[] = "8661111111111111";
+//     cJSON_AddStringToObject(pRoot, "imei", tempMessage);
 
-    // 新增一个字段number到根点，数值是2
-    cJSON_AddNumberToObject(pRoot, "number", 2020);
+//     // 新增一个字段number到根点，数值是2
+//     cJSON_AddNumberToObject(pRoot, "number", 2020);
 
-    cJSON *pValue = cJSON_CreateObject();
-    cJSON_AddStringToObject(pValue, "name", "cx");
-    cJSON_AddNumberToObject(pValue, "age", 17);
-    cJSON_AddItemToObject(pRoot, "value", pValue);
+//     cJSON *pValue = cJSON_CreateObject();
+//     cJSON_AddStringToObject(pValue, "name", "cx");
+//     cJSON_AddNumberToObject(pValue, "age", 17);
+//     cJSON_AddItemToObject(pRoot, "value", pValue);
 
-    // 数组初始化
-    int hex[5] = {11, 12, 13, 14, 15};
-    cJSON *pHex = cJSON_CreateIntArray(hex, 5); // 创建一个长度为5的int型的数组json元素
-    cJSON_AddItemToObject(pRoot, "hex", pHex);  // 将数组元素添加进pRoot
+//     // 数组初始化
+//     int hex[5] = {11, 12, 13, 14, 15};
+//     cJSON *pHex = cJSON_CreateIntArray(hex, 5); // 创建一个长度为5的int型的数组json元素
+//     cJSON_AddItemToObject(pRoot, "hex", pHex);  // 将数组元素添加进pRoot
 
-    char *s = cJSON_Print(pRoot);
-    OUT_LOG("\n[cJSON_Test] creatJson:%s\n", s);
-    // 释放内存
-    cJSON_free((void *)s);
+//     char *s = cJSON_Print(pRoot);
+//     OUT_LOG("\n[cJSON_Test] creatJson:%s\n", s);
+//     // 释放内存
+//     cJSON_free((void *)s);
 
-    // 释放内存
-    // cJSON_Delete(pHex);
-    // 释放内存
-    // cJSON_Delete(pValue);
-    // 释放内存
-    cJSON_Delete(pRoot);
-    OUT_LOG("[cJSON_Test] cJSON_Generate Stop");
-}
+//     // 释放内存
+//     // cJSON_Delete(pHex);
+//     // 释放内存
+//     // cJSON_Delete(pValue);
+//     // 释放内存
+//     cJSON_Delete(pRoot);
+//     OUT_LOG("[cJSON_Test] cJSON_Generate Stop");
+// }
 
 void timer_callback(void)
 {
@@ -192,25 +191,13 @@ static void main_task_thread(void *param)
 {
     ql_event_t event;
     DebugInit();
-    // string x="\r du lieu GNSS =>>> \n";
-    // ql_uart_write(QL_UART_PORT_1,x,x.length());
-
-    // char version_buf[128] = {0};
-    // ql_dev_get_firmware_version(version_buf, sizeof(version_buf));
-    // OUT_LOG("\nPhien phan mem hien tai:  %s\n", version_buf);
-    //ql_CamInit(320, 240);
-   // ql_CamPowerOn();
-    //ql_I2cInit(i2c_1, STANDARD_MODE);
-   // Acc_Init();
-   // cJSON_Parsing();
-    // PIN24 GPIO2 (FUNC0)
+    ql_dev_get_imei(imei, 64, NSIM);
     ql_pin_set_func(24, 0);
     ql_gpio_init(GPIO_2, GPIO_OUTPUT, PULL_NONE, LVL_HIGH);
 
     // PIN6: NET_STATUS - GPIO22 (FUNC:4)
     ql_pin_set_func(6, 4);
     ql_gpio_init(GPIO_22, GPIO_OUTPUT, PULL_NONE, LVL_HIGH);
-
 
     SendEventToThread(main_task, INIT_CONFIG);
 
@@ -245,25 +232,8 @@ static void main_task_thread(void *param)
     }
 }
 
-//extern print_GPS(char *dat);
+// extern print_GPS(char *dat);
 extern pub_mqtt(char *topic, char *mess);
-
-void ql_enter_sleep_cb(void *ctx)
-{
-    OUT_LOG("enter sleep cb\n");
-    ql_pin_set_func(QL_PIN_NUM_KEYOUT_5, QL_FUN_NUM_UART_2_CTS); // keyout5 pin need be low level when enter sleep, adjust the function to uart2_rts can do it
-    ql_gpio_set_level(GPIO_12, LVL_HIGH);                        // close mos linked to gnss, to avoid high current in sleep mode
-    ql_gpio_set_level(GPIO_11, LVL_LOW);                         // gpio11 need be low level when enter sleep to reduce leakage current to gnss
-}
-
-// exit sleep callback function is executed after exiting sleep, custom can recover the information before sleep
-// Caution:callback functions cannot run too much code
-void ql_exit_sleep_cb(void *ctx)
-{
-    OUT_LOG("exit sleep cb\n");
-
-    ql_pin_set_func(QL_PIN_NUM_KEYOUT_5, QL_FUN_NUM_UART_3_TXD); // keyout5 pin used as gnss uart3_txd function, after exit sleep, set it to uart3_txd
-}
 
 int appimg_enter(void *param)
 {
@@ -271,12 +241,7 @@ int appimg_enter(void *param)
     ql_dev_cfg_wdt(0);
     ql_log_set_port(0);
     ql_quec_trace_enable(1);
-
     ql_rtos_sw_dog_disable();
-    // register sleep callback function
-    ql_sleep_register_cb(ql_enter_sleep_cb);
-    // register wakeup callback function
-    ql_wakeup_register_cb(ql_exit_sleep_cb);
 
     /*Create timer tick*/
     err = ql_rtos_timer_create(&main_timer, main_task, timer_callback, NULL);
@@ -287,7 +252,9 @@ int appimg_enter(void *param)
     ql_sms_app_init();
     ql_mqtt_app_init();
     ql_gnss_app_init();
+#ifdef SENSOR_LIS3DH
     ql_i2c_demo_init();
+#endif
 
     return err;
 }

@@ -7,9 +7,9 @@
 
 #include "ql_log.h"
 #include "ql_api_datacall.h"
+#include "ql_lbs_client.h"
 
 #include "MQTT.h"
-#include "ql_power.h"
 #include "cJSON.h"
 #include "ql_api_nw.h"
 #include "ql_fs.h"
@@ -18,16 +18,11 @@
 #define MQTT_CLIENT_USER "esp32-iot"
 #define MQTT_CLIENT_PASS "thang123"
 
-#define MQTT_CLIENT_ONENET_DEVICENAME "SmartDevice"
-#define MQTT_CLIENT_ONENET_VERSION "2022-11-22"
-
 #define MQTT_CLIENT_SRV_URL "mqtt://103.200.20.78:1883"        // onenet
 #define MQTT_CLIENT_ONENET_SSL_URL "mqtt://103.200.20.78:1883" // onenet SSL
 
-#define MQTT_TOPIC_SUB "MQTT_SUB"
-#define MQTT_TOPIC_PUB "MQTT_PUB"
-
 #define NSIM 0
+char *SIM_info;
 // publist
 
 #define QL_MQTT_LOG DebugPrint
@@ -36,71 +31,22 @@ ql_task_t mqtt_task = NULL;
 static ql_sem_t mqtt_semp;
 static int mqtt_connected = 0;
 mqtt_client_t mqtt_cli;
-ql_nw_cell_info_s cell_info;
-ql_nw_seclection_info_s select_info;
 // extern uint8_t NSIM = 0;
 uint16_t sim_cid;
 int profile_idx = 1;
+unsigned char cell_index = 0, csq = 0;
+ql_nw_mode_type_e nw_mode = 0;
+ql_nw_reg_status_info_s *reg_info;
+// ql_nw_signal_strength_info_s *signal_info = (ql_nw_signal_strength_info_s *)calloc(1, sizeof(ql_nw_signal_strength_info_s));
+ql_nw_operator_info_s *oper_info;
+ql_nw_seclection_info_s *select_info;
+ql_nw_nitz_time_info_s *nitz_info;
+ql_nw_cell_info_s *cell_info;
 
 #define QL_LBS_LOG DebugPrint
 // #define QL_LBS_LOG_PUSH(msg, ...)	    DebugPrint
 
-static ql_task_t lbs_task = NULL;
-
-static lbs_client_hndl lbs_cli = 0;
-static ql_sem_t lbs_semp;
-
-static lbs_basic_info_t basic_info = {
-    .type = 1,
-    .encrypt = 1,
-    .key_index = 1,
-    .pos_format = 1,
-    .loc_method = 4};
-
-static lbs_auth_info_t auth_info = {
-    .user_name = "quectel",
-    .user_pwd = "123456",
-    .token = "1111111122222222", //"A693EDC90C42E624",
-    .imei = "861687000001091",
-    .rand = 2346};
-
-static lbs_cell_info_t lbs_cell_info[] = {
-    {.radio = 3,
-     .mcc = 460,
-     .mnc = 0,
-     .lac_id = 0x550B,
-     .cell_id = 0xF2D4A48,
-     .signal = 0,
-     .tac = 3,
-     .bcch = 0,
-     .bsic = 0,
-     .uarfcndl = 0,
-     .psc = 0,
-     .rsrq = 0,
-     .pci = 0,
-     .earfcn = 0}};
-
-// static void lbs_result_cb(lbs_response_data_t *response_data)
-// {
-//     int i = 0;
-//     if (NULL == response_data || lbs_cli != response_data->hndl)
-//     {
-//         return;
-//     }
-
-//     QL_LBS_LOG("lbs result: %08X", response_data->result);
-//     if (response_data->result == QL_LBS_OK)
-//     {
-//         for (i = 0; i < response_data->pos_num; i++)
-//         {
-//             QL_LBS_LOG("Location[%d]: %f, %f, %d\n", i, response_data->pos_info[i].longitude,
-//                        response_data->pos_info[i].latitude, response_data->pos_info[i].accuracy);
-//         }
-//     }
-//     ql_rtos_semaphore_release(lbs_semp);
-// }
-
-static void mqtt_connect_result_cb(mqtt_client_t *client, void *arg, mqtt_connection_status_e status)
+ mqtt_connect_result_cb(mqtt_client_t *client, void *arg, mqtt_connection_status_e status)
 {
     QL_MQTT_LOG("\rstatus: %d", status);
     if (status == 0)
@@ -118,8 +64,7 @@ static void mqtt_state_exception_cb(mqtt_client_t *client)
 
 extern gui_sms(char *sdt, char *noidung);
 extern ql_fota_http_app_init();
-//extern pub_GPS();
-// extern print_GPS(char *dat);
+extern print_GPS(char *dat);
 
 static void mqtt_requst_result_cb(mqtt_client_t *client, void *arg, int err)
 {
@@ -145,38 +90,32 @@ static void mqtt_inpub_data_cb(mqtt_client_t *client, void *arg, int pkt_id, con
 
                 ql_fota_http_app_init();
             }
-            else if (strcmp(val, "GET_VERSION") == 0)
-            {
-                char version_buf[128] = {0};
-                ql_dev_get_firmware_version(version_buf, sizeof(version_buf));
-                QL_MQTT_LOG("Phien phan mem hien tai:  %s\n", version_buf);
-                if (mqtt_connected == 1)
-                {
-                    ql_mqtt_publish(&mqtt_cli, "EC200U_REC", version_buf, strlen(version_buf), 0, 0, mqtt_requst_result_cb, NULL == MQTTCLIENT_WOUNDBLOCK);
-                }
-            }
-            else if (strcmp(val, "SMS_KTTK") == 0)
-            {
-                
-                char version_buf[128] = {0};
-                gui_sms("191", "KTTK");
-                delete_all_sms();
-            }
             else if (strcmp(val, "GET_GPS") == 0)
             {
-                //char buf[256] = {0};
-               // print_GPS(buf);
-               // pub_GPS();
-               char buf[30];
-               sprintf(buf,"lat:%.6f",g_gps_data.latitude);
-               QL_MQTT_LOG(buf);
-            }
-
-            else if (strcmp(val, "GET_MODEL") == 0)
-            {
-                char model_buf[128] = {0};
-                ql_dev_get_model(model_buf, sizeof(model_buf));
-                QL_MQTT_LOG("MODEL CHIP:  %s\n", model_buf);
+                float lat = g_gps_data.latitude;
+                float lng = g_gps_data.longitude;
+                uint8_t speed;
+                cJSON *pRoot = cJSON_CreateObject();
+                cJSON_AddStringToObject(pRoot, "RES", "GET_GPS");
+                // cJSON_AddNumberToObject(pRoot, "lat", g_gps_data.latitude);
+                speed = (int8_t)g_gps_data.gps_speed;
+                int16_t signal = g_gps_data.avg_cnr;
+                cJSON *pValue = cJSON_CreateObject();
+                cJSON_AddNumberToObject(pValue, "lat", lat);
+                cJSON_AddNumberToObject(pValue, "lng", lng);
+                cJSON_AddNumberToObject(pValue, "speed", speed);
+                cJSON_AddNumberToObject(pValue, "signal", signal);
+                cJSON_AddItemToObject(pRoot, "GPS_INFO", pValue);
+                char *GPS = cJSON_Print(pRoot);
+                QL_MQTT_LOG("\n%s\n", GPS);
+                if (lat != 0)
+                {
+                    pub_mqtt(topic_rec, GPS);
+                }
+                else
+                {
+                    pub_mqtt(topic_rec, "Khong co Du lieu GPS!");
+                }
             }
             else if (strcmp(val, "GET_TEMP") == 0)
             {
@@ -193,43 +132,38 @@ static void mqtt_inpub_data_cb(mqtt_client_t *client, void *arg, int pkt_id, con
             else if (strcmp(val, "ENTER_SLEEP") == 0)
             {
                 QL_MQTT_LOG("BAT CHE DO NGU SAU 5S:\n");
-                ql_rtos_task_sleep_s(5);
-                ql_autosleep_enable(QL_ALLOW_SLEEP);
+                ql_power_app_init();
+                // ql_rtos_task_sleep_s(5);
+                // ql_autosleep_enable(QL_ALLOW_SLEEP);
             }
             else if (strcmp(val, "SMS_PAIR") == 0)
             {
                 cJSON *sdt = cJSON_GetObjectItem(pJsonRoot, "SDT");
                 char *val1 = sdt->valuestring;
-
                 cJSON *info = cJSON_GetObjectItem(pJsonRoot, "INFO");
                 char *val2 = info->valuestring;
-
                 gui_sms(val1, val2);
-            }
-            else if (strcmp(val, "GET_SN") == 0)
-            {
-                char serial_buf[128] = {0};
-                ql_dev_get_sn(&serial_buf, sizeof(serial_buf), 0);
-                ql_dev_get_model(serial_buf, sizeof(serial_buf));
-                QL_MQTT_LOG("Serial Number CHIP:  %s\n", serial_buf);
-                if (mqtt_connected == 1)
-                {
-                    ql_mqtt_publish(&mqtt_cli, "EC200U_REMOTE", serial_buf, strlen(serial_buf), 0, 0, mqtt_requst_result_cb, NULL == MQTTCLIENT_WOUNDBLOCK);
-                }
             }
             else if (strcmp(val, "GET_SIM") == 0)
             {
-                unsigned char csq = 0;
-                int ret;
-               // ql_nw_get_csq(NSIM, &csq);
-               // QL_MQTT_LOG("ret=0x%x, csq:%d", ret, csq);
-                read_sim_info();
+
+                // char buff[100];
+                // sprintf(buff,"ret=0x%x, csq:%d name:%s %s", ret, csq,oper_info->long_oper_name,oper_info->short_oper_name);
+                // QL_MQTT_LOG(buff);
+                // read_sim_info();
+
+                get_sim();
+                // ql_rtos_task_sleep_ms(200);
+                 pub_mqtt(topic_rec,SIM_info);
+                 //ql_mqtt_connect(&mqtt_cli, MQTT_CLIENT_SRV_URL, mqtt_connect_result_cb, NULL, (const struct mqtt_connect_client_info_t *)&client_info, mqtt_state_exception_cb);
+                // ret = ql_nw_get_nitz_time_info(nitz_info);
+                // QL_MQTT_LOG("ret=0x%x, nitz_time:%s, abs_time:%ld", ret, nitz_info->nitz_time, nitz_info->abs_time);
             }
             else if (strcmp(val, "SMS_DELALL") == 0)
             {
                 delete_all_sms();
             }
-             else if (strcmp(val, "NWM_SAVE") == 0)
+            else if (strcmp(val, "NWM_SAVE") == 0)
             {
                 cJSON *info = cJSON_GetObjectItem(pJsonRoot, "INFO");
                 char *val2 = info->valuestring;
@@ -238,7 +172,7 @@ static void mqtt_inpub_data_cb(mqtt_client_t *client, void *arg, int pkt_id, con
                 {
                     QL_MQTT_LOG("Ghi thanh cong\n");
                 }
-            }           
+            }
             else if (strcmp(val, "NWM_READ") == 0)
             {
                 char buffer[100] = {0};
@@ -250,12 +184,112 @@ static void mqtt_inpub_data_cb(mqtt_client_t *client, void *arg, int pkt_id, con
             }
             else if (strcmp(val, "SCAN_WIFI") == 0)
             {
-               ql_wifiscan_app_init();
+                ql_wifiscan_app_init();
             }
-            
         }
     }
     cJSON_Delete(pJsonRoot);
+}
+
+void get_sim()
+{
+    int ret;
+    // ret = ql_nw_get_mode(NSIM, &nw_mode);
+    // QL_MQTT_LOG("ret=0x%x, nw_mode:%d", ret, nw_mode);
+
+    // ret = ql_nw_get_reg_status(NSIM, reg_info);
+    // QL_MQTT_LOG("ret=0x%x", ret);
+    // QL_MQTT_LOG("voice: state:%d, lac:0x%X, cid:0x%X, act:%d", reg_info->voice_reg.state, reg_info->voice_reg.lac, reg_info->voice_reg.cid, reg_info->voice_reg.act);
+    // QL_MQTT_LOG("data:  state:%d, lac:0x%X, cid:0x%X, act:%d", reg_info->data_reg.state, reg_info->data_reg.lac, reg_info->data_reg.cid, reg_info->data_reg.act);
+
+    ret = ql_nw_get_csq(NSIM, &csq);
+
+    // ret = ql_nw_get_signal_strength(NSIM, signal_info);
+    // QL_MQTT_LOG("ret=0x%x, rssi:%d, bitErrorRate:%d, rsrp:%d, rsrq:%d",
+    //                ret, signal_info->rssi, signal_info->bitErrorRate,
+    //                signal_info->rsrp, signal_info->rsrq);
+
+    ret = ql_nw_get_operator_name(NSIM, oper_info);
+    QL_MQTT_LOG("ret=0x%x, long_oper_name:%s, short_oper_name:%s, mcc:%s, mnc:%s",
+                ret, oper_info->long_oper_name, oper_info->short_oper_name, oper_info->mcc, oper_info->mnc);
+
+    //     ret = ql_nw_get_selection(NSIM, select_info);
+    //    QL_MQTT_LOG("ret=0x%x, nw_selection_mode:%d, mcc:%s, mnc:%s, act:%d",
+    //                    ret, select_info->nw_selection_mode, select_info->mcc, select_info->mnc, select_info->act);
+
+    //     ret = ql_nw_get_nitz_time_info(nitz_info);
+    //    QL_MQTT_LOG("ret=0x%x, nitz_time:%s, abs_time:%ld", ret, nitz_info->nitz_time, nitz_info->abs_time);
+
+    ret = ql_nw_get_cell_info(NSIM, cell_info);
+    QL_MQTT_LOG("ret=0x%x", ret);
+
+    if (cell_info->gsm_info_valid)
+    {
+        for (cell_index = 0; cell_index < cell_info->gsm_info_num; cell_index++)
+        {
+            QL_MQTT_LOG("Cell_%d [GSM] flag:%d, cid:0x%X, mcc:%d, mnc:%02d, lac:0x%X, arfcn:%d, bsic:%d, rssi:%d",
+                        cell_index,
+                        cell_info->gsm_info[cell_index].flag,
+                        cell_info->gsm_info[cell_index].cid,
+                        cell_info->gsm_info[cell_index].mcc,
+                        cell_info->gsm_info[cell_index].mnc,
+                        cell_info->gsm_info[cell_index].lac,
+                        cell_info->gsm_info[cell_index].arfcn,
+                        cell_info->gsm_info[cell_index].bsic,
+                        cell_info->gsm_info[cell_index].rssi);
+        }
+
+        cJSON *pRoot = cJSON_CreateObject();
+        cJSON_AddStringToObject(pRoot, "RES", "GET_SIM");
+        cJSON *pValue = cJSON_CreateObject();
+        cJSON_AddStringToObject(pValue, "imei", imei);
+        cJSON_AddStringToObject(pValue, "sim_name", oper_info->long_oper_name);
+        cJSON_AddStringToObject(pValue, "network", "GMS");
+        cJSON_AddNumberToObject(pValue, "csq", csq);
+        cJSON_AddNumberToObject(pValue, "mcc", cell_info->lte_info[0].mcc);
+        cJSON_AddNumberToObject(pValue, "mnc", cell_info->lte_info[0].mnc);
+        cJSON_AddNumberToObject(pValue, "cell_id", cell_info->lte_info[0].cid);
+        cJSON_AddNumberToObject(pValue, "lac_id", cell_info->lte_info[0].tac);
+        cJSON_AddItemToObject(pRoot, "SIM_INFO", pValue);
+        SIM_info = cJSON_Print(pRoot);
+        QL_MQTT_LOG("\n%s\n", SIM_info);
+        // cJSON_Delete(pRoot);
+        // cJSON_Delete(pValue);
+    }
+    else if (cell_info->lte_info_valid)
+    {
+        for (cell_index = 0; cell_index < cell_info->lte_info_num; cell_index++)
+        {
+            QL_MQTT_LOG("Cell_%d [LTE] flag:%d, cid:0x%X, mcc:%d, mnc:%02d, tac:0x%X, pci:%d, earfcn:%d, rssi:%d",
+                        cell_index,
+                        cell_info->lte_info[cell_index].flag,
+                        cell_info->lte_info[cell_index].cid,
+                        cell_info->lte_info[cell_index].mcc,
+                        cell_info->lte_info[cell_index].mnc,
+                        cell_info->lte_info[cell_index].tac,
+                        cell_info->lte_info[cell_index].pci,
+                        cell_info->lte_info[cell_index].earfcn,
+                        cell_info->lte_info[cell_index].rssi);
+        }
+
+        cJSON *pRoot = cJSON_CreateObject();
+        cJSON_AddStringToObject(pRoot, "RES", "GET_SIM");
+        cJSON *pValue = cJSON_CreateObject();
+        cJSON_AddStringToObject(pValue, "imei", imei);
+        cJSON_AddStringToObject(pValue, "sim_name", oper_info->long_oper_name);
+        cJSON_AddStringToObject(pValue, "network", "LTE");
+        cJSON_AddNumberToObject(pValue, "csq", csq);
+        cJSON_AddNumberToObject(pValue, "mcc", cell_info->lte_info[0].mcc);
+        cJSON_AddNumberToObject(pValue, "mnc", cell_info->lte_info[0].mnc);
+        cJSON_AddNumberToObject(pValue, "cell_id", cell_info->lte_info[0].cid);
+        cJSON_AddNumberToObject(pValue, "lac_id", cell_info->lte_info[0].tac);
+        cJSON_AddItemToObject(pRoot, "SIM_INFO", pValue);
+        SIM_info = cJSON_Print(pRoot);
+        ;
+        QL_MQTT_LOG("\n%s\n", SIM_info);
+        // cJSON_Delete(pRoot);
+        // cJSON_Delete(pValue);
+    }
 }
 
 static void mqtt_disconnect_result_cb(mqtt_client_t *client, void *arg, int err)
@@ -293,7 +327,11 @@ static void mqtt_app_thread(void *arg)
     char ip4_addr_str[16] = {0};
     struct mqtt_connect_client_info_t client_info = {0};
     int is_user_onenet = 0;
-
+    oper_info = (ql_nw_operator_info_s *)calloc(1, sizeof(ql_nw_operator_info_s));
+    // ql_nw_signal_strength_info_s *signal_info = (ql_nw_signal_strength_info_s *)calloc(1, sizeof(ql_nw_signal_strength_info_s));
+    select_info = (ql_nw_seclection_info_s *)calloc(1, sizeof(ql_nw_seclection_info_s));
+    nitz_info = (ql_nw_nitz_time_info_s *)calloc(1, sizeof(ql_nw_nitz_time_info_s));
+    cell_info = (ql_nw_cell_info_s *)calloc(1, sizeof(ql_nw_cell_info_s));
     ql_rtos_task_sleep_s(10);
     ql_rtos_semaphore_create(&mqtt_semp, 0);
 
@@ -424,7 +462,7 @@ static void mqtt_app_thread(void *arg)
                 ql_rtos_semaphore_wait(mqtt_semp, QL_WAIT_FOREVER);
             }
 
-            ql_rtos_task_sleep_ms(10000);
+            ql_rtos_task_sleep_ms(5000);
         }
     }
     if (mqtt_connected == 1 && ql_mqtt_disconnect(&mqtt_cli, mqtt_disconnect_result_cb, NULL) == MQTTCLIENT_WOUNDBLOCK)

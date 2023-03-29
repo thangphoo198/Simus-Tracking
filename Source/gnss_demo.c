@@ -219,7 +219,7 @@ static void ql_gnss_demo_thread(void *param)
                             ret = nmea_value_update(nmea, &g_gps_data);
                             char buff[100]={0};
                             sprintf(buff,"\n%f,%f SPEED:%f tin hieu:%d vetinh:%d time:%d\n",g_gps_data.latitude,g_gps_data.longitude,g_gps_data.gps_speed,g_gps_data.avg_cnr,g_gps_data.satellites_num,g_gps_data.UTC);
-                            QL_GNSSDEMO_LOG(buff);
+                          //  QL_GNSSDEMO_LOG(buff);
                             if (nmea->data)
                             {
                                 free(nmea->data);
