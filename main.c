@@ -250,22 +250,15 @@ static void main_task_thread(void *param)
 
 void send_gps()
 {
-    float lat = g_gps_data.latitude;
-    float lng = g_gps_data.longitude;
-    uint8_t speed;
+
     cJSON *pRoot = cJSON_CreateObject();
     cJSON_AddStringToObject(pRoot, "RES", "GET_GPS");
     // cJSON_AddNumberToObject(pRoot, "lat", g_gps_data.latitude);
-    char buff_time[50]={0};
-    sprintf(buff_time,"%d-%d/%d/20%d",g_gps_data.UTC,g_gps_data.time.tm_mday,g_gps_data.time.tm_mon,g_gps_data.time.tm_year);
-    char buff_local[50]={0};
-    sprintf(buff_local,"%.6f,%.6f",g_gps_data.latitude,g_gps_data.longitude);
     int16_t signal = g_gps_data.avg_cnr;
     cJSON *pValue = cJSON_CreateObject();
     cJSON_AddStringToObject(pValue, "time", buff_time);
     cJSON_AddStringToObject(pValue, "localtion", buff_local);
-    cJSON_AddNumberToObject(pValue, "speed", (int)g_gps_data.gps_speed);
-    cJSON_AddNumberToObject(pValue, "signal", signal);
+    cJSON_AddNumberToObject(pValue, "speed", speed);
     cJSON_AddItemToObject(pRoot, "GPS_INFO", pValue);
     GPS_info = cJSON_Print(pRoot);
     OUT_LOG(GPS_info);
