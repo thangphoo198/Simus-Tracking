@@ -31,24 +31,13 @@ WHEN			  WHO		  WHAT, WHERE, WHY
 #include "DataDefine.h"
 #include "cJSON.h"
 
-/*===========================================================================
- *Definition
- ===========================================================================*/
-// #define QL_WIFISACN_DEMO_LOG_LEVEL			QL_LOG_LEVEL_INFO
-// #define QL_WIFISACN_DEMO_LOG(msg, ...)		QL_LOG(QL_WIFISACN_DEMO_LOG_LEVEL, "wifiscan_demo", msg, ##__VA_ARGS__)
-// #define QL_WIFISACN_DEMO_LOG_PUSH(msg, ...)	QL_LOG_PUSH("wifiscan_demo", msg, ##__VA_ARGS__)
 #define QL_WIFISACN_DEMO_LOG DebugPrint
 
 #define QL_WIFISACN_TASK_STACK_SIZE     	4096
 #define QL_WIFISACN_TASK_PRIO          	    APP_PRIORITY_NORMAL
 #define QL_WIFISACN_TASK_EVENT_CNT      	10
-
-
-/*===========================================================================
- * Variate
- ===========================================================================*/
 ql_task_t ql_wifiscan_app_task = NULL;
-
+char *out;
 extern pub_mqtt(char *topic, char *mess);
 void ql_wifiscan_ap_info_output(uint16_t ap_cnt, ql_wifi_ap_info_s *p_ap_infos)
 {
@@ -100,9 +89,8 @@ void ql_wifiscan_ap_info_output(uint16_t ap_cnt, ql_wifi_ap_info_s *p_ap_infos)
     // cJSON *sig= cJSON_CreateIntArray(signal, strlen(signal)); // 创建一个长度为5的int型的数组json元素
     // cJSON_AddItemToObject(pRoot, "signalStrength", sig);  // 将数组元素添加进pRoot
     
-    char *out= cJSON_Print(root);
+    out= cJSON_Print(root);
     QL_WIFISACN_DEMO_LOG("\n%s\n", out);
-    pub_mqtt("EC200U_REC",out);
     
 }
 
@@ -228,6 +216,7 @@ static void ql_wifiscan_app_thread(void *param)
 		if(event.id == QUEC_WIFISCAN_EVENT_ASYNC_IND)
         {
             ql_wifiscan_close();//close the wifiscan device fot the async scan
+            pub_mqtt("EC200U_REC",out);
             QL_WIFISACN_DEMO_LOG("\n thoat scan wifi\n");
            // ql_rtos_task_sleep_ms(15000);
 

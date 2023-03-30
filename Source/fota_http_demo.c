@@ -18,7 +18,7 @@
 #include "ql_api_fota.h"
 
 #include "DataDefine.h"
-
+#include "main.h"
 #ifdef QL_APP_FEATURE_SDMMC
 #include "ql_sdmmc.h"
 #endif
@@ -27,12 +27,14 @@
 #define QL_FOTA_HTTP_LOG_PUSH(msg, ...) DebugPrint
 #define QL_FOTA_HTTP_LOG DebugPrint
 
-#define TRY_DOWN_TIMES		5
+#define TRY_DOWN_TIMES		2
 #define WRITE_TO_FILESIZE	(1024*5)		
 #define QL_VERSION_MAX 256
 #define HTTP_HEAD_RANGE_LENGTH_MAX  50
 #define HTTP_DLOAD_URL                      "http://broker.simus.vn/api/dl/firmware?k=000d1078-7326-11ed-ac26-d6d2c8169f23&s=abcdef&v=1.0"
 
+#define RSP_FOTA_OK "{\"RSP\":\"FOTA_OK\"}"
+#define RSP_FOTA_FAIL "{\"RSP\":\"FOTA_FAIL\"}"
 
 
 
@@ -689,12 +691,14 @@ static int 	fota_http_download_pacfile(fota_http_client_t* fota_http_cli_p)
 			//下载完成校验不成功删除文件
 			ql_remove(fota_http_cli_p->fota_packname);
 			QL_FOTA_HTTP_LOG("[%s]file FW bi loi\n",fota_http_cli_p->fota_packname);
+			pub_mqtt(topic_rec,RSP_FOTA_FAIL);
 			return -3;
 		}
 		else
 		{
 			//校验成功
 			QL_FOTA_HTTP_LOG("tai thanh cong, reset MODULE de tien hanh FOTA\n");
+			pub_mqtt(topic_rec,RSP_FOTA_OK);
 			ql_rtos_task_sleep_s(2);
 	        ql_power_reset(RESET_NORMAL);
 		}
@@ -702,7 +706,7 @@ static int 	fota_http_download_pacfile(fota_http_client_t* fota_http_cli_p)
 	return 0;
 }
 
-
+extern pub_mqtt(char *topic, char *mess);
 ql_fota_result_e  fota_http_result_process(void)
 {
 	ql_fota_result_e 	p_fota_result = 0;
@@ -768,7 +772,7 @@ void fota_http_app_thread()
 	//尝试下载最多十次
 	while( ui_down_times-- )
 	{
-		QL_FOTA_HTTP_LOG("start [%d] times download fota packge\n",TRY_DOWN_TIMES-ui_down_times);
+		QL_FOTA_HTTP_LOG("\nstart [%d] times download fota packge\n",TRY_DOWN_TIMES-ui_down_times);
 		
 		if ( fota_http_download_pacfile(&fota_http_cli) == 0 )
 		{
@@ -780,7 +784,7 @@ void fota_http_app_thread()
 		{
 			//空间不够，删除文件
 			ql_remove(fota_http_cli.fota_packname);
-			QL_FOTA_HTTP_LOG("have no space\n");
+			QL_FOTA_HTTP_LOG("\nhave no space\n");
 			break;
 		}
 		//下载失败等待10s重新开始下载
@@ -799,7 +803,7 @@ void ql_fota_http_app_init()
 {
 	QL_FOTA_HTTP_LOG("http fota demo support!\n");
 	QlOSStatus err = QL_OSI_SUCCESS;
-	err = ql_rtos_task_create(&fota_http_task, 4096*32, 20, "fota_http_app", fota_http_app_thread, NULL, 5);
+	err = ql_rtos_task_create(&fota_http_task, 4096*32,APP_PRIORITY_NORMAL, "fota_http_app", fota_http_app_thread, NULL, 5);
     if (err != QL_OSI_SUCCESS)
     {
         QL_FOTA_HTTP_LOG("created task failed");

@@ -13,6 +13,7 @@
 #include "cJSON.h"
 #include "ql_api_nw.h"
 #include "ql_fs.h"
+#include "ql_power.h"
 #include "main.h"
 
 #define NSIM 0
@@ -29,7 +30,6 @@ mqtt_client_t mqtt_cli;
 // extern uint8_t NSIM = 0;
 uint16_t sim_cid;
 int profile_idx = 1;
-
 
  mqtt_connect_result_cb(mqtt_client_t *client, void *arg, mqtt_connection_status_e status)
 {
@@ -87,10 +87,11 @@ static void mqtt_inpub_data_cb(mqtt_client_t *client, void *arg, int pkt_id, con
                 ql_get_battery_vol(&vol);
                 QL_MQTT_LOG("DIEN AP NGUON:  %d\n", vol);
             }
-            else if (strcmp(val, "ENTER_SLEEP") == 0)
+            else if (strcmp(val, "SHUTDOWN") == 0)
             {
-                QL_MQTT_LOG("BAT CHE DO NGU SAU 5S:\n");
-                ql_power_app_init();
+                QL_MQTT_LOG("TAT NGUON:\n");
+                ql_power_down(POWD_NORMAL);
+               // ql_power_app_init();
                 // ql_rtos_task_sleep_s(5);
                 // ql_autosleep_enable(QL_ALLOW_SLEEP);
             }

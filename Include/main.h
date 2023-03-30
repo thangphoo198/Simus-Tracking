@@ -20,7 +20,7 @@ static char imei[64];
 #define MQTT_CLIENT_ONENET_SSL_URL "mqtt://103.200.20.78:1883" // onenet SSL
 #define topic_remote "EC200U_REMOTE"
 #define topic_rec "EC200U_REC"
-
+#define UART_DEBUG QL_USB_PORT_MODEM
 // APPLICATION
 //#define SENSOR_LIS3DH
 #define SMS_APP

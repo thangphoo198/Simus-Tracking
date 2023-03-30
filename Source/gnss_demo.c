@@ -31,23 +31,9 @@ ql_task_t gnss_task = NULL;
 nmeasrc_sentences nmea_handle = {0};
 char gnss_device_info[100] = {0};
 static uint32 prev_ms_gsv = 0;
-
 unsigned char nmea_buff[256];
 unsigned char nmea_buff2[256];
 static bool tick_overflow = FALSE;
-/*===========================================================================
- * Functions
- ===========================================================================*/
-extern pub_mqtt(char *topic, char *mess);
-void print_GPS(char *dat)
-{
-    int i = 0;
-    for (i = 0; i < strlen(nmea_buff); i++)
-    {
-        dat[i] = nmea_buff2[i];
-    }
-}
-
 void ql_gnss_notify_cb(uint32 ind_type, ql_uart_port_number_e port, uint32 size)
 {
     if (ind_type == QUEC_UART_RX_RECV_DATA_IND)
@@ -77,7 +63,6 @@ static void ql_gnss_demo_thread(void *param)
     struct nmea_s *nmea = NULL;
     unsigned char *recbuff = NULL;
     ql_gnss_apflashdatarecv_e datarecv_status = 0;
-
     /* open GNSS */
     ret = ql_gnss_switch(GNSS_ENABLE);
     if (ret == QL_GNSS_ALREADY_OPEN)
@@ -219,19 +204,15 @@ static void ql_gnss_demo_thread(void *param)
                             ret = nmea_value_update(nmea, &g_gps_data);
                             char buff[100]={0};
                             char buff_time[50]={0};
-   sprintf(buff_time,"%d-%d/%d/20%d",g_gps_data.UTC+70000,g_gps_data.time.tm_mday,g_gps_data.time.tm_mon,g_gps_data.time.tm_year);
-                            sprintf(buff,"\n%f,%f speed%f sig:%d num:%d time:%d\n",g_gps_data.latitude,g_gps_data.longitude,g_gps_data.gps_speed,g_gps_data.avg_cnr,g_gps_data.satellites_num,g_gps_data.UTC);
-                            cJSON *pRoot = cJSON_CreateObject();
-                            cJSON_AddStringToObject(pRoot, "RES", "GET_GPS");
-                            // cJSON_AddNumberToObject(pRoot, "lat", g_gps_data.latitude);
-                            cJSON *pValue = cJSON_CreateObject();
-                            cJSON_AddNumberToObject(pValue, "lat", g_gps_data.latitude);
-                            cJSON_AddNumberToObject(pValue, "lng", g_gps_data.longitude);
-                            cJSON_AddNumberToObject(pValue, "speed", (int)g_gps_data.gps_speed);
-                            cJSON_AddNumberToObject(pValue, "signal", g_gps_data.avg_cnr);
-                            cJSON_AddStringToObject(pValue, "time", buff_time);
-                            cJSON_AddItemToObject(pRoot, "GPS_INFO", pValue);
-                            GPS_info = cJSON_Print(pRoot);
+                            sprintf(buff_time,"%d-%d/%d/20%d",g_gps_data.UTC,g_gps_data.time.tm_mday,g_gps_data.time.tm_mon,g_gps_data.time.tm_year);
+                            sprintf(buff,"\n%f,%f speed%f sig:%d num:%d time:%s\n",g_gps_data.latitude,g_gps_data.longitude,g_gps_data.gps_speed,g_gps_data.avg_cnr,g_gps_data.satellites_num,buff_time);
+                            // cJSON_AddNumberToObject(pValue, "lat", g_gps_data.latitude);
+                            // cJSON_AddNumberToObject(pValue, "lng", g_gps_data.longitude);
+                            // cJSON_AddNumberToObject(pValue, "speed", (int)g_gps_data.gps_speed);
+                            // cJSON_AddNumberToObject(pValue, "signal", g_gps_data.avg_cnr);
+                            // cJSON_AddStringToObject(pValue, "time", buff_time);
+                            // cJSON_AddItemToObject(pRoot, "GPS_INFO", pValue);
+                            // GPS_info = cJSON_Print(pRoot);
                             //QL_GNSSDEMO_LOG(GPS_info);
                             QL_GNSSDEMO_LOG(buff);
                             if (nmea->data)
@@ -267,7 +248,7 @@ void ql_gnss_app_init(void)
 {
     QlOSStatus err = QL_OSI_SUCCESS;
 
-    err = ql_rtos_task_create(&gnss_task, 16*4096, APP_PRIORITY_NORMAL, "ql_gnssdemo", ql_gnss_demo_thread, NULL, 5);
+    err = ql_rtos_task_create(&gnss_task, 4*4096, 15, "ql_gnssdemo", ql_gnss_demo_thread, NULL, 5);
     if (err != QL_OSI_SUCCESS)
     {
         QL_GNSSDEMO_LOG("gnss demo task created failed");
