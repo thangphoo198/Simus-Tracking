@@ -32,7 +32,6 @@ nmeasrc_sentences nmea_handle = {0};
 char gnss_device_info[100] = {0};
 static uint32 prev_ms_gsv = 0;
 unsigned char nmea_buff[256];
-unsigned char nmea_buff2[256];
 static bool tick_overflow = FALSE;
 void ql_gnss_notify_cb(uint32 ind_type, ql_uart_port_number_e port, uint32 size)
 {
@@ -201,9 +200,19 @@ static void ql_gnss_demo_thread(void *param)
                         if (nmea)
                         {
                             nmea_value_update(nmea, &g_gps_data);
-                            sprintf(buff_time,"%d-%d/%d/20%d",g_gps_data.UTC,g_gps_data.time.tm_mday,g_gps_data.time.tm_mon,g_gps_data.time.tm_year);
-                            sprintf(buff_local,"%.7f,%.7f",g_gps_data.latitude,g_gps_data.longitude);
-                            QL_GNSSDEMO_LOG("\n %s -- %s\n",buff_local,buff_time);                          
+                            lat=g_gps_data.latitude;
+                            if(lat>0){
+                                sprintf(gps_ok,"%s",GPSOK);
+                                QL_GNSSDEMO_LOG("\n co data gps\n");
+                                sprintf(buff_time,"%d-%d/%d/20%d",g_gps_data.UTC,g_gps_data.time.tm_mday,g_gps_data.time.tm_mon,g_gps_data.time.tm_year);
+                                sprintf(buff_local,"%.7f,%.7f",g_gps_data.latitude,g_gps_data.longitude);
+                                QL_GNSSDEMO_LOG("\n %s -- %s\n",buff_local,buff_time);  
+                                
+                            }
+                            else 
+                            {
+                                sprintf(gps_ok,"%s",GPSFAIL);
+                            }                        
                             if (nmea->data)
                             {
                                 free(nmea->data);

@@ -46,7 +46,6 @@ static void nw_app_thread(void *arg)
     }
     int ret;
     ret = ql_nw_get_csq(NSIM, &csq);
-    ql_dev_get_imei(imei, 64, NSIM);
     ret = ql_nw_get_operator_name(NSIM, oper_info);
     ret = ql_nw_get_cell_info(NSIM, cell_info);
     if (cell_info->gsm_info_valid)
@@ -65,7 +64,7 @@ static void nw_app_thread(void *arg)
         cJSON_AddItemToObject(pRoot, "SIM_INFO", pValue);
         SIM_info = cJSON_Print(pRoot);
         QL_NW_DEMO_LOG("\n%s\n", SIM_info);
-        pub_mqtt(topic_rec,SIM_info);
+        pub_mqtt(topic_gui,SIM_info);
         // cJSON_Delete(pRoot);
         // cJSON_Delete(pValue);
     }
@@ -85,7 +84,7 @@ static void nw_app_thread(void *arg)
         cJSON_AddItemToObject(pRoot, "SIM_INFO", pValue);
         SIM_info = cJSON_Print(pRoot);
         QL_NW_DEMO_LOG("\n%s\n", SIM_info);
-        pub_mqtt(topic_rec,SIM_info);
+        pub_mqtt(topic_gui,SIM_info);
         // cJSON_Delete(pRoot);
         // cJSON_Delete(pValue);
     }

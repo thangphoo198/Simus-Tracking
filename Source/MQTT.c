@@ -15,9 +15,11 @@
 #include "ql_fs.h"
 #include "ql_power.h"
 #include "main.h"
+#include "ql_adc.h"
 
 #define NSIM 0
 #define MQTT_CLIENT_IDENTITY "VT_00001"
+char mqtt_client[50]={0};
 char *SIM_info;
 // publist
 
@@ -182,6 +184,17 @@ static void mqtt_app_thread(void *arg)
     char *client_id = (char *)malloc(256);
     char *client_user = (char *)malloc(256);
     char *client_pass = (char *)malloc(256);
+    ql_dev_get_imei(imei, 30, NSIM);
+    strcpy(topic_gui, imei);
+    strcat(topic_gui, topic_rec);
+    strcpy(topic_nhan, imei);
+    strcat(topic_nhan, topic_remote);
+    strcpy(mqtt_client,imei);
+    strcat(mqtt_client,MQTT_CLIENT_IDENTITY);
+    // strcpy(topic_rec,imei);
+    // strcpy(topic_gui, imei);
+    QL_MQTT_LOG("\nimei gui:%s", topic_gui);
+    QL_MQTT_LOG("\nimei nhan:%s", topic_nhan);
 
     while ((ret = ql_network_register_wait(NSIM, 120)) != 0 && i < 10)
     {
@@ -260,7 +273,7 @@ static void mqtt_app_thread(void *arg)
         client_info.will_retain = 0;
         client_info.will_topic = NULL;
         client_info.will_msg = NULL;
-        client_info.client_id = MQTT_CLIENT_IDENTITY;
+        client_info.client_id = mqtt_client;
         client_info.client_user = MQTT_CLIENT_USER;
         client_info.client_pass = MQTT_CLIENT_PASS;
         QL_MQTT_LOG("\rconnect ssl %d onenet mode %d\n", case_id, is_user_onenet);
@@ -300,9 +313,9 @@ static void mqtt_app_thread(void *arg)
         ql_mqtt_set_inpub_callback(&mqtt_cli, mqtt_inpub_data_cb, NULL);
         while (mqtt_connected == 1)
         {
-            if (ql_mqtt_sub_unsub(&mqtt_cli, "EC200U_REMOTE", 1, mqtt_requst_result_cb, NULL, 1) == MQTTCLIENT_WOUNDBLOCK)
+            if (ql_mqtt_sub_unsub(&mqtt_cli,topic_nhan, 1, mqtt_requst_result_cb, NULL, 1) == MQTTCLIENT_WOUNDBLOCK)
             {
-                QL_MQTT_LOG("dang sub topic:EC200U_REMOTE");
+                QL_MQTT_LOG("\ndang sub topic:\n",topic_nhan);
                 ql_rtos_semaphore_wait(mqtt_semp, QL_WAIT_FOREVER);
             }
 
@@ -313,6 +326,12 @@ static void mqtt_app_thread(void *arg)
     {
         QL_MQTT_LOG("\r=====wait disconnect result");
         ql_rtos_semaphore_wait(mqtt_semp, QL_WAIT_FOREVER);
+        int adc_value = 0;
+        ql_adc_get_volt(QL_ADC0_CHANNEL, &adc_value);
+        char MQTT_CLI[50]={0};
+        sprintf(MQTT_CLI,"%s0x%d",client_info.client_id,adc_value);
+        client_info.client_id=MQTT_CLI;
+        QL_MQTT_LOG("\rKET NOI LAI MQTT\n");
         ret = ql_mqtt_connect(&mqtt_cli, MQTT_CLIENT_SRV_URL, mqtt_connect_result_cb, NULL, (const struct mqtt_connect_client_info_t *)&client_info, mqtt_state_exception_cb);
     }
     //  QL_MQTT_LOG("\r==============mqtt_client_test[%d] end=======%x=========\n", run_num, &mqtt_cli);

@@ -30,6 +30,7 @@ WHEN			  WHO		  WHAT, WHERE, WHY
 #include "wifi_scan_demo.h"
 #include "DataDefine.h"
 #include "cJSON.h"
+#include "main.h"
 
 #define QL_WIFISACN_DEMO_LOG DebugPrint
 
@@ -216,7 +217,7 @@ static void ql_wifiscan_app_thread(void *param)
 		if(event.id == QUEC_WIFISCAN_EVENT_ASYNC_IND)
         {
             ql_wifiscan_close();//close the wifiscan device fot the async scan
-            pub_mqtt("EC200U_REC",out);
+            pub_mqtt(topic_gui,out);
             QL_WIFISACN_DEMO_LOG("\n thoat scan wifi\n");
            // ql_rtos_task_sleep_ms(15000);
 

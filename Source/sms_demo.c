@@ -22,8 +22,8 @@ WHEN              WHO         WHAT, WHERE, WHY
 #include "ql_api_osi.h"
 #include "ql_api_sms.h"
 #include "ql_log.h"
-#include "ql_uart.h"
 #include "DataDefine.h"
+#include "main.h"
 
 ql_task_t sms_task = NULL;
 ql_sem_t sms_init_sem = NULL;
@@ -31,7 +31,7 @@ ql_sem_t sms_list_sem = NULL;
 
 #define QL_SMS_LOG DebugPrint
 uint8_t nSim = 0;
-uint8_t INDEX_SMS = -1,in_pre = -1;
+int8_t INDEX_SMS = -1,in_pre = -1;
 extern pub_mqtt(char *topic, char *mess);
 
 void read_sms(uint8_t index)
@@ -57,7 +57,21 @@ void read_sms(uint8_t index)
     if (QL_SMS_SUCCESS == ql_sms_read_msg(nSim, index, msg, msg_len, TEXT))
     {
         QL_SMS_LOG("SMS=> %s\n Length:%d", msg,strlen(msg));
-        pub_mqtt("EC200U_REC",msg);
+       
+        char *token = strtok(msg, ",");
+        QL_SMS_LOG("\nSĐT: %s\n",token);
+        token = strtok(NULL, ",");
+        token = strtok(NULL, ",");
+        token = strtok(NULL, ",");
+        QL_SMS_LOG("\nNOI DUNG: %s\n",token);
+        // Lấy ra toàn bộ token
+        // for (size_t i = 0; i < 3; i++)
+        // {
+        //     printf(" %s\n", token); // In mỗi token ra
+        //     token = strtok(NULL, " ");
+        //     /* code */
+        // }
+        pub_mqtt(topic_gui,token);
     }
     else
     {
@@ -186,7 +200,7 @@ void sms_demo_task(void *param)
         QL_SMS_LOG("ql_sms_get_storage_info FAIL");
     }
     // read_sms(3);
-   // delete_all_sms();
+    delete_all_sms();
     ql_rtos_task_sleep_ms(100);
     while (1)
     {

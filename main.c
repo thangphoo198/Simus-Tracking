@@ -250,7 +250,8 @@ static void main_task_thread(void *param)
 
 void send_gps()
 {
-
+    if(strcmp(gps_ok,GPSOK)==0)
+    {
     cJSON *pRoot = cJSON_CreateObject();
     cJSON_AddStringToObject(pRoot, "RES", "GET_GPS");
     // cJSON_AddNumberToObject(pRoot, "lat", g_gps_data.latitude);
@@ -262,7 +263,12 @@ void send_gps()
     cJSON_AddItemToObject(pRoot, "GPS_INFO", pValue);
     GPS_info = cJSON_Print(pRoot);
     OUT_LOG(GPS_info);
-    pub_mqtt(topic_rec,GPS_info);
+    pub_mqtt(topic_gui,GPS_info);
+    }
+    else
+    {
+        OUT_LOG("\nkhong co GPS\n");
+    }
 }
 extern pub_mqtt(char *topic, char *mess);
 
