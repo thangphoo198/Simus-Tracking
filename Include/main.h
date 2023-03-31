@@ -12,7 +12,7 @@
 char *GPS_info;
 char *SIM_info;
 static ql_gnss_data_t g_gps_data;
-static char imei[64];
+static char imei[20];
 #define NSIM 0
 #define MQTT_CLIENT_USER "esp32-iot"
 #define MQTT_CLIENT_PASS "thang123"
