@@ -21,6 +21,10 @@ static char imei[20];
 #define topic_remote "EC200U_REMOTE"
 #define topic_rec "EC200U_REC"
 #define UART_DEBUG QL_USB_PORT_MODEM
+uint16 speed;
+static float lat,lng;
+char buff_local[50];
+char buff_time[50];
 // APPLICATION
 //#define SENSOR_LIS3DH
 #define SMS_APP

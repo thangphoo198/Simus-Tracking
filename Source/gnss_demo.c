@@ -200,21 +200,10 @@ static void ql_gnss_demo_thread(void *param)
                    nmea = nmea_parse(start, end - start + 1, 1);
                         if (nmea)
                         {
-                            // nmea = nmea_parse(start, end - start + 1, 1);
-                            ret = nmea_value_update(nmea, &g_gps_data);
-                            char buff[100]={0};
-                            char buff_time[50]={0};
+                            nmea_value_update(nmea, &g_gps_data);
                             sprintf(buff_time,"%d-%d/%d/20%d",g_gps_data.UTC,g_gps_data.time.tm_mday,g_gps_data.time.tm_mon,g_gps_data.time.tm_year);
-                            sprintf(buff,"\n%f,%f speed%f sig:%d num:%d time:%s\n",g_gps_data.latitude,g_gps_data.longitude,g_gps_data.gps_speed,g_gps_data.avg_cnr,g_gps_data.satellites_num,buff_time);
-                            // cJSON_AddNumberToObject(pValue, "lat", g_gps_data.latitude);
-                            // cJSON_AddNumberToObject(pValue, "lng", g_gps_data.longitude);
-                            // cJSON_AddNumberToObject(pValue, "speed", (int)g_gps_data.gps_speed);
-                            // cJSON_AddNumberToObject(pValue, "signal", g_gps_data.avg_cnr);
-                            // cJSON_AddStringToObject(pValue, "time", buff_time);
-                            // cJSON_AddItemToObject(pRoot, "GPS_INFO", pValue);
-                            // GPS_info = cJSON_Print(pRoot);
-                            //QL_GNSSDEMO_LOG(GPS_info);
-                            QL_GNSSDEMO_LOG(buff);
+                            sprintf(buff_local,"%.7f,%.7f",g_gps_data.latitude,g_gps_data.longitude);
+                            QL_GNSSDEMO_LOG("\n %s -- %s\n",buff_local,buff_time);                          
                             if (nmea->data)
                             {
                                 free(nmea->data);
@@ -248,7 +237,7 @@ void ql_gnss_app_init(void)
 {
     QlOSStatus err = QL_OSI_SUCCESS;
 
-    err = ql_rtos_task_create(&gnss_task, 4*4096, 15, "ql_gnssdemo", ql_gnss_demo_thread, NULL, 5);
+    err = ql_rtos_task_create(&gnss_task, 4*4096,APP_PRIORITY_NORMAL, "ql_gnssdemo", ql_gnss_demo_thread, NULL, 5);
     if (err != QL_OSI_SUCCESS)
     {
         QL_GNSSDEMO_LOG("gnss demo task created failed");
