@@ -8,16 +8,10 @@
 // #include "ql_pin_cfg.h"
 #include "ql_log.h"
 #include "ql_adc.h"
-#include "ql_uart.h"
-#include "ql_power.h"
-
 #include "DataDefine.h"
 #include "gnss_demo.h"
 #include "cJSON.h"
-#include "ql_fs.h"
 #include "main.h"
-
-// #include "GNSS.h"
 #define OUT_LOG DebugPrint
 
 #define INIT_CONFIG 101
@@ -193,7 +187,10 @@ static void main_task_thread(void *param)
     DebugInit();
     ql_pin_set_func(24, 0);
     ql_gpio_init(GPIO_2, GPIO_OUTPUT, PULL_NONE, LVL_HIGH);
-    ql_gpio_init(GPIO_17,GPIO_INPUT,PULL_UP,LVL_HIGH); //SDA
+    ql_gpio_init(IO_LOCK, GPIO_OUTPUT, PULL_NONE, LVL_LOW);
+    ql_gpio_init(IO_SPEAKER, GPIO_OUTPUT, PULL_NONE, LVL_LOW);
+    ql_gpio_init(IO_LIGHT, GPIO_OUTPUT, PULL_NONE, LVL_LOW);
+    ql_gpio_init(ACC_IN ,GPIO_INPUT,PULL_UP,LVL_HIGH); //SDA
     // PIN6: NET_STATUS - GPIO22 (FUNC:4)
     ql_pin_set_func(6, 4);
     ql_gpio_init(GPIO_22, GPIO_OUTPUT, PULL_NONE, LVL_HIGH);
@@ -205,7 +202,7 @@ static void main_task_thread(void *param)
     {
         ql_event_try_wait(&event);
         ql_LvlMode in;
-        ql_gpio_get_level(GPIO_17, &in); //SDA
+        ql_gpio_get_level(ACC_IN , &in); //SDA
         if(in==LVL_LOW)
         {
             ql_rtos_task_sleep_ms(50);
@@ -278,7 +275,7 @@ int appimg_enter(void *param)
     ql_dev_cfg_wdt(0);
     ql_log_set_port(0);
     ql_quec_trace_enable(1);
-    //ql_rtos_sw_dog_enable();
+    ql_rtos_sw_dog_enable;
 
     /*Create timer tick*/
     err = ql_rtos_timer_create(&main_timer, main_task, timer_callback, NULL);

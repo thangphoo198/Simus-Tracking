@@ -19,7 +19,7 @@
 
 #define NSIM 0
 #define MQTT_CLIENT_IDENTITY "VT_00001"
-char mqtt_client[50]={0};
+char mqtt_client[50] = {0};
 char *SIM_info;
 // publist
 
@@ -33,7 +33,7 @@ mqtt_client_t mqtt_cli;
 uint16_t sim_cid;
 int profile_idx = 1;
 
- mqtt_connect_result_cb(mqtt_client_t *client, void *arg, mqtt_connection_status_e status)
+mqtt_connect_result_cb(mqtt_client_t *client, void *arg, mqtt_connection_status_e status)
 {
     QL_MQTT_LOG("\rstatus: %d", status);
     if (status == 0)
@@ -91,11 +91,24 @@ static void mqtt_inpub_data_cb(mqtt_client_t *client, void *arg, int pkt_id, con
             }
             else if (strcmp(val, "SHUTDOWN") == 0)
             {
-                QL_MQTT_LOG("TAT NGUON:\n");
-                ql_power_down(POWD_NORMAL);
-               // ql_power_app_init();
-                // ql_rtos_task_sleep_s(5);
-                // ql_autosleep_enable(QL_ALLOW_SLEEP);
+                QL_MQTT_LOG("TAT MAY:\n");
+
+                ql_gpio_set_level(IO_LOCK, LVL_HIGH);
+                // ql_power_down(POWD_NORMAL);
+            }
+            else if (strcmp(val, "SPEAKER_ON") == 0)
+            {
+                QL_MQTT_LOG("BAT LOA\n");
+
+                ql_gpio_set_level(IO_LOCK, LVL_HIGH);
+                // ql_power_down(POWD_NORMAL);
+            }
+            else if (strcmp(val, "TAT LOA") == 0)
+            {
+                QL_MQTT_LOG("TAT MAY:\n");
+
+                ql_gpio_set_level(IO_LOCK, LVL_LOW);
+                // ql_power_down(POWD_NORMAL);
             }
             else if (strcmp(val, "SMS_PAIR") == 0)
             {
@@ -104,11 +117,11 @@ static void mqtt_inpub_data_cb(mqtt_client_t *client, void *arg, int pkt_id, con
                 cJSON *info = cJSON_GetObjectItem(pJsonRoot, "INFO");
                 char *val2 = info->valuestring;
                 gui_sms(val1, val2);
+                
             }
             else if (strcmp(val, "GET_SIM") == 0)
             {
                 ql_nw_app_init();
-
             }
             else if (strcmp(val, "SMS_DELALL") == 0)
             {
@@ -141,7 +154,6 @@ static void mqtt_inpub_data_cb(mqtt_client_t *client, void *arg, int pkt_id, con
     }
     cJSON_Delete(pJsonRoot);
 }
-
 
 static void mqtt_disconnect_result_cb(mqtt_client_t *client, void *arg, int err)
 {
@@ -189,8 +201,8 @@ static void mqtt_app_thread(void *arg)
     strcat(topic_gui, topic_rec);
     strcpy(topic_nhan, imei);
     strcat(topic_nhan, topic_remote);
-    strcpy(mqtt_client,imei);
-    strcat(mqtt_client,MQTT_CLIENT_IDENTITY);
+    strcpy(mqtt_client, imei);
+    strcat(mqtt_client, MQTT_CLIENT_IDENTITY);
     // strcpy(topic_rec,imei);
     // strcpy(topic_gui, imei);
     QL_MQTT_LOG("\nimei gui:%s", topic_gui);
@@ -313,9 +325,9 @@ static void mqtt_app_thread(void *arg)
         ql_mqtt_set_inpub_callback(&mqtt_cli, mqtt_inpub_data_cb, NULL);
         while (mqtt_connected == 1)
         {
-            if (ql_mqtt_sub_unsub(&mqtt_cli,topic_nhan, 1, mqtt_requst_result_cb, NULL, 1) == MQTTCLIENT_WOUNDBLOCK)
+            if (ql_mqtt_sub_unsub(&mqtt_cli, topic_nhan, 1, mqtt_requst_result_cb, NULL, 1) == MQTTCLIENT_WOUNDBLOCK)
             {
-                QL_MQTT_LOG("\ndang sub topic:\n",topic_nhan);
+                QL_MQTT_LOG("\ndang sub topic:\n", topic_nhan);
                 ql_rtos_semaphore_wait(mqtt_semp, QL_WAIT_FOREVER);
             }
 
@@ -328,9 +340,9 @@ static void mqtt_app_thread(void *arg)
         ql_rtos_semaphore_wait(mqtt_semp, QL_WAIT_FOREVER);
         int adc_value = 0;
         ql_adc_get_volt(QL_ADC0_CHANNEL, &adc_value);
-        char MQTT_CLI[50]={0};
-        sprintf(MQTT_CLI,"%s0x%d",client_info.client_id,adc_value);
-        client_info.client_id=MQTT_CLI;
+        char MQTT_CLI[50] = {0};
+        sprintf(MQTT_CLI, "%s0x%d", client_info.client_id, adc_value);
+        client_info.client_id = MQTT_CLI;
         QL_MQTT_LOG("\rKET NOI LAI MQTT\n");
         ret = ql_mqtt_connect(&mqtt_cli, MQTT_CLIENT_SRV_URL, mqtt_connect_result_cb, NULL, (const struct mqtt_connect_client_info_t *)&client_info, mqtt_state_exception_cb);
     }

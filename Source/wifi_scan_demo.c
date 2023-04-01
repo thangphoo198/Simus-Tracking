@@ -52,7 +52,7 @@ void ql_wifiscan_ap_info_output(uint16_t ap_cnt, ql_wifi_ap_info_s *p_ap_infos)
     cars = cJSON_CreateArray();
    /* add cars array to root */
    cJSON_AddStringToObject(root, "RES", "SCAN_WIFI");
-   cJSON_AddItemToObject(root, "WIFI_INFO", cars);
+   cJSON_AddItemToObject(root, "wifiAccessPoints", cars);
 
     for (uint16_t n = 0; n < ap_cnt; n++)
     {   
@@ -64,6 +64,11 @@ void ql_wifiscan_ap_info_output(uint16_t ap_cnt, ql_wifi_ap_info_s *p_ap_infos)
         int8_t rssi=p_ap_infos->rssival;
         uint8_t channel=p_ap_infos->channel;
         sprintf(macbuff,"%x%lx",p_ap_infos->bssid_high, p_ap_infos->bssid_low);
+        char mac_out[50]={0};
+        // convert to "60:38:E0:A1:A4:91"
+        sprintf(mac_out,"%c%c:%c%c:%c%c:%c%c:%c%c:%c%c",macbuff[0],macbuff[1],macbuff[2],macbuff[3],macbuff[4],
+        macbuff[5],macbuff[6],macbuff[7],macbuff[8],macbuff[9],macbuff[10],macbuff[11]);
+      // QL_WIFISACN_DEMO_LOG("MAC=%s\n",mac_out);
         // sprintf(rssi_buf,"%d",p_ap_infos->rssival);
         // sprintf(channel_buf,"%d",p_ap_infos->channel);
        //  cJSON_AddItemToObject(root,
@@ -71,9 +76,9 @@ void ql_wifiscan_ap_info_output(uint16_t ap_cnt, ql_wifi_ap_info_s *p_ap_infos)
     //    cJSON_AddItemToArray(wifi_arr, wifi_list = cJSON_CreateObject());
     //    cJSON_AddItemToObject(wifi_list, "WiFi", cJSON_CreateString(buff));
         cJSON_AddItemToArray(cars, car = cJSON_CreateObject());
-        cJSON_AddItemToObject(car, "MAC", cJSON_CreateString(macbuff));
-        cJSON_AddItemToObject(car, "RSSI", cJSON_CreateNumber(rssi));
-        cJSON_AddItemToObject(car, "CHANNEL", cJSON_CreateNumber(channel));
+        cJSON_AddItemToObject(car, "macAddress", cJSON_CreateString(mac_out));
+        cJSON_AddItemToObject(car, "signalStrength", cJSON_CreateNumber(rssi));
+        cJSON_AddItemToObject(car, "channel", cJSON_CreateNumber(channel));
         p_ap_infos++;
         
     }
