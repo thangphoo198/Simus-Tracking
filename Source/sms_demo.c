@@ -248,7 +248,7 @@ QlOSStatus ql_sms_app_init(void)
 {
     QlOSStatus err = QL_OSI_SUCCESS;
 
-    err = ql_rtos_task_create(&sms_task, 4 * 4096, 24, "SMS_TASK", sms_demo_task, NULL, 2);
+    err = ql_rtos_task_create(&sms_task, 4 * 4096, APP_PRIORITY_NORMAL, "SMS_TASK", sms_demo_task, NULL, 2);
     if (err != QL_OSI_SUCCESS)
     {
         QL_SMS_LOG("sms_task created failed, ret = 0x%x", err);

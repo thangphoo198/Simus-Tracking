@@ -111,7 +111,7 @@ void ql_nw_app_init(void)
 {
     QlOSStatus err = QL_OSI_SUCCESS;
 
-    err = ql_rtos_task_create(&nw_task, 1024 * 4, APP_PRIORITY_NORMAL, "QNWDEMO", nw_app_thread, NULL, 5);
+    err = ql_rtos_task_create(&nw_task, 1024 * 4, APP_PRIORITY_LOW, "QNWDEMO", nw_app_thread, NULL, 5);
     if (err != QL_OSI_SUCCESS)
     {
         QL_NW_DEMO_LOG("created task failed");

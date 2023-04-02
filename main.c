@@ -24,9 +24,11 @@ ql_timer_t main_timer = NULL;
 
 static uint32_t tickCount100MS = 0;
 static uint32_t tickCount3000MS = 0;
+static uint32_t TIME_START = 0;
 
 // int adc1_value, adc2_value, adc3_value;
 static uint8_t Led = 0, Led2 = 0;
+ql_LvlMode in;
 
 #define QL_FUN_NUM_UART_2_CTS 3
 #define QL_FUN_NUM_UART_3_TXD 4
@@ -111,9 +113,11 @@ void timer_callback(void)
 {
     ql_event_t event;
 
-    if (++tickCount100MS > 30)
+    if (++tickCount100MS > 100)
     {
         tickCount100MS = 0;
+        //
+        if(in==LVL_LOW) ++TIME_START;
         SendEventToThread(main_task, MAIN_TICK_100MS);
     }
 
@@ -169,16 +173,16 @@ uint8_t DebugInit(void)
     uartConfig.parity_bit = 0;
     uartConfig.stop_bit = 1;
 
-    ql_uart_set_dcbconfig(UART_DEBUG , &uartConfig);
+    ql_uart_set_dcbconfig(UART_DEBUG, &uartConfig);
 
-    ret = ql_uart_open(UART_DEBUG );
+    ret = ql_uart_open(UART_DEBUG);
 
     if (ret == 0)
     {
-        ret = ql_uart_register_cb(UART_DEBUG , Uart1_rev_callback);
+        ret = ql_uart_register_cb(UART_DEBUG, Uart1_rev_callback);
     }
 
-    return ret; 
+    return ret;
 }
 
 static void main_task_thread(void *param)
@@ -190,50 +194,50 @@ static void main_task_thread(void *param)
     ql_gpio_init(IO_LOCK, GPIO_OUTPUT, PULL_NONE, LVL_LOW);
     ql_gpio_init(IO_SPEAKER, GPIO_OUTPUT, PULL_NONE, LVL_LOW);
     ql_gpio_init(IO_LIGHT, GPIO_OUTPUT, PULL_NONE, LVL_LOW);
-    ql_gpio_init(ACC_IN ,GPIO_INPUT,PULL_UP,LVL_HIGH); //SDA
+    ql_gpio_init(ACC_IN, GPIO_INPUT, PULL_UP, LVL_HIGH); // SDA
     // PIN6: NET_STATUS - GPIO22 (FUNC:4)
     ql_pin_set_func(6, 4);
     ql_gpio_init(GPIO_22, GPIO_OUTPUT, PULL_NONE, LVL_HIGH);
 
     SendEventToThread(main_task, INIT_CONFIG);
-    //char buff_gps[50]={0};
+    // char buff_gps[50]={0};
 
     while (1)
     {
         ql_event_try_wait(&event);
-        ql_LvlMode in;
-        ql_gpio_get_level(ACC_IN , &in); //SDA
-        if(in==LVL_LOW)
+        ql_gpio_get_level(ACC_IN, &in); // 
+        if (in == LVL_LOW)
         {
-            ql_rtos_task_sleep_ms(50);
+            ql_rtos_task_sleep_ms(20);
             OUT_LOG("\n ban da nhap phim\n");
+            ql_rtos_timer_start(main_timer, 2, 1);
         }
 
         switch (event.id)
         {
 
         case INIT_CONFIG:
-            ql_uart_write(UART_DEBUG , "\r==>Init Configs\n", 16);
-            ql_rtos_timer_start(main_timer, 2, 1);
+            ql_uart_write(UART_DEBUG, "\r==>Init Configs\n", 16);
+            // ql_rtos_timer_start(main_timer, 2, 1);
 
             break;
         case MAIN_TICK_100MS:
-            Led ^= 1;
             Led2 ^= 1;
             ql_gpio_set_level(GPIO_22, Led2 == 0 ? LVL_LOW : LVL_HIGH);
+            OUT_LOG("TIME:%d\n",TIME_START);
             break;
 
         case MAIN_TICK_3000MS:
             Led2 ^= 1;
             send_gps();
-        //  if (strlen(GPS_info)>120)
-        //  {
-        //     OUT_LOG(GPS_info);
-        //     pub_mqtt(topic_rec,GPS_info);
-        //  }
-         // long s = ql_fs_free_size("UFS");
-           // sprintf(buff_gps,"%.6f,%.6f",g_gps_data.latitude,g_gps_data.longitude);
-          //  OUT_LOG("\ntime chinh:%s\n",buff_gps);
+            //  if (strlen(GPS_info)>120)
+            //  {
+            //     OUT_LOG(GPS_info);
+            //     pub_mqtt(topic_rec,GPS_info);
+            //  }
+            // long s = ql_fs_free_size("UFS");
+            // sprintf(buff_gps,"%.6f,%.6f",g_gps_data.latitude,g_gps_data.longitude);
+            //  OUT_LOG("\ntime chinh:%s\n",buff_gps);
             ql_gpio_set_level(GPIO_22, Led2 == 0 ? LVL_LOW : LVL_HIGH);
             break;
 
@@ -244,23 +248,22 @@ static void main_task_thread(void *param)
     }
 }
 
-
 void send_gps()
 {
-    if(strcmp(gps_ok,GPSOK)==0)
+    if (strcmp(gps_ok, GPSOK) == 0)
     {
-    cJSON *pRoot = cJSON_CreateObject();
-    cJSON_AddStringToObject(pRoot, "RES", "GET_GPS");
-    // cJSON_AddNumberToObject(pRoot, "lat", g_gps_data.latitude);
-    int16_t signal = g_gps_data.avg_cnr;
-    cJSON *pValue = cJSON_CreateObject();
-    cJSON_AddStringToObject(pValue, "time", buff_time);
-    cJSON_AddStringToObject(pValue, "localtion", buff_local);
-    cJSON_AddNumberToObject(pValue, "speed", speed);
-    cJSON_AddItemToObject(pRoot, "GPS_INFO", pValue);
-    GPS_info = cJSON_Print(pRoot);
-    OUT_LOG(GPS_info);
-    pub_mqtt(topic_gui,GPS_info);
+        cJSON *pRoot = cJSON_CreateObject();
+        cJSON_AddStringToObject(pRoot, "RES", "GET_GPS");
+        // cJSON_AddNumberToObject(pRoot, "lat", g_gps_data.latitude);
+        int16_t signal = g_gps_data.avg_cnr;
+        cJSON *pValue = cJSON_CreateObject();
+        cJSON_AddStringToObject(pValue, "time", buff_time);
+        cJSON_AddStringToObject(pValue, "localtion", buff_local);
+        cJSON_AddNumberToObject(pValue, "speed", speed);
+        cJSON_AddItemToObject(pRoot, "GPS_INFO", pValue);
+        GPS_info = cJSON_Print(pRoot);
+        OUT_LOG(GPS_info);
+        pub_mqtt(topic_gui, GPS_info);
     }
     else
     {
@@ -279,7 +282,6 @@ int appimg_enter(void *param)
 
     /*Create timer tick*/
     err = ql_rtos_timer_create(&main_timer, main_task, timer_callback, NULL);
-    
 
     /* main task*/
     err = ql_rtos_task_create(&main_task, 4 * 1024, APP_PRIORITY_NORMAL, "Main_task", main_task_thread, NULL, 5);

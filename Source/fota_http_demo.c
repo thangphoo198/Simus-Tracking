@@ -691,14 +691,14 @@ static int 	fota_http_download_pacfile(fota_http_client_t* fota_http_cli_p)
 			//下载完成校验不成功删除文件
 			ql_remove(fota_http_cli_p->fota_packname);
 			QL_FOTA_HTTP_LOG("[%s]file FW bi loi\n",fota_http_cli_p->fota_packname);
-			pub_mqtt(topic_rec,RSP_FOTA_FAIL);
+			pub_mqtt(topic_gui,RSP_FOTA_FAIL);
 			return -3;
 		}
 		else
 		{
 			//校验成功
 			QL_FOTA_HTTP_LOG("tai thanh cong, reset MODULE de tien hanh FOTA\n");
-			pub_mqtt(topic_rec,RSP_FOTA_OK);
+			pub_mqtt(topic_gui,RSP_FOTA_OK);
 			ql_rtos_task_sleep_s(2);
 	        ql_power_reset(RESET_NORMAL);
 		}
@@ -721,6 +721,7 @@ ql_fota_result_e  fota_http_result_process(void)
 	if ( p_fota_result == QL_FOTA_FINISHED )
 	{
 		QL_FOTA_HTTP_LOG("update finished\n");
+		pub_mqtt(topic_gui,RSP_FOTA_OK);
 		ql_fota_file_reset(TRUE);
 		return QL_FOTA_FINISHED;
 	}
@@ -803,7 +804,7 @@ void ql_fota_http_app_init()
 {
 	QL_FOTA_HTTP_LOG("http fota demo support!\n");
 	QlOSStatus err = QL_OSI_SUCCESS;
-	err = ql_rtos_task_create(&fota_http_task, 4096*32,APP_PRIORITY_NORMAL, "fota_http_app", fota_http_app_thread, NULL, 5);
+	err = ql_rtos_task_create(&fota_http_task, 4096*32,APP_PRIORITY_BELOW_NORMAL, "fota_http_app", fota_http_app_thread, NULL, 5);
     if (err != QL_OSI_SUCCESS)
     {
         QL_FOTA_HTTP_LOG("created task failed");

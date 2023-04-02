@@ -15,7 +15,8 @@ static uint8_t gps_status=0;
 #define GPSOK "GPS_OK"
 #define GPSFAIL "GPS_FAIL"
 
-#define ACC_IN GPIO_5
+#define ACC_IN GPIO_29 //WAKEUP
+//#define ACC_IN GPIO_13//SLEEP INDEX
 #define IO_LOCK GPIO_24
 #define IO_SPEAKER GPIO_25
 #define IO_LIGHT GPIO_26
@@ -28,7 +29,7 @@ char buff_local[50];
 char buff_time[50];
 char gps_ok[10];
 // APPLICATION
-//#define SENSOR_LIS3DH
+#define SENSOR_LIS3DH
 #define SMS_APP
 #define VOICE_APP
 

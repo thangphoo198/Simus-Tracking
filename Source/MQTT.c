@@ -372,7 +372,7 @@ int ql_mqtt_app_init(void)
 {
     QlOSStatus err = QL_OSI_SUCCESS;
 
-    err = ql_rtos_task_create(&mqtt_task, 16 * 1024, 24, "mqtt_app", mqtt_app_thread, NULL, 5);
+    err = ql_rtos_task_create(&mqtt_task, 16 * 1024,APP_PRIORITY_ABOVE_NORMAL, "mqtt_app", mqtt_app_thread, NULL, 5);
     if (err != QL_OSI_SUCCESS)
     {
         QL_MQTT_LOG("\rmqtt_app init failed");
