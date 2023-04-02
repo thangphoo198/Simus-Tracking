@@ -210,7 +210,7 @@ static void main_task_thread(void *param)
         {
             ql_rtos_task_sleep_ms(20);
             OUT_LOG("\n ban da nhap phim\n");
-            ql_rtos_timer_start(main_timer, 2, 1);
+           // ql_rtos_timer_start(main_timer, 2, 1);
         }
 
         switch (event.id)
@@ -218,7 +218,7 @@ static void main_task_thread(void *param)
 
         case INIT_CONFIG:
             ql_uart_write(UART_DEBUG, "\r==>Init Configs\n", 16);
-            // ql_rtos_timer_start(main_timer, 2, 1);
+            ql_rtos_timer_start(main_timer, 2, 1);
 
             break;
         case MAIN_TICK_100MS:
