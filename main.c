@@ -191,9 +191,9 @@ static void main_task_thread(void *param)
     DebugInit();
     ql_pin_set_func(24, 0);
     ql_gpio_init(GPIO_2, GPIO_OUTPUT, PULL_NONE, LVL_HIGH);
-    ql_gpio_init(IO_LOCK, GPIO_OUTPUT, PULL_NONE, LVL_LOW);
-    ql_gpio_init(IO_SPEAKER, GPIO_OUTPUT, PULL_NONE, LVL_LOW);
-    ql_gpio_init(IO_LIGHT, GPIO_OUTPUT, PULL_NONE, LVL_LOW);
+    ql_gpio_init(IO_LOCK, GPIO_OUTPUT, PULL_DOWN, LVL_LOW);
+    ql_gpio_init(IO_SPEAKER, GPIO_OUTPUT, PULL_DOWN, LVL_LOW);
+    ql_gpio_init(IO_LIGHT, GPIO_OUTPUT, PULL_DOWN, LVL_LOW);
     ql_gpio_init(ACC_IN, GPIO_INPUT, PULL_UP, LVL_HIGH); // SDA
     // PIN6: NET_STATUS - GPIO22 (FUNC:4)
     ql_pin_set_func(6, 4);

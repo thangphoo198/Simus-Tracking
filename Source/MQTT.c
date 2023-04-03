@@ -15,7 +15,9 @@
 #include "ql_fs.h"
 #include "ql_power.h"
 #include "main.h"
+#include "command.h"
 #include "ql_adc.h"
+#include "ql_gpio.h"
 
 #define NSIM 0
 #define MQTT_CLIENT_IDENTITY "VT_00001"
@@ -89,13 +91,41 @@ static void mqtt_inpub_data_cb(mqtt_client_t *client, void *arg, int pkt_id, con
                 ql_get_battery_vol(&vol);
                 QL_MQTT_LOG("DIEN AP NGUON:  %d\n", vol);
             }
-            else if (strcmp(val, "SHUTDOWN") == 0)
-            {
-                QL_MQTT_LOG("TAT MAY:\n");
+            // else if (strcmp(val, "SHUTDOWN") == 0)
+            // {
+            //     ql_LvlMode stt;
+            //     ql_gpio_get_level(IO_LOCK, &stt);
+            //     if(stt==LVL_HIGH) {
+            //          QL_MQTT_LOG("MAY DANG TAT \n");
+            //          pub_mqtt(topic_gui, RSP_SHUTDOWN_FAIL);
+            //     }
+            //     else{                  
+            //         ql_gpio_set_level(IO_LOCK, LVL_HIGH);
+            //         pub_mqtt(topic_gui, RSP_SHUTDOWN_OK);
+            //         QL_MQTT_LOG("TAT MAY OK\n");
 
-                ql_gpio_set_level(IO_LOCK, LVL_HIGH);
-                // ql_power_down(POWD_NORMAL);
-            }
+            //     }
+
+            //     // ql_power_down(POWD_NORMAL);
+            // }
+            // else if (strcmp(val, "POWER_ON") == 0)
+            // {
+            //     ql_LvlMode stt;
+            //     ql_gpio_get_level(IO_LOCK, &stt);
+            //     if(stt==LVL_LOW) {
+            //          QL_MQTT_LOG("MAY DANG MO\n");
+            //          pub_mqtt(topic_gui, RSP_POWER_ON_FAIL);
+            //     }
+            //     else{
+            //         ql_gpio_set_level(IO_LOCK, LVL_LOW);
+            //         pub_mqtt(topic_gui, RSP_POWER_ON_OK);
+            //         QL_MQTT_LOG("MO MAY OK\n");
+
+            //     }
+
+            //     // ql_power_down(POWD_NORMAL);
+            // }
+
             else if (strcmp(val, "SPEAKER_ON") == 0)
             {
                 QL_MQTT_LOG("BAT LOA\n");

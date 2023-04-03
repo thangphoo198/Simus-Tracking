@@ -56,7 +56,7 @@ void ql_wifiscan_ap_info_output(uint16_t ap_cnt, ql_wifi_ap_info_s *p_ap_infos)
     for (uint16_t n = 0; n < ap_cnt; n++)
     {
         char macbuff[20];
-        uint8_t rssi = p_ap_infos->rssival;
+        int8_t rssi = p_ap_infos->rssival;
         uint8_t channel = p_ap_infos->channel;
         sprintf(macbuff, "%x%lx", p_ap_infos->bssid_high, p_ap_infos->bssid_low);
         char mac_out[50] = {0};

@@ -721,7 +721,7 @@ ql_fota_result_e  fota_http_result_process(void)
 	if ( p_fota_result == QL_FOTA_FINISHED )
 	{
 		QL_FOTA_HTTP_LOG("update finished\n");
-		pub_mqtt(topic_gui,RSP_FOTA_OK);
+		pub_mqtt(topic_gui,RSP_FOTA_FAIL);
 		ql_fota_file_reset(TRUE);
 		return QL_FOTA_FINISHED;
 	}
