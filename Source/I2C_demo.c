@@ -37,6 +37,18 @@
 #define REG3 0x22
 #define REG4 0x23 //=00011000b [+-4g, High-resolution output mode]=0x18
 #define REG5 0x24
+#define REG6 0x25
+#define LIS3DH_REG_REFERENCE 0x26
+
+#define INT1_CFG 0x30
+#define INT1_SRC 0x31
+#define INT1_THS 0x32
+#define INT1_DURATION 0x33
+
+#define INT2_CFG 0x34
+#define INT2_SRC 0x35
+#define INT2_THS 0x36
+#define INT2_DURATION 0x37
 
 #define LIS3DH_REG_TEMPCFG 0x1F
 
@@ -48,6 +60,9 @@
 #define OUT_YH 0x2B
 #define OUT_ZL 0x2C
 #define OUT_ZH 0x2D
+
+
+
 #define LIS3DSH_OUT_TEMP 0x0C
 
 #define LIS3DH_LSB16_TO_KILO_LSB10 \
@@ -77,24 +92,66 @@ char check()
     }
 }
 
+uint8_t mpu_read_reg8(uint8_t RegAddr)
+{
+    uint8_t x;
+    ql_I2cRead(i2c_1, SalveAddr_r_8bit, RegAddr, &x, 1);
+    return x;
+}
+
 void Acc_Init()
 {
     if (check())
     {
-        ql_rtos_task_sleep_ms(100);
+        ql_rtos_task_sleep_ms(50);
         QL_I2C_LOG("\n tim thay CAM BIEN\n");
-        mpu_write_reg(REG1, 0x57);
-        //  ql_I2cWrite(i2c_1, SalveAddr_w_8bit, REG4, 0x88, 1);
-        // mpu_write_reg(REG4, 0x5f);
+        mpu_write_reg(REG1, 0x57); //Turn on the sensor, enable X, Y, and Z ODR = 100 Hz
         mpu_write_reg(REG4, 0x18); //+4g
-        // mpu_write_reg(REG5, 0x80);
-        // mpu_write_reg(0x2E, 0);
-        // mpu_write_reg(0x25, 0x10);
+       // mpu_write_reg(REG2, 0x09); // High-pass filter enabled on interrupt activity 1
+      //  mpu_write_reg(REG3, 0x40); // Interrupt activity 1 driven to INT1 pad
+
+      //  mpu_write_reg(REG6, 0x20); // High-pass filter enabled on interrupt activity 2
+        mpu_write_reg(REG5, 0x08); // move
+        mpu_write_reg(INT2_THS, 0); // Threshold = 250 mg
+        mpu_write_reg(INT2_CFG,0x0A);
+        mpu_write_reg(INT2_DURATION, 0x01); // Duration = 0
+        uint16_t dataToWrite = 0 | (4 << 1);
+        dataToWrite|=0x20;
+        mpu_write_reg(REG6, dataToWrite); // High-pass filter enabled on interrupt activity 2
+        uint8_t x = mpu_read_reg8(INT2_CFG);
+        QL_I2C_LOG("doc cau hinh:%u\n",x);
+
+        // mpu_write_reg(INT1_DURATION, 0x00); // Duration = 0
+
         //  ql_I2cWrite(i2c_1, SalveAddr_w_8bit, LIS3DH_REG_TEMPCFG, 0x80, 1);
         // ql_I2cWrite(i2c_1,SalveAddr_w_8bit,0x6c,tmp,0x01);
         // mpu_write_reg(LIS3DH_REG_TEMPCFG,0x80);
     }
 }
+
+// Write 57h into CTRL_REG1 // Turn on the sensor, enable X, Y, and Z
+// // ODR = 100 Hz
+// 2. Write 09h into CTRL_REG2 // High-pass filter enabled on interrupt activity 1
+// 3. Write 40h into CTRL_REG3 // Interrupt activity 1 driven to INT1 pad
+// 4. Write 00h into CTRL_REG4 // FS = ±2 g
+// 5. Write 08h into CTRL_REG5 // Interrupt 1 pin latched
+// 6. Write10h into INT1_THS // Threshold = 250 mg
+// 7. Write 00h into INT1_DURATION // Duration = 0
+// 8. Read REFERENCE
+// // Dummy read to force the HP filter to
+// // current acceleration value
+// // (i.e. set reference acceleration/tilt value)
+// 9. Write 2Ah into INT1_CFG // Configure desired wake-up event
+// 10. Poll INT1 pad; if INT1 = 0 then go to 9 // Poll INT1 pin waiting for the
+// // wake-up event
+// 11. (Wake-up event has occurred; insert your
+// code here) // Event handling
+// 12. Read INT1_SRC // Return the event that has triggered the
+// // interrupt and clear interrupt
+// 13. (Insert your code here) // Event handling
+// 14. Go to 9
+
+
 void mpu_write_reg(uint8 RegAddr, uint16 RegData)
 {
     uint8 param_data[3] = {0x00};
@@ -112,29 +169,30 @@ void mpu_write_reg(uint8 RegAddr, uint16 RegData)
     // } while (--retry_count);
 }
 
-// void mpu_read_reg(uint8 RegAddr, uint16 *p_value)
-// {
-// 	ql_audio_errcode_e status = QL_AUDIO_SUCCESS;
-// 	uint8 temp_buf[2];
-// 	uint8 retry_count = 5;
-//   //  RegAddr = (RegAddr << 1) & 0xFE;
+void mpu_read_reg(uint8 RegAddr, uint16 *p_value)
+{
+	ql_audio_errcode_e status = QL_AUDIO_SUCCESS;
+	uint8 temp_buf[2];
+	uint8 retry_count = 5;
+  //  RegAddr = (RegAddr << 1) & 0xFE;
 
-// 	do
-//     {
-//         status = (ql_audio_errcode_e)ql_I2cRead(i2c_1, SalveAddr_r_8bit, RegAddr, temp_buf, 2);
-//         		if (status != QL_AUDIO_SUCCESS)
-// 		{
-//             QL_I2C_LOG("\nError:[%dth] device[0x%x] addr[0x%x] failed\n", retry_count, SalveAddr_r_8bit, RegAddr);
-//         }
-//         else
-//         {
-// 		*p_value = (((uint16)temp_buf[0]) << 8) | temp_buf[1];
-// 		break;
-//         }
-// 	}
-//      while (--retry_count);
+	do
+    {
+        status = (ql_audio_errcode_e)ql_I2cRead(i2c_1, SalveAddr_r_8bit, RegAddr, temp_buf, 2);
+        		if (status != QL_AUDIO_SUCCESS)
+		{
+            QL_I2C_LOG("\nError:[%dth] device[0x%x] addr[0x%x] failed\n", retry_count, SalveAddr_r_8bit, RegAddr);
+        }
+        else
+        {
+		*p_value = (((uint16)temp_buf[0]) << 8) | temp_buf[1];
+		break;
+        }
+	}
+     while (--retry_count);
 
-// }
+}
+
 
 int16_t GetData(unsigned char Haddress, unsigned char Laddress)
 {
@@ -169,6 +227,7 @@ void ql_i2c_demo_thread(void *param)
     ql_pin_set_func(41, 0);
     ql_pin_set_func(42, 0);
     ql_I2cInit(i2c_1, STANDARD_MODE);
+     ql_rtos_task_sleep_ms(5000);
     Acc_Init();
     while (1)
     {
@@ -185,7 +244,7 @@ void ql_i2c_demo_thread(void *param)
         // QL_APP_I2C_LOG("I2C read_data = 0x%x", read_data);
         // ql_I2cWrite(i2c_1, SalveAddr_w_8bit, 0x55, &data, 1);
         // read_data = 0;
-        ql_rtos_task_sleep_ms(500);
+        ql_rtos_task_sleep_ms(300);
     }
 }
 
