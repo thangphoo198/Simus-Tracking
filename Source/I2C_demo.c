@@ -227,7 +227,7 @@ void ql_i2c_demo_thread(void *param)
     ql_pin_set_func(41, 0);
     ql_pin_set_func(42, 0);
     ql_I2cInit(i2c_1, STANDARD_MODE);
-     ql_rtos_task_sleep_ms(5000);
+     //ql_rtos_task_sleep_ms(5000);
     Acc_Init();
     while (1)
     {

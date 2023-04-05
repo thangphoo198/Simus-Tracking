@@ -81,7 +81,7 @@ static void nw_app_thread(void *arg)
         cJSON_AddNumberToObject(pValue, "mnc", cell_info->lte_info[0].mnc);
         cJSON_AddNumberToObject(pValue, "cell_id", cell_info->lte_info[0].cid);
         cJSON_AddNumberToObject(pValue, "lac_id", cell_info->lte_info[0].tac);
-        cJSON_AddItemToObject(pRoot, "SIM_INFO", pValue);
+        cJSON_AddItemToObject(pRoot, "DATA", pValue);
         SIM_info = cJSON_Print(pRoot);
         QL_NW_DEMO_LOG("\n%s\n", SIM_info);
         pub_mqtt(topic_gui,SIM_info);

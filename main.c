@@ -260,7 +260,7 @@ void send_gps()
         cJSON_AddStringToObject(pValue, "time", buff_time);
         cJSON_AddStringToObject(pValue, "localtion", buff_local);
         cJSON_AddNumberToObject(pValue, "speed", speed);
-        cJSON_AddItemToObject(pRoot, "GPS_INFO", pValue);
+        cJSON_AddItemToObject(pRoot, "DATA", pValue);
         GPS_info = cJSON_Print(pRoot);
         OUT_LOG(GPS_info);
         pub_mqtt(topic_gui, GPS_info);
@@ -268,7 +268,8 @@ void send_gps()
     else
     {
         OUT_LOG("\nkhong co GPS\n");
-    }
+    }\
+    
 }
 extern pub_mqtt(char *topic, char *mess);
 

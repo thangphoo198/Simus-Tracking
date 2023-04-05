@@ -30,7 +30,7 @@ char buff_time[50];
 char gps_ok[10];
 // APPLICATION
 #define SENSOR_LIS3DH
-#define SMS_APP
-#define VOICE_APP
+//#define SMS_APP
+//#define VOICE_APP
 
 #endif /* JSON_H_ */

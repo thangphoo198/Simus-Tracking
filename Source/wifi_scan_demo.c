@@ -51,7 +51,7 @@ void ql_wifiscan_ap_info_output(uint16_t ap_cnt, ql_wifi_ap_info_s *p_ap_infos)
     cars = cJSON_CreateArray();
     /* add cars array to root */
     cJSON_AddStringToObject(root, "RES", "SCAN_WIFI");
-    cJSON_AddItemToObject(root, "wifiAccessPoints", cars);
+    cJSON_AddItemToObject(root, "DATA", cars);
 
     for (uint16_t n = 0; n < ap_cnt; n++)
     {
