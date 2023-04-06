@@ -13,15 +13,11 @@
 #include "cJSON.h"
 #include "main.h"
 #define OUT_LOG DebugPrint
-
 #define INIT_CONFIG 101
 #define MAIN_TICK_100MS 102
 #define MAIN_TICK_3000MS 103
-
 ql_task_t main_task = NULL;
-// ql_task_t gnss_task = NULL;
 ql_timer_t main_timer = NULL;
-
 static uint32_t tickCount100MS = 0;
 static uint32_t tickCount3000MS = 0;
 static uint32_t TIME_START = 0;
@@ -35,17 +31,18 @@ ql_LvlMode in;
 
 // for ledcfg demo
 #define QL_PIN_NUM_KEYOUT_5 82
+#define FEED_DOG_MAX_MISS_CNT   5
 
-#define jsonRoot "{\r\n"                                                                             \
-                 "\"imei\": \"8661111111111111\",\r\n"                                               \
-                 "\"Num\": 142,\r\n"                                                                 \
-                 "\"Value\": {\r\n"                                                                  \
-                 "\"name\": \"cx\",\r\n"                                                             \
-                 "\"age\": 18,\r\n"                                                                  \
-                 "\"blog\": \"https://blog.csdn.net/weixin_44570083/article/details/104285283\"\r\n" \
-                 "},\r\n"                                                                            \
-                 "\"hexArry\": [31, 56, 36, 1365, 263]\r\n"                                          \
-                 "}\r\n"
+// #define jsonRoot "{\r\n"                                                                             \
+//                  "\"imei\": \"8661111111111111\",\r\n"                                               \
+//                  "\"Num\": 142,\r\n"                                                                 \
+//                  "\"Value\": {\r\n"                                                                  \
+//                  "\"name\": \"cx\",\r\n"                                                             \
+//                  "\"age\": 18,\r\n"                                                                  \
+//                  "\"blog\": \"https://blog.csdn.net/weixin_44570083/article/details/104285283\"\r\n" \
+//                  "},\r\n"                                                                            \
+//                  "\"hexArry\": [31, 56, 36, 1365, 263]\r\n"                                          \
+//                  "}\r\n"
 
 // JSON解析
 
@@ -117,7 +114,8 @@ void timer_callback(void)
     {
         tickCount100MS = 0;
         //
-        if(in==LVL_LOW) ++TIME_START;
+        if (in == LVL_LOW)
+            ++TIME_START;
         SendEventToThread(main_task, MAIN_TICK_100MS);
     }
 
@@ -187,7 +185,7 @@ uint8_t DebugInit(void)
 
 static void main_task_thread(void *param)
 {
-    ql_event_t event;
+    ql_event_t event= {0};
     DebugInit();
     ql_pin_set_func(24, 0);
     ql_gpio_init(GPIO_2, GPIO_OUTPUT, PULL_NONE, LVL_HIGH);
@@ -204,13 +202,14 @@ static void main_task_thread(void *param)
 
     while (1)
     {
+
         ql_event_try_wait(&event);
-        ql_gpio_get_level(ACC_IN, &in); // 
+        ql_gpio_get_level(ACC_IN, &in); //
         if (in == LVL_LOW)
         {
             ql_rtos_task_sleep_ms(20);
             OUT_LOG("\n ban da nhap phim\n");
-           // ql_rtos_timer_start(main_timer, 2, 1);
+            // ql_rtos_timer_start(main_timer, 2, 1);
         }
 
         switch (event.id)
@@ -224,7 +223,7 @@ static void main_task_thread(void *param)
         case MAIN_TICK_100MS:
             Led2 ^= 1;
             ql_gpio_set_level(GPIO_22, Led2 == 0 ? LVL_LOW : LVL_HIGH);
-            OUT_LOG("TIME:%d\n",TIME_START);
+            OUT_LOG("TIME:%d\n", TIME_START);
             break;
 
         case MAIN_TICK_3000MS:
@@ -240,7 +239,13 @@ static void main_task_thread(void *param)
             //  OUT_LOG("\ntime chinh:%s\n",buff_gps);
             ql_gpio_set_level(GPIO_22, Led2 == 0 ? LVL_LOW : LVL_HIGH);
             break;
+        case QUEC_KERNEL_FEED_DOG:
+            OUT_LOG("demo task receive feed dog event");
 
+            if (ql_rtos_feed_dog() != QL_OSI_SUCCESS)
+            {
+                OUT_LOG("feed dog failed");
+            }
         default:
 
             break;
@@ -268,10 +273,29 @@ void send_gps()
     else
     {
         OUT_LOG("\nkhong co GPS\n");
-    }\
-    
+    }
 }
 extern pub_mqtt(char *topic, char *mess);
+
+void feed_dog_callback(uint32 id_type, void *ctx)
+{
+    ql_event_t event;
+
+    if (id_type == QUEC_KERNEL_FEED_DOG)
+    {
+        OUT_LOG("feed dog callback run");
+
+        event.id = QUEC_KERNEL_FEED_DOG;
+        if (ql_rtos_event_send(main_task, &event) != QL_OSI_SUCCESS)
+        {
+            OUT_LOG("send feed_dog event to demo task failed");
+        }
+        else
+        {
+            OUT_LOG("send feed dog event to demo task ok");
+        }
+    }
+}
 
 int appimg_enter(void *param)
 {
@@ -279,7 +303,14 @@ int appimg_enter(void *param)
     ql_dev_cfg_wdt(0);
     ql_log_set_port(0);
     ql_quec_trace_enable(1);
-    ql_rtos_sw_dog_enable;
+    // ql_rtos_sw_dog_enable;
+    err = ql_rtos_swdog_register((ql_swdog_callback)feed_dog_callback, main_task);
+    if (err != QL_OSI_SUCCESS)
+    {
+        OUT_LOG("demo_task register sw dog failed");
+    }
+
+    err = ql_rtos_sw_dog_enable(5000, 3);
 
     /*Create timer tick*/
     err = ql_rtos_timer_create(&main_timer, main_task, timer_callback, NULL);
