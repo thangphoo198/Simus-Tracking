@@ -34,6 +34,7 @@ mqtt_client_t mqtt_cli;
 // extern uint8_t NSIM = 0;
 uint16_t sim_cid;
 int profile_idx = 1;
+struct mqtt_connect_client_info_t client_info = {0};
 
 mqtt_connect_result_cb(mqtt_client_t *client, void *arg, mqtt_connection_status_e status)
 {
@@ -47,8 +48,11 @@ mqtt_connect_result_cb(mqtt_client_t *client, void *arg, mqtt_connection_status_
 
 static void mqtt_state_exception_cb(mqtt_client_t *client)
 {
-    QL_MQTT_LOG("\rmqtt session abnormal disconnect\n");
     mqtt_connected = 0;
+    QL_MQTT_LOG("\rmqtt session abnormal disconnect\n");
+    QL_MQTT_LOG("\rthu ket noi lai\n");
+    reconnect();
+    
 }
 
 extern gui_sms(char *sdt, char *noidung);
@@ -218,7 +222,6 @@ static void mqtt_app_thread(void *arg)
     int i = 0, run_num = 1;
     ql_data_call_info_s info;
     char ip4_addr_str[16] = {0};
-    struct mqtt_connect_client_info_t client_info = {0};
     int is_user_onenet = 0;
     ql_rtos_task_sleep_s(10);
     ql_rtos_semaphore_create(&mqtt_semp, 0);
@@ -319,23 +322,25 @@ static void mqtt_app_thread(void *arg)
         client_info.client_user = MQTT_CLIENT_USER;
         client_info.client_pass = MQTT_CLIENT_PASS;
         QL_MQTT_LOG("\rconnect ssl %d onenet mode %d\n", case_id, is_user_onenet);
-        if (case_id == 0)
-        {
+        // if (case_id == 0)
+        // {
+            QL_MQTT_LOG("\nchon id-0\n");
             client_info.ssl_cfg = NULL;
             ret = ql_mqtt_connect(&mqtt_cli, MQTT_CLIENT_SRV_URL, mqtt_connect_result_cb, NULL, (const struct mqtt_connect_client_info_t *)&client_info, mqtt_state_exception_cb);
-        }
-        else
-        {
-            struct mqtt_ssl_config_t quectel_ssl_cfg = {
-                .ssl_ctx_id = 1,
-                .verify_level = MQTT_SSL_VERIFY_NONE,
-                .cacert_path = NULL,
-                .client_cert_path = NULL,
-                .client_key_path = NULL,
-                .client_key_pwd = NULL};
-            client_info.ssl_cfg = &quectel_ssl_cfg;
-            ret = ql_mqtt_connect(&mqtt_cli, MQTT_CLIENT_ONENET_SSL_URL, mqtt_connect_result_cb, NULL, (const struct mqtt_connect_client_info_t *)&client_info, mqtt_state_exception_cb);
-        }
+     //   }
+        // else
+        // {
+        //     struct mqtt_ssl_config_t quectel_ssl_cfg = {
+        //         .ssl_ctx_id = 1,
+        //         .verify_level = MQTT_SSL_VERIFY_NONE,
+        //         .cacert_path = NULL,
+        //         .client_cert_path = NULL,
+        //         .client_key_path = NULL,
+        //         .client_key_pwd = NULL};
+        //     client_info.ssl_cfg = &quectel_ssl_cfg;
+        //     ret = ql_mqtt_connect(&mqtt_cli, MQTT_CLIENT_ONENET_SSL_URL, mqtt_connect_result_cb, NULL, (const struct mqtt_connect_client_info_t *)&client_info, mqtt_state_exception_cb);
+        //      QL_MQTT_LOG("\nchon id-11\n");
+        // }
         if (ret == MQTTCLIENT_WOUNDBLOCK)
         {
             QL_MQTT_LOG("\r====wait connect result:\n");
@@ -345,6 +350,7 @@ static void mqtt_app_thread(void *arg)
                 ql_mqtt_client_deinit(&mqtt_cli);
                 break;
             }
+             QL_MQTT_LOG("\nDA KET NOI\n");
         }
         else
         {
@@ -353,28 +359,22 @@ static void mqtt_app_thread(void *arg)
         }
 
         ql_mqtt_set_inpub_callback(&mqtt_cli, mqtt_inpub_data_cb, NULL);
+        (ql_mqtt_sub_unsub(&mqtt_cli, topic_nhan, 1, mqtt_requst_result_cb, NULL, 1) == MQTTCLIENT_WOUNDBLOCK);
         while (mqtt_connected == 1)
         {
-            if (ql_mqtt_sub_unsub(&mqtt_cli, topic_nhan, 1, mqtt_requst_result_cb, NULL, 1) == MQTTCLIENT_WOUNDBLOCK)
-            {
-                QL_MQTT_LOG("\ndang sub topic:\n", topic_nhan);
-                ql_rtos_semaphore_wait(mqtt_semp, QL_WAIT_FOREVER);
-            }
+            // if (ql_mqtt_sub_unsub(&mqtt_cli, topic_nhan, 1, mqtt_requst_result_cb, NULL, 1) == MQTTCLIENT_WOUNDBLOCK)
+            // {
+            //     QL_MQTT_LOG("\ndang sub topic:%s\n", topic_nhan);
+            //     ql_rtos_semaphore_wait(mqtt_semp, QL_WAIT_FOREVER);
+            // }
 
-            ql_rtos_task_sleep_ms(5000);
+            ql_rtos_task_sleep_ms(3000);
         }
     }
     if (mqtt_connected == 1 && ql_mqtt_disconnect(&mqtt_cli, mqtt_disconnect_result_cb, NULL) == MQTTCLIENT_WOUNDBLOCK)
     {
         QL_MQTT_LOG("\r=====wait disconnect result");
         ql_rtos_semaphore_wait(mqtt_semp, QL_WAIT_FOREVER);
-        int adc_value = 0;
-        ql_adc_get_volt(QL_ADC0_CHANNEL, &adc_value);
-        char MQTT_CLI[50] = {0};
-        sprintf(MQTT_CLI, "%s0x%d", client_info.client_id, adc_value);
-        client_info.client_id = MQTT_CLI;
-        QL_MQTT_LOG("\rKET NOI LAI MQTT\n");
-        ret = ql_mqtt_connect(&mqtt_cli, MQTT_CLIENT_SRV_URL, mqtt_connect_result_cb, NULL, (const struct mqtt_connect_client_info_t *)&client_info, mqtt_state_exception_cb);
     }
     //  QL_MQTT_LOG("\r==============mqtt_client_test[%d] end=======%x=========\n", run_num, &mqtt_cli);
     ql_mqtt_client_deinit(&mqtt_cli);
@@ -396,13 +396,34 @@ exit:
 
     return;
 }
+void reconnect()
+{
+    int adc_value = 0;
+    ql_adc_get_volt(QL_ADC0_CHANNEL, &adc_value);
+    char MQTT_CLI[50] = {0};
+    sprintf(MQTT_CLI, "%s0x%d", client_info.client_id, adc_value);
+    client_info.client_id = MQTT_CLI;
+    QL_MQTT_LOG("\rKET NOI LAI MQTT clien:%s\n", client_info.client_id);
+    ql_mqtt_connect(&mqtt_cli, MQTT_CLIENT_SRV_URL, mqtt_connect_result_cb, NULL, (const struct mqtt_connect_client_info_t *)&client_info, mqtt_state_exception_cb);
+    if (ql_mqtt_sub_unsub(&mqtt_cli, topic_nhan, 1, mqtt_requst_result_cb, NULL, 1) == MQTTCLIENT_WOUNDBLOCK)
+    {
+        QL_MQTT_LOG("\ndang sub topic:%s\n", topic_nhan);
+        ql_rtos_semaphore_wait(mqtt_semp, QL_WAIT_FOREVER);
+    }
+    else
+    {
+        QL_MQTT_LOG("\n ket noi lai failed\n");
+        ql_rtos_task_sleep_ms(5000);
+        
+    }
+}
 
 extern delete_all_sms();
 int ql_mqtt_app_init(void)
 {
     QlOSStatus err = QL_OSI_SUCCESS;
 
-    err = ql_rtos_task_create(&mqtt_task, 16 * 1024,APP_PRIORITY_ABOVE_NORMAL, "mqtt_app", mqtt_app_thread, NULL, 5);
+    err = ql_rtos_task_create(&mqtt_task, 16 * 1024,APP_PRIORITY_HIGH, "mqtt_app", mqtt_app_thread, NULL, 5);
     if (err != QL_OSI_SUCCESS)
     {
         QL_MQTT_LOG("\rmqtt_app init failed");
