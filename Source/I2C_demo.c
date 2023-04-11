@@ -111,13 +111,13 @@ void Acc_Init()
       //  mpu_write_reg(REG3, 0x40); // Interrupt activity 1 driven to INT1 pad
 
       //  mpu_write_reg(REG6, 0x20); // High-pass filter enabled on interrupt activity 2
-        mpu_write_reg(REG5, 0x08); // move
-        mpu_write_reg(INT2_THS, 0); // Threshold = 250 mg
-        mpu_write_reg(INT2_CFG,0x0A);
-        mpu_write_reg(INT2_DURATION, 0x01); // Duration = 0
-        uint16_t dataToWrite = 0 | (4 << 1);
-        dataToWrite|=0x20;
-        mpu_write_reg(REG6, dataToWrite); // High-pass filter enabled on interrupt activity 2
+        // mpu_write_reg(REG5, 0x08); // move
+        // mpu_write_reg(INT2_THS, 0); // Threshold = 250 mg
+        // mpu_write_reg(INT2_CFG,0x0A);
+        // mpu_write_reg(INT2_DURATION, 0x01); // Duration = 0
+        // uint16_t dataToWrite = 0 | (4 << 1);
+        // dataToWrite|=0x20;
+        // mpu_write_reg(REG6, dataToWrite); // High-pass filter enabled on interrupt activity 2
         uint8_t x = mpu_read_reg8(INT2_CFG);
         QL_I2C_LOG("doc cau hinh:%u\n",x);
 
@@ -217,8 +217,14 @@ void print_ACC()
     y_g *= SENSORS_GRAVITY_EARTH;
     z_g *= SENSORS_GRAVITY_EARTH;
     char buff[50] = {0};
-    sprintf(buff, "\nGx: %.2f  Gy:%.2f  Gz:%.2f  \n", x_g, y_g, z_g);
+    float alpha = 0.8;                           // Hệ số bộ lọc trung bình trượt
+    float x2 = x * x * alpha + x2 * (1 - alpha); // Bộ lọc trung bình trượt trên trục X
+    float y2 = y * y * alpha + y2 * (1 - alpha); // Bộ lọc trung bình trượt trên trục Y
+    float z2 = z * z * alpha + z2 * (1 - alpha); // Bộ lọc trung bình trượt trên trục Z
+    float rms = sqrt(x2 + y2 + z2) / 16384.0;    // Độ rung lắc, chuyển đổi từ đơn v
+    sprintf(buff, "\nGx: %.2f  Gy:%.2f  Gz:%.2f rung:%.2f X:%d Y:%d Z:%d  \n", x_g, y_g, z_g,rms,x,y,z);
     QL_I2C_LOG(buff);
+
 }
 
 void ql_i2c_demo_thread(void *param)
@@ -244,7 +250,7 @@ void ql_i2c_demo_thread(void *param)
         // QL_APP_I2C_LOG("I2C read_data = 0x%x", read_data);
         // ql_I2cWrite(i2c_1, SalveAddr_w_8bit, 0x55, &data, 1);
         // read_data = 0;
-        ql_rtos_task_sleep_ms(300);
+        ql_rtos_task_sleep_ms(500);
     }
 }
 

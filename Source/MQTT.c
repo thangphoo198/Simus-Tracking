@@ -18,6 +18,8 @@
 #include "command.h"
 #include "ql_adc.h"
 #include "ql_gpio.h"
+#include "ql_api_virt_at.h"
+#include "ql_virt_at_demo.h"
 
 #define NSIM 0
 #define MQTT_CLIENT_IDENTITY "VT_00001"
@@ -35,6 +37,26 @@ mqtt_client_t mqtt_cli;
 uint16_t sim_cid;
 int profile_idx = 1;
 struct mqtt_connect_client_info_t client_info = {0};
+
+#define QL_VIRT_AT_RX_BUFF_SIZE                1024
+
+void ql_virt_at0_notify_cb(unsigned int ind_type, unsigned int size)
+{
+    unsigned char *recv_buff = calloc(1, QL_VIRT_AT_RX_BUFF_SIZE+1);
+    unsigned int real_size = 0;
+    
+    if(QUEC_VIRT_AT_RX_RECV_DATA_IND == ind_type)
+    {
+        memset(recv_buff, 0, QL_VIRT_AT_RX_BUFF_SIZE+1);
+        real_size= MIN(size, QL_VIRT_AT_RX_BUFF_SIZE);
+        
+        ql_virt_at_read(QL_VIRT_AT_PORT_0, recv_buff, real_size);
+        
+        QL_MQTT_LOG("\n VAT0 => %s \n", recv_buff);
+    }
+    free(recv_buff);
+    recv_buff = NULL;
+}
 
 mqtt_connect_result_cb(mqtt_client_t *client, void *arg, mqtt_connection_status_e status)
 {
@@ -95,6 +117,14 @@ static void mqtt_inpub_data_cb(mqtt_client_t *client, void *arg, int pkt_id, con
                 ql_get_battery_vol(&vol);
                 QL_MQTT_LOG("DIEN AP NGUON:  %d\n", vol);
             }
+             else if (strcmp(val, "SLEEP") == 0)
+            {
+                QL_MQTT_LOG("\n DI ngu sau 10s\n");
+                char *cmd2 ="AT+QSCLK=1\r\n";
+                ql_virt_at_write(QL_VIRT_AT_PORT_0, (unsigned char*)cmd2, strlen((char *)cmd2));   
+                //l_power_app_init();
+
+            }           
             // else if (strcmp(val, "SHUTDOWN") == 0)
             // {
             //     ql_LvlMode stt;
@@ -240,6 +270,12 @@ static void mqtt_app_thread(void *arg)
     // strcpy(topic_gui, imei);
     QL_MQTT_LOG("\nimei gui:%s", topic_gui);
     QL_MQTT_LOG("\nimei nhan:%s", topic_nhan);
+    ret = ql_virt_at_open(QL_VIRT_AT_PORT_0, ql_virt_at0_notify_cb);
+    if (QL_VIRT_AT_SUCCESS != ret)
+    {
+        QL_MQTT_LOG("\nvirt at0 open error,ret: 0x%x\n", ret);
+        goto exit;
+    }
 
     while ((ret = ql_network_register_wait(NSIM, 120)) != 0 && i < 10)
     {
@@ -362,13 +398,13 @@ static void mqtt_app_thread(void *arg)
         (ql_mqtt_sub_unsub(&mqtt_cli, topic_nhan, 1, mqtt_requst_result_cb, NULL, 1) == MQTTCLIENT_WOUNDBLOCK);
         while (mqtt_connected == 1)
         {
-            // if (ql_mqtt_sub_unsub(&mqtt_cli, topic_nhan, 1, mqtt_requst_result_cb, NULL, 1) == MQTTCLIENT_WOUNDBLOCK)
-            // {
-            //     QL_MQTT_LOG("\ndang sub topic:%s\n", topic_nhan);
-            //     ql_rtos_semaphore_wait(mqtt_semp, QL_WAIT_FOREVER);
-            // }
+            if (ql_mqtt_sub_unsub(&mqtt_cli, topic_nhan, 1, mqtt_requst_result_cb, NULL, 1) == MQTTCLIENT_WOUNDBLOCK)
+            {
+                QL_MQTT_LOG("\ndang sub topic:%s\n", topic_nhan);
+                ql_rtos_semaphore_wait(mqtt_semp, QL_WAIT_FOREVER);
+            }
 
-            ql_rtos_task_sleep_ms(3000);
+            ql_rtos_task_sleep_s(30);
         }
     }
     if (mqtt_connected == 1 && ql_mqtt_disconnect(&mqtt_cli, mqtt_disconnect_result_cb, NULL) == MQTTCLIENT_WOUNDBLOCK)

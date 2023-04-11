@@ -196,7 +196,7 @@ void ql_power_app_init(void)
 	err = ql_rtos_timer_create(&power_timer, power_task, power_timer_callback, NULL);
 	require_action(err, return, "demo_timer created failed");
 
-	err = ql_rtos_timer_start(power_timer, 5000, 0);   // 1秒后开启自动休眠
+	err = ql_rtos_timer_start(power_timer, 10000, 0);   // 1秒后开启自动休眠
 	require_action(err, return, "demo_timer start failed");
 
 //	wake_lock_1 = ql_lpm_wakelock_create("my_lock_1", 10);
