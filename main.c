@@ -10,6 +10,7 @@
 #include "DataDefine.h"
 #include "cJSON.h"
 #include "main.h"
+
 #define OUT_LOG DebugPrint
 #define INIT_CONFIG 101
 #define MAIN_TICK_100MS 102
@@ -36,7 +37,7 @@ void timer_callback(void)
     Led2 ^= 1;
     ql_gpio_set_level(LED_STT, Led2 == 0 ? LVL_LOW : LVL_HIGH);
 
-    if (++tickCount5000MS > 10)
+    if (++tickCount5000MS > 20)
     {
         tickCount5000MS = 0;
         SendEventToThread(main_task, MAIN_TICK_3000MS);
@@ -98,7 +99,7 @@ static void main_task_thread(void *param)
 {
     ql_event_t event= {0};
     DebugInit();
-    ql_pin_set_func(24, 0);
+    //ql_pin_set_func(24, 0);
     ql_gpio_init(GPIO_2, GPIO_OUTPUT, PULL_NONE, LVL_HIGH);
     ql_gpio_init(IO_LOCK, GPIO_OUTPUT, PULL_DOWN, LVL_LOW);
     ql_gpio_init(IO_SPEAKER, GPIO_OUTPUT, PULL_DOWN, LVL_LOW);
@@ -107,6 +108,7 @@ static void main_task_thread(void *param)
     // PIN6: NET_STATUS - GPIO22 (FUNC:4)
     //ql_pin_set_func(6, 4);
     ql_gpio_init(LED_STT, GPIO_OUTPUT, PULL_NONE, LVL_HIGH);
+    ql_gpio_init(LED_MODE, GPIO_OUTPUT, PULL_NONE, LVL_HIGH);
 
     SendEventToThread(main_task, INIT_CONFIG);
     // char buff_gps[50]={0};
@@ -144,7 +146,9 @@ static void main_task_thread(void *param)
             break;
 
         case MAIN_TICK_3000MS:
+            Led^=1;
             send_gps();
+            ql_gpio_set_level(LED_MODE, Led == 0 ? LVL_LOW : LVL_HIGH);
             break;
         default:
 

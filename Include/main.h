@@ -16,8 +16,9 @@ static uint8_t gps_status=0;
 #define GPSFAIL "GPS_FAIL"
 
 #define LED_STT GPIO_22//LED STATUS
+#define LED_MODE GPIO_13//LED MODE
 
-#define ACC_IN GPIO_25//WAKEUP
+#define ACC_IN GPIO_30//WAKEUP
 //#define ACC_IN GPIO_13//SLEEP INDEX
 #define IO_LOCK GPIO_24
 #define IO_SPEAKER GPIO_25
