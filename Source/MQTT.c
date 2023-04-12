@@ -117,11 +117,13 @@ static void mqtt_inpub_data_cb(mqtt_client_t *client, void *arg, int pkt_id, con
                 ql_get_battery_vol(&vol);
                 QL_MQTT_LOG("DIEN AP NGUON:  %d\n", vol);
             }
-             else if (strcmp(val, "SLEEP") == 0)
+             else if (strcmp(val, "SEND_AT") == 0)
             {
                 QL_MQTT_LOG("\n DI ngu sau 10s\n");
-                char *cmd2 ="AT+QSCLK=1\r\n";
-                ql_virt_at_write(QL_VIRT_AT_PORT_0, (unsigned char*)cmd2, strlen((char *)cmd2));   
+                cJSON *sdt = cJSON_GetObjectItem(pJsonRoot, "INFO");
+                char *val1 = sdt->valuestring;               
+                //char *cmd2 ="AT+QSCLK=1\r\n";
+                ql_virt_at_write(QL_VIRT_AT_PORT_0, (unsigned char*)val1, strlen((char *)val1));   
                 //l_power_app_init();
 
             }           
@@ -226,7 +228,7 @@ static void mqtt_disconnect_result_cb(mqtt_client_t *client, void *arg, int err)
     ql_rtos_semaphore_release(mqtt_semp);
 }
 
-void pub_mqtt(char *topic, char *mess)
+QlOSStatus pub_mqtt(char *topic, char *mess)
 {
     if (mqtt_connected == 1)
     {
@@ -235,6 +237,7 @@ void pub_mqtt(char *topic, char *mess)
         {
             QL_MQTT_LOG("\rTHANHCONG CHO KET QUA!\n");
             ql_rtos_semaphore_wait(mqtt_semp, QL_WAIT_FOREVER);
+            return QL_OSI_SUCCESS;
         }
         else
         {
@@ -243,7 +246,8 @@ void pub_mqtt(char *topic, char *mess)
     }
     else
     {
-        QL_MQTT_LOG("FAIL: MQTT DISCONNECTED!");
+        QL_MQTT_LOG("FAIL: MQTT DISCONNECTED!\n");
+        return 1;
     }
 }
 static void mqtt_app_thread(void *arg)
@@ -264,12 +268,15 @@ static void mqtt_app_thread(void *arg)
     strcat(topic_gui, topic_rec);
     strcpy(topic_nhan, imei);
     strcat(topic_nhan, topic_remote);
+    strcpy(topic_tb,imei);
+    strcat(topic_tb,topic_event);
     strcpy(mqtt_client, imei);
     strcat(mqtt_client, MQTT_CLIENT_IDENTITY);
     // strcpy(topic_rec,imei);
     // strcpy(topic_gui, imei);
-    QL_MQTT_LOG("\nimei gui:%s", topic_gui);
-    QL_MQTT_LOG("\nimei nhan:%s", topic_nhan);
+    QL_MQTT_LOG("\ntopic gui:%s", topic_gui);
+    QL_MQTT_LOG("\ntopic nhan:%s", topic_nhan);
+    QL_MQTT_LOG("\ntopic thong bao:%s", topic_tb);
     ret = ql_virt_at_open(QL_VIRT_AT_PORT_0, ql_virt_at0_notify_cb);
     if (QL_VIRT_AT_SUCCESS != ret)
     {

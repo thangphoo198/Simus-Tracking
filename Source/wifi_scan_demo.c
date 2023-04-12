@@ -201,6 +201,7 @@ static void ql_wifiscan_app_thread(void *param)
             // ql_wifiscan_synchro_complete_flow();
             // ql_rtos_task_sleep_ms(5000);
             // ql_rtos_semaphore_delete(mqtt_semp);
+            cJSON_free((void *)out);
             ql_rtos_task_delete(ql_wifiscan_app_task);
             // ql_wifiscan_async_start();
         }
