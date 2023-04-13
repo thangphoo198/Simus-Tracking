@@ -21,10 +21,6 @@ static uint32_t tickCount500MS = 0,tickCount5000MS=0;
 static uint8_t Led = 0, Led2 = 0;
 ql_LvlMode in;
 bool noti=false;
-#define QL_FUN_NUM_UART_2_CTS 3
-#define QL_FUN_NUM_UART_3_TXD 4
-#define QL_PIN_NUM_KEYOUT_5 82
-#define FEED_DOG_MAX_MISS_CNT   5
 void timer_callback(void)
 {
     ql_event_t event;
@@ -172,7 +168,15 @@ void send_gps()
         cJSON_AddItemToObject(pRoot, "DATA", pValue);
         char *GPS_info = cJSON_Print(pRoot);
         OUT_LOG(GPS_info);
-        pub_mqtt(topic_gui, GPS_info);
+        QlOSStatus ret=pub_mqtt(topic_gui, GPS_info);
+       if (ret != QL_OSI_SUCCESS)
+       {
+            OUT_LOG("gui that bai\n");
+       }
+       else
+       {
+            OUT_LOG("gui thanh cong\n");
+       }
         cJSON_free((void *)GPS_info);
     }
     else

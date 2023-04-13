@@ -61,7 +61,8 @@ void feed_dog_callback(uint32 id_type, void *ctx)
 void timer1_callback(void *ctx)
 {
 
-	QL_OSI_DEMO_LOG("timer run %d times\n", run_time);
+	run_time++;
+	QL_OSI_DEMO_LOG("timer run %d times\n",run_time);
 	return;
 }
 
