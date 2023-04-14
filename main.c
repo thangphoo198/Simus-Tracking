@@ -194,7 +194,7 @@ int appimg_enter(void *param)
     ql_quec_trace_enable(1);
     // ql_rtos_sw_dog_enable;
     /*Create timer tick*/
-    ql_osi_demo_init();
+   // ql_osi_demo_init();
     err = ql_rtos_timer_create(&main_timer, main_task, timer_callback, NULL);
 
     /* main task*/

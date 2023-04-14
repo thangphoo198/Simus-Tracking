@@ -353,7 +353,7 @@ static void mqtt_app_thread(void *arg)
             break;
         }
 
-        QL_MQTT_LOG("\rmqtt_cli:%d", mqtt_cli);
+        QL_MQTT_LOG("\rmqtt_cli:%d\n", mqtt_cli);
 
         client_info.keep_alive = 60;
         client_info.clean_session = 1;
@@ -370,6 +370,7 @@ static void mqtt_app_thread(void *arg)
             QL_MQTT_LOG("\nchon id-0\n");
             client_info.ssl_cfg = NULL;
             ret = ql_mqtt_connect(&mqtt_cli, MQTT_CLIENT_SRV_URL, mqtt_connect_result_cb, NULL, (const struct mqtt_connect_client_info_t *)&client_info, mqtt_state_exception_cb);
+            QL_MQTT_LOG("\rmqtt_cli:%d\n", mqtt_cli);
      //   }
         // else
         // {
@@ -405,13 +406,25 @@ static void mqtt_app_thread(void *arg)
         (ql_mqtt_sub_unsub(&mqtt_cli, topic_nhan, 1, mqtt_requst_result_cb, NULL, 1) == MQTTCLIENT_WOUNDBLOCK);
         while (mqtt_connected == 1)
         {
-            if (ql_mqtt_sub_unsub(&mqtt_cli, topic_nhan, 1, mqtt_requst_result_cb, NULL, 1) == MQTTCLIENT_WOUNDBLOCK)
+
+
+            ql_event_t test_event = {0};
+            if (ql_event_try_wait(&test_event) != 0)
             {
-                QL_MQTT_LOG("\ndang sub topic:%s\n", topic_nhan);
-                ql_rtos_semaphore_wait(mqtt_semp, QL_WAIT_FOREVER);
+                continue;
             }
 
-            ql_rtos_task_sleep_s(30);
+            if (test_event.id == QUEC_KERNEL_FEED_DOG)
+            {
+                QL_MQTT_LOG("\ndemo task receive feed dog event\n");
+
+                if (ql_rtos_feed_dog() != QL_OSI_SUCCESS)
+                {
+                    QL_MQTT_LOG("feed dog failed\n");
+                }
+            }
+
+            ql_rtos_task_sleep_s(10);
         }
     }
     if (mqtt_connected == 1 && ql_mqtt_disconnect(&mqtt_cli, mqtt_disconnect_result_cb, NULL) == MQTTCLIENT_WOUNDBLOCK)
@@ -439,6 +452,37 @@ exit:
 
     return;
 }
+
+void feed_dog_callback1(uint32 id_type, void *ctx)
+{	
+	ql_event_t event;
+
+	if(id_type == QUEC_KERNEL_FEED_DOG)
+	{
+		QL_MQTT_LOG("feed dog callback run\n");
+		
+		event.id = QUEC_KERNEL_FEED_DOG;
+		if(ql_rtos_event_send(mqtt_task, &event) != QL_OSI_SUCCESS)
+		{
+			QL_MQTT_LOG("send feed_dog event to demo task failed\n");
+		}	
+		else
+		{
+			QL_MQTT_LOG("send feed dog event to demo task ok\n");
+
+            if (ql_mqtt_sub_unsub(&mqtt_cli, topic_nhan, 1, mqtt_requst_result_cb, NULL, 1) == MQTTCLIENT_WOUNDBLOCK)
+            {
+                QL_MQTT_LOG("\ndang sub topic:%s\n", topic_nhan);
+                ql_rtos_semaphore_wait(mqtt_semp, QL_WAIT_FOREVER);
+            }
+
+		}
+	}
+}
+
+
+
+
 void reconnect()
 {
     int adc_value = 0;
@@ -467,6 +511,8 @@ int ql_mqtt_app_init(void)
     QlOSStatus err = QL_OSI_SUCCESS;
 
     err = ql_rtos_task_create(&mqtt_task, 16 * 1024,APP_PRIORITY_HIGH, "mqtt_app", mqtt_app_thread, NULL, 5);
+    ql_rtos_swdog_register((ql_swdog_callback)feed_dog_callback1, mqtt_task);  
+    ql_rtos_sw_dog_enable(10000, 3);
     if (err != QL_OSI_SUCCESS)
     {
         QL_MQTT_LOG("\rmqtt_app init failed");
