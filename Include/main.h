@@ -32,7 +32,7 @@ char buff_time[50];
 char gps_ok[10];
 static uint32_t run_time = 0,run_on;
 // APPLICATION
-#define SENSOR_LIS3DH
+//#define SENSOR_LIS3DH
 //#define SMS_APP
 //#define VOICE_APP
 

@@ -163,7 +163,6 @@ void send_gps()
     {
         cJSON *pRoot = cJSON_CreateObject();
         cJSON_AddStringToObject(pRoot, "RES", "GET_GPS");
-        // cJSON_AddNumberToObject(pRoot, "lat", g_gps_data.latitude);
         int16_t signal = g_gps_data.avg_cnr;
         cJSON *pValue = cJSON_CreateObject();
         cJSON_AddStringToObject(pValue, "time", buff_time);
@@ -197,9 +196,7 @@ int appimg_enter(void *param)
     err = ql_rtos_task_create(&main_task, 4 * 1024, APP_PRIORITY_NORMAL, "Main_task", main_task_thread, NULL, 5);
     ql_sms_app_init();
     ql_mqtt_app_init();
-    ql_gnss_app_init();
-    ql_ble_gatt_server_demo_init();
-    
+    ql_gnss_app_init();   
 #ifdef SENSOR_LIS3DH
     ql_i2c_demo_init();
 #endif
@@ -209,4 +206,5 @@ int appimg_enter(void *param)
 
 void appimg_exit(void)
 {
+    
 }

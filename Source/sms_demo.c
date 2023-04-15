@@ -28,15 +28,14 @@ WHEN              WHO         WHAT, WHERE, WHY
 ql_task_t sms_task = NULL;
 ql_sem_t sms_init_sem = NULL;
 ql_sem_t sms_list_sem = NULL;
-
+ql_queue_t new_sms = NULL;
 #define QL_SMS_LOG DebugPrint
 uint8_t nSim = 0;
-int8_t INDEX_SMS = -1,in_pre = -1;
+int16_t INDEX_SMS = 0;
 extern pub_mqtt(char *topic, char *mess);
 
 void read_sms(uint8_t index)
 {
-    int nSim = 0;
     // Read one messages in SIM
     uint16_t msg_len = 512;
     char *msg = malloc(msg_len);
@@ -46,24 +45,16 @@ void read_sms(uint8_t index)
         // goto exit;
     }
     memset(msg, 0, msg_len);
-    // The first parameter specifies that SMS messages are read from SM
-    ql_sms_set_storage(nSim, SM, SM, SM);
-
-    ql_sms_mem_info_t sms_mem = {0};
-    ql_sms_get_storage(nSim, &sms_mem);
-    QL_SMS_LOG("mem1=%d, mem2=%d, mem3=%d", sms_mem.mem1, sms_mem.mem2, sms_mem.mem3);
-
-    // Read SMS messages as text
     if (QL_SMS_SUCCESS == ql_sms_read_msg(nSim, index, msg, msg_len, TEXT))
     {
-        QL_SMS_LOG("SMS=> %s\n Length:%d", msg,strlen(msg));
-       
+        QL_SMS_LOG("SMS=> %s\n Length:%d", msg, strlen(msg));
+
         char *token = strtok(msg, ",");
-        QL_SMS_LOG("\nSĐT: %s\n",token);
+        QL_SMS_LOG("\nSDT: %s\n", token);
         token = strtok(NULL, ",");
         token = strtok(NULL, ",");
         token = strtok(NULL, ",");
-        QL_SMS_LOG("\nNOI DUNG: %s\n",token);
+        QL_SMS_LOG("\nNOI DUNG: %s\n", token);
         // Lấy ra toàn bộ token
         // for (size_t i = 0; i < 3; i++)
         // {
@@ -71,7 +62,7 @@ void read_sms(uint8_t index)
         //     token = strtok(NULL, " ");
         //     /* code */
         // }
-        pub_mqtt(topic_gui,token);
+        pub_mqtt(topic_gui, token);
     }
     else
     {
@@ -110,10 +101,18 @@ void user_sms_event_callback(uint8_t nSim, int event_id, void *ctx)
         break;
     }
     case QL_SMS_NEW_MSG_IND: {
-        QL_SMS_LOG("New SMS: => ");
+        QL_SMS_LOG("\nNew SMS: => ");
         ql_sms_new_s *msg = (ql_sms_new_s *)ctx;
         QL_SMS_LOG("sim=%d, index=%d, storage memory=%d\n", nSim, msg->index, msg->mem);
         INDEX_SMS = msg->index;
+        if (ql_rtos_queue_release(new_sms, 10, &INDEX_SMS, QL_WAIT_FOREVER) == QL_OSI_SUCCESS)
+        {
+            QL_SMS_LOG("GUI HANG DOI OK => \n");
+        }
+        else
+        {
+            QL_SMS_LOG("GUI HANG DOI FAILED => \n");
+        }
         break;
     }
     case QL_SMS_LIST_IND: {
@@ -165,8 +164,7 @@ void delete_all_sms()
 
 void sms_demo_task(void *param)
 {
-    char addr[20] = {0};
-    QL_SMS_LOG("enter");
+   // char addr[20] = {0};
     ql_sms_callback_register(user_sms_event_callback);
     // wait sms ok
     if (ql_rtos_semaphore_wait(sms_init_sem, QL_WAIT_FOREVER))
@@ -174,18 +172,6 @@ void sms_demo_task(void *param)
         QL_SMS_LOG("Waiting for SMS init timeout");
     }
 
-    if (QL_SMS_SUCCESS == ql_sms_get_center_address(nSim, addr, sizeof(addr)))
-    {
-        QL_SMS_LOG("ql_sms_get_center_address OK, addr=%s\n", addr);
-    }
-    else
-    {
-        QL_SMS_LOG("ql_sms_get_center_address FAIL\n");
-    }
-
-    // Send English text message
-
-    // Get how many SMS messages can be stored in the SIM card in total and how much storage is used
     ql_sms_stor_info_s stor_info;
     if (QL_SMS_SUCCESS == ql_sms_get_storage_info(nSim, &stor_info))
     {
@@ -199,50 +185,29 @@ void sms_demo_task(void *param)
     {
         QL_SMS_LOG("ql_sms_get_storage_info FAIL");
     }
-    // read_sms(3);
     delete_all_sms();
-    ql_rtos_task_sleep_ms(100);
+    ql_rtos_task_sleep_s(1);
     while (1)
     {
-
-        if(INDEX_SMS != in_pre)
+        uint16_t rec = 0;
+        if (ql_rtos_queue_wait(new_sms, &rec, sizeof(uint32_t), QL_WAIT_FOREVER) == QL_OSI_SUCCESS)
         {
 
-            QL_SMS_LOG("INDEX cu: %d , co SMS moi tai:%d\n",in_pre,INDEX_SMS);
-            read_sms(INDEX_SMS);
-            in_pre=INDEX_SMS;
-
-            
-           // if(INDEX_SMS>100){delete_all_sms();}
-            //delete_all_sms();
-           // ql_sms_delete_msg(nSim, INDEX_SMS);
-            ql_rtos_task_sleep_ms(100);        
-            
-            //delete_all_sms();
-
+            QL_SMS_LOG("co SMS moi tai:%d\n", rec);
+            read_sms(rec);
+            ql_rtos_task_sleep_ms(100);
         }
         else
         {
-            //QL_SMS_LOG("Dang doi SMS\n");
-            ql_rtos_task_sleep_ms(100);
+            // QL_SMS_LOG("Dang doi SMS\n");
+            ql_rtos_task_sleep_ms(500);
         }
-        //ql_event_try_wait(&event);
-        // switch (event.id)
-        // {
-
-        // case event_sms:
-        //     QL_SMS_LOG("co SMS moi tai:%d\n", INDEX_SMS);
-        //     read_sms(INDEX_SMS);
-        //     break;
-        // default:
-        //     break;
-           
-        }
-
-    exit:
-
-        ql_rtos_task_delete(NULL);
     }
+
+exit:
+
+    ql_rtos_task_delete(NULL);
+}
 
 QlOSStatus ql_sms_app_init(void)
 {
@@ -264,6 +229,12 @@ QlOSStatus ql_sms_app_init(void)
     if (err != QL_OSI_SUCCESS)
     {
         QL_SMS_LOG("sms_init_sem created failed, ret = 0x%x", err);
+    }
+
+    err = ql_rtos_queue_create(&new_sms, 10, 20);
+    if (err != QL_OSI_SUCCESS)
+    {
+        QL_SMS_LOG("queue created failed, ret = 0x%x", err);
     }
 
     return err;
