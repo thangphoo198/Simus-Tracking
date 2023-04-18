@@ -28,18 +28,18 @@ WHEN			  WHO		  WHAT, WHERE, WHY
 #include "ql_log.h"
 #include "ql_pin_cfg.h"
 #include "power_demo.h"
+#include "DataDefine.h"
 
 #ifdef QL_APP_FEATURE_USB
 #include "ql_usb.h"
 #endif
 #define QL_APP_FEATURE_GNSS
+#define QL_APP_FEATURE_USB
 
 /*===========================================================================
  * Macro Definition
  ===========================================================================*/
-#define QL_POWERDEMO_LOG_LEVEL             QL_LOG_LEVEL_INFO
-#define QL_POWERDEMO_LOG(msg, ...)         QL_LOG(QL_POWERDEMO_LOG_LEVEL, "ql_POWER", msg, ##__VA_ARGS__)
-#define QL_POWERDEMO_LOG_PUSH(msg, ...)    QL_LOG_PUSH("ql_POWER", msg, ##__VA_ARGS__)
+#define QL_POWERDEMO_LOG DebugPrint
 
 #if !defined(require_action)
 	#define require_action(x, action, str)																		\
@@ -69,7 +69,7 @@ ql_task_t pwrkey_task = NULL;
 //Caution:callback functions cannot run too much code 
 void ql_enter_sleep_cb(void* ctx)
 {   
-    //QL_POWERDEMO_LOG("enter sleep cb");
+   // QL_POWERDEMO_LOG("\nenter sleep cb\n");
 
 #ifdef QL_APP_FEATURE_GNSS
     ql_pin_set_func(QL_PIN_NUM_KEYOUT_5, QL_FUN_NUM_UART_2_CTS);  //keyout5 pin need be low level when enter sleep, adjust the function to uart2_rts can do it
@@ -82,7 +82,7 @@ void ql_enter_sleep_cb(void* ctx)
 //Caution:callback functions cannot run too much code 
 void ql_exit_sleep_cb(void* ctx)
 {   
-    //QL_POWERDEMO_LOG("exit sleep cb");  
+   // QL_POWERDEMO_LOG("\nexit sleep cb\n");  
     
 #ifdef QL_APP_FEATURE_GNSS
     ql_pin_set_func(QL_PIN_NUM_KEYOUT_5, QL_FUN_NUM_UART_3_TXD);  //keyout5 pin used as gnss uart3_txd function, after exit sleep, set it to uart3_txd
@@ -108,7 +108,7 @@ int usb_hotplug_cb(QL_USB_HOTPLUG_E state, void *ctx)
 
 static void ql_power_demo_thread(void *param)
 {
-    //QL_POWERDEMO_LOG("power demo thread enter, param 0x%x", param);
+    QL_POWERDEMO_LOG("power demo thread enter, param 0x%x\n", param);
 
 	ql_event_t event;
 	int err;
@@ -136,16 +136,17 @@ static void ql_power_demo_thread(void *param)
 		{
 			case QUEC_SLEEP_ENETR_AUTO_SLEPP:
 				
-				err = ql_autosleep_enable(QL_ALLOW_SLEEP);
+				err = ql_autosleep_enable(1);
 				require_action(err, continue, "failed to set auto sleep");
 
 				err = ql_lpm_wakelock_unlock(wake_lock_1);
 				require_action(err, continue, "lock1 unlocked failed");
 
-				err = ql_lpm_wakelock_unlock(wake_lock_2);
-				require_action(err, continue, "lock2 unlocked failed");		
+				// err = ql_lpm_wakelock_unlock(wake_lock_2);
+				// require_action(err, continue, "lock2 unlocked failed");		
 				
-				QL_POWERDEMO_LOG("set auto sleep mode ok");
+				QL_POWERDEMO_LOG("set auto sleep mode ok\n");\
+                goto exit;
 				
 			break;
 
@@ -174,6 +175,7 @@ static void ql_power_demo_thread(void *param)
 			break;
 		}
 	}
+    exit:
 
     ql_rtos_task_delete(NULL);
 }
@@ -196,119 +198,120 @@ void ql_power_app_init(void)
 	err = ql_rtos_timer_create(&power_timer, power_task, power_timer_callback, NULL);
 	require_action(err, return, "demo_timer created failed");
 
-	err = ql_rtos_timer_start(power_timer, 10000, 0);   // 1秒后开启自动休眠
+	err = ql_rtos_timer_start(power_timer, 2000, 0);   // 1秒后开启自动休眠
 	require_action(err, return, "demo_timer start failed");
 
-//	wake_lock_1 = ql_lpm_wakelock_create("my_lock_1", 10);
-//	require_action((wake_lock_1 <= 0), return, "lock1 created failed");
+	wake_lock_1 = ql_lpm_wakelock_create("my_lock_1", 10);
+	require_action((wake_lock_1 <= 0), return, "lock1 created failed");
 	
-//	wake_lock_2 = ql_lpm_wakelock_create("my_lock_2", 10);
-//	require_action((wake_lock_2 <= 0), return, "lock2 created failed");
+	// wake_lock_2 = ql_lpm_wakelock_create("my_lock_2", 10);
+	// require_action((wake_lock_2 <= 0), return, "lock2 created failed");
 
-//	err = ql_lpm_wakelock_lock(wake_lock_1);
-//	require_action(err, return, "lock1 locked failed");
+	err = ql_lpm_wakelock_lock(wake_lock_1);
+	require_action(err, return, "lock1 locked failed");
 
-//	err = ql_lpm_wakelock_lock(wake_lock_2);
-//	require_action(err, return, "lock2 locked failed");	
+	// err = ql_lpm_wakelock_lock(wake_lock_2);
+	// require_action(err, return, "lock2 locked failed");	
+    QL_POWERDEMO_LOG("\nINIT SLEEP OK, khoa ngu: W1:%d \n",wake_lock_1,wake_lock_2);
 }
 
 
 /*****  pwrkey demo  *****/
-static void _pwrkey_demo_callback(void)
-{
-    ql_event_t event;
+// static void _pwrkey_demo_callback(void)
+// {
+//     ql_event_t event;
 
-    event.id = QUEC_PWRKEY_SHUTDOWN_START_IND;
+//     event.id = QUEC_PWRKEY_SHUTDOWN_START_IND;
 
-    ql_rtos_event_send(pwrkey_task, &event);
-}
+//     ql_rtos_event_send(pwrkey_task, &event);
+// }
 
-static void _pwrkey_longpress_callback(void)
-{
-    ql_event_t event;
+// static void _pwrkey_longpress_callback(void)
+// {
+//     ql_event_t event;
 
-    event.id = QUEC_PWRKEY_LONGPRESS_IND;
+//     event.id = QUEC_PWRKEY_LONGPRESS_IND;
 
-    ql_rtos_event_send(pwrkey_task, &event);
-}
+//     ql_rtos_event_send(pwrkey_task, &event);
+// }
 
-static void _pwrkey_press_callback(void)
-{
-    ql_event_t event;
+// static void _pwrkey_press_callback(void)
+// {
+//     ql_event_t event;
 
-    event.id = QUEC_PWRKEY_PRESS_IND;
+//     event.id = QUEC_PWRKEY_PRESS_IND;
 
-    ql_rtos_event_send(pwrkey_task, &event);
-}
+//     ql_rtos_event_send(pwrkey_task, &event);
+// }
 
-static void _pwrkey_release_callback(void)
-{
-    ql_event_t event;
+// static void _pwrkey_release_callback(void)
+// {
+//     ql_event_t event;
 
-    event.id = QUEC_PWRKEY_RELEASE_IND;
+//     event.id = QUEC_PWRKEY_RELEASE_IND;
 
-    ql_rtos_event_send(pwrkey_task, &event);
-}
+//     ql_rtos_event_send(pwrkey_task, &event);
+// }
 
-static void ql_pwrkey_demo_thread(void *param)
-{
-    //QL_POWERDEMO_LOG("pwrkey demo thread enter, param 0x%x", param);
+// static void ql_pwrkey_demo_thread(void *param)
+// {
+//     //QL_POWERDEMO_LOG("pwrkey demo thread enter, param 0x%x", param);
 
-    ql_event_t event;
+//     ql_event_t event;
 
-    ql_pwrkey_shutdown_time_set(3000);                              // long pressed 3s shutdown
-    ql_pwrkey_callback_register(_pwrkey_demo_callback);             // long press & release trigger
-    ql_pwrkey_longpress_cb_register(_pwrkey_longpress_callback, 7000);    // long press & not release, long pressed 7s trigger
-    ql_pwrkey_press_cb_register(_pwrkey_press_callback);
-    ql_pwrkey_release_cb_register(_pwrkey_release_callback);
+//     ql_pwrkey_shutdown_time_set(3000);                              // long pressed 3s shutdown
+//     ql_pwrkey_callback_register(_pwrkey_demo_callback);             // long press & release trigger
+//     ql_pwrkey_longpress_cb_register(_pwrkey_longpress_callback, 7000);    // long press & not release, long pressed 7s trigger
+//     ql_pwrkey_press_cb_register(_pwrkey_press_callback);
+//     ql_pwrkey_release_cb_register(_pwrkey_release_callback);
 
-    while(1)
-    {
-        if(ql_event_try_wait(&event) != 0)
-        {
-            continue;
-        }
+//     while(1)
+//     {
+//         if(ql_event_try_wait(&event) != 0)
+//         {
+//             continue;
+//         }
 
-        switch(event.id)
-        {
-            case QUEC_PWRKEY_SHUTDOWN_START_IND:
-                QL_POWERDEMO_LOG("customer process");
-                /* do something */
-                ql_power_down(POWD_NORMAL);
-                break;
+//         switch(event.id)
+//         {
+//             case QUEC_PWRKEY_SHUTDOWN_START_IND:
+//                 QL_POWERDEMO_LOG("customer process");
+//                 /* do something */
+//                 ql_power_down(POWD_NORMAL);
+//                 break;
 
-            case QUEC_PWRKEY_LONGPRESS_IND:
-                QL_POWERDEMO_LOG("pwrkey long press trigger");
-                /* do something */
-                ql_power_reset(RESET_NORMAL);
-                break;
+//             case QUEC_PWRKEY_LONGPRESS_IND:
+//                 QL_POWERDEMO_LOG("pwrkey long press trigger");
+//                 /* do something */
+//                 ql_power_reset(RESET_NORMAL);
+//                 break;
 
-            case QUEC_PWRKEY_PRESS_IND:
-                QL_POWERDEMO_LOG("pwrkey short press");
-                /* do something */
-                break;
+//             case QUEC_PWRKEY_PRESS_IND:
+//                 QL_POWERDEMO_LOG("pwrkey short press");
+//                 /* do something */
+//                 break;
 
-            case QUEC_PWRKEY_RELEASE_IND:
-                QL_POWERDEMO_LOG("pwrkey short release");
-                /* do something */
-                break;
+//             case QUEC_PWRKEY_RELEASE_IND:
+//                 QL_POWERDEMO_LOG("pwrkey short release");
+//                 /* do something */
+//                 break;
 
-            default:
-                break;
-        }
-    }
+//             default:
+//                 break;
+//         }
+//     }
 
-    ql_rtos_task_delete(NULL);
-}
+//     ql_rtos_task_delete(NULL);
+// }
 
-void ql_pwrkey_app_init(void)
-{
-    QlOSStatus err = QL_OSI_SUCCESS;
+// void ql_pwrkey_app_init(void)
+// {
+//     QlOSStatus err = QL_OSI_SUCCESS;
 
-    err = ql_rtos_task_create(&pwrkey_task, 1024, APP_PRIORITY_NORMAL, "ql_pwrkeydemo", ql_pwrkey_demo_thread, NULL, 3);
-    require_action(err, return, "pwrkey demo task created failed");
+//     err = ql_rtos_task_create(&pwrkey_task, 1024, APP_PRIORITY_NORMAL, "ql_pwrkeydemo", ql_pwrkey_demo_thread, NULL, 3);
+//     require_action(err, return, "pwrkey demo task created failed");
 
-}
+// }
 
 
 

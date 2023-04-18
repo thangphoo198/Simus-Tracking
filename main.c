@@ -121,6 +121,9 @@ static void main_task_thread(void *param)
         if (in == LVL_LOW)
         {
             // ql_rtos_task_sleep_ms(20);
+            ql_dev_set_modem_fun(QL_DEV_CFUN_FULL, 1, 0);
+            ql_mqtt_app_init();
+            //off_gnss();
             OUT_LOG("\n ban da nhap phim\n");
             if(noti==false)
             {
@@ -140,7 +143,7 @@ static void main_task_thread(void *param)
         {
         case INIT_CONFIG:
             OUT_LOG("khoi tao OK\n");
-            ql_rtos_timer_start(main_timer, 500, 1);
+            ql_rtos_timer_start(main_timer, 1000, 1);
             break;
         case MAIN_TICK_100MS:
             break;
@@ -179,6 +182,7 @@ void send_gps()
         OUT_LOG("\nkhong co GPS\n");
     }
 }
+
 extern pub_mqtt(char *topic, char *mess);
 
 int appimg_enter(void *param)
@@ -196,7 +200,9 @@ int appimg_enter(void *param)
     err = ql_rtos_task_create(&main_task, 4 * 1024, APP_PRIORITY_NORMAL, "Main_task", main_task_thread, NULL, 5);
     ql_sms_app_init();
     ql_mqtt_app_init();
-    ql_gnss_app_init();   
+#ifdef GNSS
+    ql_gnss_app_init(); 
+#endif      
 #ifdef SENSOR_LIS3DH
     ql_i2c_demo_init();
 #endif

@@ -49,6 +49,12 @@ void ql_gnss_notify_cb(uint32 ind_type, ql_uart_port_number_e port, uint32 size)
         QL_GNSSDEMO_LOG("gnss demo recv overflow error!");
     }
 }
+void off_gnss()
+{
+    ql_gnss_switch(GNSS_DISABLE);
+    QL_GNSSDEMO_LOG("gnss demo thread exit\n");
+    ql_rtos_task_delete(NULL);   
+}
 
 static void ql_gnss_demo_thread(void *param)
 {
@@ -238,7 +244,7 @@ exit:
         recbuff = NULL;
     }
     ql_gnss_switch(GNSS_DISABLE);
-    QL_GNSSDEMO_LOG("gnss demo thread exit, param 0x%x", param);
+    QL_GNSSDEMO_LOG("gnss demo thread exit, param 0x%x\n", param);
     ql_rtos_task_delete(NULL);
 }
 

@@ -31,7 +31,7 @@
 #define WRITE_TO_FILESIZE	(1024*5)		
 #define QL_VERSION_MAX 256
 #define HTTP_HEAD_RANGE_LENGTH_MAX  50
-#define HTTP_DLOAD_URL                      "http://broker.simus.vn/api/dl/firmware?k=000d1078-7326-11ed-ac26-d6d2c8169f23&s=abcdef&v=1.0"
+#define HTTP_DLOAD_URL                      "http://103.200.20.78:8001/api/dl/firmware?k=d79cb2d8-dcd9-11ed-9909-ca6afe7e4d60&s=abcdef&v=1.266"
 
 #define RSP_FOTA_OK "{\"RSP\":\"FOTA_OK\"}"
 #define RSP_FOTA_FAIL "{\"RSP\":\"FOTA_FAIL\"}"
@@ -628,7 +628,7 @@ static int fota_http_evn_request(fota_http_client_t* fota_http_cli_p)
 	char URL[200]={0};
 	char ver[100]={0};
 	ql_dev_get_firmware_version(ver, sizeof(ver));
-	sprintf(URL,"http://broker.simus.vn/api/dl/firmware?k=000d1078-7326-11ed-ac26-d6d2c8169f23&s=abcdef&v=%s",ver);
+	sprintf(URL,"http://103.200.20.78:8001/api/dl/firmware?k=d79cb2d8-dcd9-11ed-9909-ca6afe7e4d60&s=abcdef&v=%s",ver);
 	QL_FOTA_HTTP_LOG(URL);
 	ql_httpc_setopt(&(fota_http_cli_p->http_cli), HTTP_CLIENT_OPT_URL, URL);
 	//设置sim_id
