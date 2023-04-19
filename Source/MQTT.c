@@ -53,9 +53,11 @@ void ql_virt_at0_notify_cb(unsigned int ind_type, unsigned int size)
         ql_virt_at_read(QL_VIRT_AT_PORT_0, recv_buff, real_size);
         
         QL_MQTT_LOG("\n VAT0 => %s \n", recv_buff);
+        
         pub_mqtt(topic_gui,recv_buff);
+       // free(recv_buff);
     }
-    free(recv_buff);
+   // free(recv_buff);
     recv_buff = NULL;
 }
 
@@ -77,11 +79,6 @@ static void mqtt_state_exception_cb(mqtt_client_t *client)
     reconnect();
     
 }
-
-extern gui_sms(char *sdt, char *noidung);
-extern ql_fota_http_app_init();
-extern print_GPS(char *dat);
-extern off_gnss();
 
 static void mqtt_requst_result_cb(mqtt_client_t *client, void *arg, int err)
 {
@@ -128,7 +125,18 @@ static void mqtt_inpub_data_cb(mqtt_client_t *client, void *arg, int pkt_id, con
                  QL_MQTT_LOG("\n da gui:%s\n",val1);               
                 //l_power_app_init();
 
-            }      
+            }   
+
+              else if (strcmp(val, "KTTK") == 0)
+            {
+                ql_virt_at_write(QL_VIRT_AT_PORT_0, (unsigned char*)CMD_KTTK, strlen((char *)CMD_KTTK));   
+                QL_MQTT_LOG("\n da gui:%s\n",CMD_KTTK);  
+                //ON_MQTT=0;
+            }
+               else if (strcmp(val, "SAVE_CONFIG") == 0)
+            {
+                //ql_mxml_app_init();  
+            }                    
              else if (strcmp(val, "SLEEP") == 0)
             {
                 ql_power_app_init();
@@ -137,12 +145,10 @@ static void mqtt_inpub_data_cb(mqtt_client_t *client, void *arg, int pkt_id, con
                 //ON_MQTT=0;
             }   
 
-            // else if (strcmp(val, "SHUTDOWN") == 0)
-            // {
-            //     ql_LvlMode stt;
-            //     ql_gpio_get_level(IO_LOCK, &stt);
-            //     if(stt==LVL_HIGH) {
-            //          QL_MQTT_LOG("MAY DANG TAT \n");
+            else if (strcmp(val, "SHUTDOWN") == 0)
+            {
+            ql_power_down(POWD_NORMAL);
+            }
             //          pub_mqtt(topic_gui, RSP_SHUTDOWN_FAIL);
             //     }
             //     else{                  
