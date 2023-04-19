@@ -10,6 +10,7 @@
 #include "DataDefine.h"
 #include "cJSON.h"
 #include "main.h"
+#include "ql_api_rtc.h"
 
 #define OUT_LOG DebugPrint
 #define INIT_CONFIG 101
@@ -29,7 +30,7 @@ void timer_callback(void)
 {
     ql_event_t event;
 
-    if (++tickCount500MS > 1)
+    if (++tickCount500MS > 0)
     {
         tickCount500MS = 0;
         SendEventToThread(main_task, MAIN_TICK_100MS);
@@ -94,6 +95,10 @@ void send_event()
     }
     cJSON_free((void *)event_info);
 }
+void ngat(void *ctx)
+{
+    OUT_LOG("\nDA NGAT\n");
+}
 
 static void main_task_thread(void *param)
 {
@@ -104,7 +109,10 @@ static void main_task_thread(void *param)
     ql_gpio_init(IO_LOCK, GPIO_OUTPUT, PULL_DOWN, LVL_LOW);
     ql_gpio_init(IO_SPEAKER, GPIO_OUTPUT, PULL_DOWN, LVL_LOW);
     ql_gpio_init(IO_LIGHT, GPIO_OUTPUT, PULL_DOWN, LVL_LOW);
-    ql_gpio_init(ACC_IN, GPIO_INPUT, PULL_UP, LVL_HIGH); // SDA
+   // ql_gpio_init(ACC_IN, GPIO_INPUT, PULL_UP, LVL_HIGH); // SDA
+    ql_gpio_deinit(ACC_IN);
+    ql_int_register(ACC_IN, EDGE_TRIGGER,DEBOUNCE_EN,EDGE_FALLING,PULL_UP,ngat,NULL);
+    ql_int_enable(ACC_IN);
     // PIN6: NET_STATUS - GPIO22 (FUNC:4)
     //ql_pin_set_func(6, 4);
     ql_gpio_init(LED_STT, GPIO_OUTPUT, PULL_NONE, LVL_HIGH);
@@ -117,19 +125,22 @@ static void main_task_thread(void *param)
     {
 
         ql_event_try_wait(&event);
-        ql_gpio_get_level(ACC_IN, &in); //
-        if (in == LVL_LOW)
-        {
-            // ql_rtos_task_sleep_ms(20);
-            OUT_LOG("\n ban da nhap phim\n");
-            if(noti==false)
-            {
-                OUT_LOG("da gui thong bao\n");
-                send_event();
-            }
+        //ql_gpio_get_level(ACC_IN, &in); //
+        // if (in == LVL_LOW)
+        // {
+        //     // ql_rtos_task_sleep_ms(20);
+        //     ql_dev_set_modem_fun(QL_DEV_CFUN_FULL, 1, 0);
+        //     ql_mqtt_app_init();
+        //     //off_gnss();
+        //     OUT_LOG("\n ban da nhap phim\n");
+        //     if(noti==false)
+        //     {
+        //         OUT_LOG("da gui thong bao\n");
+        //         send_event();
+        //     }
 
 
-        }
+        // }
         // else if (in == LVL_HIGH)
         // {
 
@@ -140,21 +151,47 @@ static void main_task_thread(void *param)
         {
         case INIT_CONFIG:
             OUT_LOG("khoi tao OK\n");
-            ql_rtos_timer_start(main_timer, 500, 1);
+            ql_rtos_timer_start(main_timer, 1000, 1);
             break;
         case MAIN_TICK_100MS:
+        get_time();
             break;
 
         case MAIN_TICK_3000MS:
             Led^=1;
             send_gps();
             ql_gpio_set_level(LED_MODE, Led == 0 ? LVL_LOW : LVL_HIGH);
+                  
             break;
         default:
 
             break;
         }
     }
+}
+void get_time()
+{
+
+    int ret = 0;
+    int64_t time_sec=0,time_fix=0;
+    ql_rtc_time_t tm={0};
+    //int timezone=0;
+    ret = ql_rtc_get_time(&tm);
+    //time_sec += 60*60*7;
+   // ql_sec_conv_rtc_time(&time_sec,&tm);
+    //ret = ql_rtc_get_timezone(&timezone);
+
+    //time_fix+=FIX_HOUR;
+   // ql_sec_conv_rtc_time(&time_fix,&tm);
+
+    if(ret != QL_RTC_SUCCESS)
+    {
+        OUT_LOG("get time err");
+        return false; 
+    } 
+    //QL_PSMDEMO_LOG("time zone:%d\n",timezone);
+    OUT_LOG("TIME %d:%d:%d - %d/%d/%d \n", tm.tm_hour,tm.tm_min,tm.tm_sec,tm.tm_mday,tm.tm_mon,tm.tm_year);
+
 }
 
 void send_gps()
@@ -163,7 +200,6 @@ void send_gps()
     {
         cJSON *pRoot = cJSON_CreateObject();
         cJSON_AddStringToObject(pRoot, "RES", "GET_GPS");
-        // cJSON_AddNumberToObject(pRoot, "lat", g_gps_data.latitude);
         int16_t signal = g_gps_data.avg_cnr;
         cJSON *pValue = cJSON_CreateObject();
         cJSON_AddStringToObject(pValue, "time", buff_time);
@@ -180,6 +216,7 @@ void send_gps()
         OUT_LOG("\nkhong co GPS\n");
     }
 }
+
 extern pub_mqtt(char *topic, char *mess);
 
 int appimg_enter(void *param)
@@ -190,16 +227,16 @@ int appimg_enter(void *param)
     ql_quec_trace_enable(1);
     // ql_rtos_sw_dog_enable;
     /*Create timer tick*/
-    ql_osi_demo_init();
+   // ql_osi_demo_init();
     err = ql_rtos_timer_create(&main_timer, main_task, timer_callback, NULL);
 
     /* main task*/
     err = ql_rtos_task_create(&main_task, 4 * 1024, APP_PRIORITY_NORMAL, "Main_task", main_task_thread, NULL, 5);
     ql_sms_app_init();
     ql_mqtt_app_init();
-    ql_gnss_app_init();
-   // ql_ble_gatt_server_demo_init();
-    
+#ifdef GNSS
+    ql_gnss_app_init(); 
+#endif      
 #ifdef SENSOR_LIS3DH
     ql_i2c_demo_init();
 #endif
@@ -209,4 +246,5 @@ int appimg_enter(void *param)
 
 void appimg_exit(void)
 {
+    
 }
