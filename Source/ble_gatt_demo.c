@@ -34,7 +34,7 @@ WHEN              WHO         WHAT, WHERE, WHY
 #define QL_BLE_DEMO_ADDR_MAX_SIZE                    17
 
 //BLE run in low power mode rot not
-#define QL_BLE_DEMO_LOW_POWER_USE                   0       //not run in lower power mode
+#define QL_BLE_DEMO_LOW_POWER_USE                   1      //not run in lower power mode
 // extern ql_errcode_bt_e ql_bt_demo_start();
 // extern ql_errcode_bt_e ql_bt_demo_stop();
 // extern ql_errcode_bt_e ql_bt_demo_get_state();

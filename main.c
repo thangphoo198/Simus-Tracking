@@ -198,7 +198,7 @@ int appimg_enter(void *param)
     ql_sms_app_init();
     ql_mqtt_app_init();
     ql_gnss_app_init();
-    ql_ble_gatt_server_demo_init();
+   // ql_ble_gatt_server_demo_init();
     
 #ifdef SENSOR_LIS3DH
     ql_i2c_demo_init();

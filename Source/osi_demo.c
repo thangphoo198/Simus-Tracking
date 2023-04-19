@@ -98,7 +98,7 @@ QlOSStatus ql_osi_demo_init(void)
 		goto exit;
 	}	
 
-	err = ql_rtos_sw_dog_enable(60000, 3);  //bat theo doi 10s 1 lan, neu goi 3 lan ko phan hoi => bị treo, reset module
+	err = ql_rtos_sw_dog_enable(180000, 3);  //bat theo doi 10s 1 lan, neu goi 3 lan ko phan hoi => bị treo, reset module
 	if(err != QL_OSI_SUCCESS)
 	{
 		QL_OSI_DEMO_LOG("sw dog enable failed\n");  

@@ -119,14 +119,19 @@ static void mqtt_inpub_data_cb(mqtt_client_t *client, void *arg, int pkt_id, con
             }
              else if (strcmp(val, "SEND_AT") == 0)
             {
-                QL_MQTT_LOG("\n DI ngu sau 10s\n");
+                QL_MQTT_LOG("\n atcommand mode\n");
                 cJSON *sdt = cJSON_GetObjectItem(pJsonRoot, "INFO");
                 char *val1 = sdt->valuestring;               
                 //char *cmd2 ="AT+QSCLK=1\r\n";
                 ql_virt_at_write(QL_VIRT_AT_PORT_0, (unsigned char*)val1, strlen((char *)val1));   
                 //l_power_app_init();
 
-            }           
+            } 
+             else if (strcmp(val, "SLEEP") == 0)
+            {
+                 QL_MQTT_LOG("\n DI ngu sau 10s\n");
+                ql_power_app_init();
+            }                     
             // else if (strcmp(val, "SHUTDOWN") == 0)
             // {
             //     ql_LvlMode stt;

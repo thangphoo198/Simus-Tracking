@@ -29,8 +29,8 @@
 #define QL_I2C_TASK_PRIO APP_PRIORITY_NORMAL
 #define QL_I2C_TASK_EVENT_CNT 5
 
-#define SalveAddr_w_8bit 0x19
-#define SalveAddr_r_8bit 0x19
+#define SalveAddr_w_8bit 0x19 //0x19
+#define SalveAddr_r_8bit 0x19 //0x19
 
 #define REG1 0x20 //=0101[100Hz]0[HR mode]111[ZYX enable]=01010111b=0x57;
 #define REG2 0x21
@@ -81,7 +81,7 @@ char check()
     uint8_t KQ = 0;
     ql_I2cRead(i2c_1, SalveAddr_r_8bit, W_A_I, &KQ, 1);
     //	kq=IC_Read(W_A_I);
-    // QL_I2C_LOG("\nWAIT :0x%x\n", KQ);
+    QL_I2C_LOG("\nWAIT :0x%x\n", KQ);
     if (KQ == 0x33) // 0x68
     {
         return 1;
