@@ -142,12 +142,25 @@ static void mqtt_inpub_data_cb(mqtt_client_t *client, void *arg, int pkt_id, con
                 ql_power_app_init();
                 ql_rtos_sw_dog_disable();
                 ql_dev_set_modem_fun(QL_DEV_CFUN_MIN, 1,0);
+                INDEX_SLEEP=1;
+
+                if (ql_rtos_queue_release(sleep_index, 10, &INDEX_SLEEP, QL_WAIT_FOREVER) == QL_OSI_SUCCESS)
+                {
+                    QL_MQTT_LOG("GUI sleep den HANG DOI OK => \n");
+                    ql_rtos_semaphore_release(sleep_sem);
+                }
+                else
+                {
+                    QL_MQTT_LOG("GUI sleep HANG DOI FAILED => \n");
+                }     
+              //  off_main();
+                ql_rtos_task_delete(NULL);
                 //ON_MQTT=0;
             }   
 
             else if (strcmp(val, "SHUTDOWN") == 0)
             {
-            ql_power_down(POWD_NORMAL);
+            //ql_power_down(POWD_NORMAL);
             }
             //          pub_mqtt(topic_gui, RSP_SHUTDOWN_FAIL);
             //     }
@@ -510,7 +523,7 @@ void feed_dog_callback1(uint32 id_type, void *ctx)
 			QL_MQTT_LOG("send feed dog event to mqtttask ok\n");
             if(sub_mqtt(topic_nhan)==QL_OSI_SUCCESS)
             {
-                QL_MQTT_LOG("SUB TOPIC:%s OK",topic_nhan);
+                QL_MQTT_LOG("\nSUB TOPIC:%s OK\n",topic_nhan);
             }
 
 		}

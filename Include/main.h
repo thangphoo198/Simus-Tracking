@@ -1,6 +1,7 @@
 #ifndef MAIN_H_
 #define MAIN_H_
 #include "ql_gnss.h"
+#include "ql_api_osi.h"
 static ql_gnss_data_t g_gps_data;
 static uint8_t gps_status=0;
 #define NSIM 0
@@ -18,8 +19,9 @@ static uint8_t gps_status=0;
 #define LED_STT GPIO_22//LED STATUS
 #define LED_MODE GPIO_13//LED MODE
 
-//#define ACC_IN GPIO_30//WAKEUP
-#define ACC_IN GPIO_25// SDIO1-DATA0
+//#define ACC_IN GPIO_30//AP-READY
+#define ACC_IN GPIO_29// WAKEUP 
+//#define ACC_IN GPIO_25// SDIO1-DATA0
 //#define ACC_IN GPIO_13//SLEEP INDEX
 #define IO_LOCK GPIO_24
 #define IO_SPEAKER GPIO_25
@@ -32,6 +34,10 @@ char buff_local[50];
 char buff_time[50];
 char gps_ok[10];
 static uint32_t run_time = 0,run_on;
+uint8_t INDEX_SLEEP;
+ql_queue_t sleep_index;
+ql_sem_t sleep_sem;
+
 // APPLICATION
 //#define SENSOR_LIS3DH
 //#define GNSS

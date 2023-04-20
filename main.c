@@ -98,6 +98,11 @@ void send_event()
 void ngat(void *ctx)
 {
     OUT_LOG("\nDA NGAT\n");
+        if(noti==false)
+        {
+            OUT_LOG("da gui thong bao\n");
+            send_event();
+        }
 }
 
 static void main_task_thread(void *param)
@@ -125,6 +130,7 @@ static void main_task_thread(void *param)
     {
 
         ql_event_try_wait(&event);
+        uint16_t rec = 0;      
         //ql_gpio_get_level(ACC_IN, &in); //
         // if (in == LVL_LOW)
         // {
@@ -167,7 +173,25 @@ static void main_task_thread(void *param)
 
             break;
         }
+        ql_rtos_semaphore_wait(sleep_sem, QL_WAIT_FOREVER);
+        {    
+        if (ql_rtos_queue_wait(sleep_index, &rec, sizeof(uint32_t),1) == QL_OSI_SUCCESS)
+        {
+            OUT_LOG("co tin hieu sleep:%d\n", rec);     
+            ql_rtos_semaphore_release(sleep_sem); 
+
+            // ql_rtos_task_sleep_ms(100);
+            //ql_rtos_task_delete(NULL);
+        } 
+        }
+
     }
+}
+
+void off_main()
+{
+            OUT_LOG("\nxoa main task \n");
+            ql_rtos_task_delete(main_task);
 }
 void get_time()
 {
@@ -232,8 +256,23 @@ int appimg_enter(void *param)
 
     /* main task*/
     err = ql_rtos_task_create(&main_task, 4 * 1024, APP_PRIORITY_NORMAL, "Main_task", main_task_thread, NULL, 5);
+    sleep_index=NULL;
+    sleep_sem=NULL;
+    err = ql_rtos_queue_create(&sleep_index, 10, 20);
+    if (err != QL_OSI_SUCCESS)
+    {
+        OUT_LOG("queue created failed, ret = 0x%x\n", err);
+    } 
+     err = ql_rtos_semaphore_create(&sleep_sem, 0);
+    if (err != QL_OSI_SUCCESS)
+    {
+        OUT_LOG("sem sleep created failed, ret = 0x%x\n", err);
+    }   
+    ql_rtos_semaphore_release(sleep_sem); 
+
     ql_sms_app_init();
     ql_mqtt_app_init();
+    
 #ifdef GNSS
     ql_gnss_app_init(); 
 #endif      

@@ -136,7 +136,7 @@ static void ql_power_demo_thread(void *param)
 		{
 			case QUEC_SLEEP_ENETR_AUTO_SLEPP:
 				
-				err = ql_autosleep_enable(1);
+				err = ql_autosleep_enable(QL_ALLOW_SLEEP);
 				require_action(err, continue, "failed to set auto sleep");
 
 				err = ql_lpm_wakelock_unlock(wake_lock_1);
@@ -145,7 +145,7 @@ static void ql_power_demo_thread(void *param)
 				// err = ql_lpm_wakelock_unlock(wake_lock_2);
 				// require_action(err, continue, "lock2 unlocked failed");		
 				
-				QL_POWERDEMO_LOG("set auto sleep mode ok\n");\
+				QL_POWERDEMO_LOG("\nset auto sleep mode ok\n");\
                 goto exit;
 				
 			break;
