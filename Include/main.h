@@ -34,7 +34,7 @@ char gps_ok[10];
 static uint32_t run_time = 0,run_on;
 // APPLICATION
 //#define SENSOR_LIS3DH
-//#define GNSS
+#define GNSS
 //#define SMS_APP
 //#define VOICE_APP
 

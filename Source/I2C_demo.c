@@ -29,16 +29,17 @@
 #define QL_I2C_TASK_PRIO APP_PRIORITY_NORMAL
 #define QL_I2C_TASK_EVENT_CNT 5
 
-#define SalveAddr_w_8bit 0x19
-#define SalveAddr_r_8bit 0x19
+#define SalveAddr_w_8bit 0x1D
+#define SalveAddr_r_8bit 0x1D
 
-#define REG1 0x20 //=0101[100Hz]0[HR mode]111[ZYX enable]=01010111b=0x57;
-#define REG2 0x21
-#define REG3 0x22
-#define REG4 0x23 //=00011000b [+-4g, High-resolution output mode]=0x18
+// #define REG1 0x20 //=0101[100Hz]0[HR mode]111[ZYX enable]=01010111b=0x57;
+// #define REG2 0x21
+// #define REG3 0x22
+// #define REG4 0x23 //=00011000b [+-4g, High-resolution output mode]=0x18
 #define REG5 0x24
 #define REG6 0x25
-#define LIS3DH_REG_REFERENCE 0x26
+#define REG3    	0x23
+#define REG4    	0x20
 
 #define INT1_CFG 0x30
 #define INT1_SRC 0x31
@@ -53,7 +54,8 @@
 #define LIS3DH_REG_TEMPCFG 0x1F
 
 // #define W_A_I 0x75 // phai bang 0x34
-#define W_A_I 0x0F // phai bang 0x34
+// #define W_A_I 0x0F // phai bang 0x34
+#define W_A_I 0x1A // phai bang 0x34
 #define OUT_XL 0x28
 #define OUT_XH 0x29
 #define OUT_YL 0x2A
@@ -79,9 +81,9 @@ typedef enum
 char check()
 {
     uint8_t KQ = 0;
-    ql_I2cRead(i2c_1, SalveAddr_r_8bit, W_A_I, &KQ, 1);
+    ql_I2cRead(i2c_2, SalveAddr_r_8bit, W_A_I, &KQ, 1);
     //	kq=IC_Read(W_A_I);
-    // QL_I2C_LOG("\nWAIT :0x%x\n", KQ);
+    QL_I2C_LOG("\nWAIT :0x%x\n", KQ);
     if (KQ == 0x33) // 0x68
     {
         return 1;
@@ -95,18 +97,21 @@ char check()
 uint8_t mpu_read_reg8(uint8_t RegAddr)
 {
     uint8_t x;
-    ql_I2cRead(i2c_1, SalveAddr_r_8bit, RegAddr, &x, 1);
+    ql_I2cRead(i2c_2, SalveAddr_r_8bit, RegAddr, &x, 1);
     return x;
 }
 
 void Acc_Init()
 {
-    if (check())
-    {
-        ql_rtos_task_sleep_ms(50);
-        QL_I2C_LOG("\n tim thay CAM BIEN\n");
-        mpu_write_reg(REG1, 0x57); //Turn on the sensor, enable X, Y, and Z ODR = 100 Hz
-        mpu_write_reg(REG4, 0x18); //+4g
+    // if (check())
+    // {
+    //     ql_rtos_task_sleep_ms(50);
+    //     QL_I2C_LOG("\n tim thay CAM BIEN\n");
+        // mpu_write_reg(REG1, 0x57); //Turn on the sensor, enable X, Y, and Z ODR = 100 Hz
+        // mpu_write_reg(REG4, 0x18); //+4g
+        mpu_write_reg(REG4, 0x5f); //Turn on the sensor, enable X, Y, and Z ODR = 100 Hz
+        mpu_write_reg(REG5, 0x80);
+        // mpu_write_reg(REG4, 0x18); //+4g        
        // mpu_write_reg(REG2, 0x09); // High-pass filter enabled on interrupt activity 1
       //  mpu_write_reg(REG3, 0x40); // Interrupt activity 1 driven to INT1 pad
 
@@ -123,10 +128,10 @@ void Acc_Init()
 
         // mpu_write_reg(INT1_DURATION, 0x00); // Duration = 0
 
-        //  ql_I2cWrite(i2c_1, SalveAddr_w_8bit, LIS3DH_REG_TEMPCFG, 0x80, 1);
-        // ql_I2cWrite(i2c_1,SalveAddr_w_8bit,0x6c,tmp,0x01);
+        //  ql_I2cWrite(i2c_2, SalveAddr_w_8bit, LIS3DH_REG_TEMPCFG, 0x80, 1);
+        // ql_I2cWrite(i2c_2,SalveAddr_w_8bit,0x6c,tmp,0x01);
         // mpu_write_reg(LIS3DH_REG_TEMPCFG,0x80);
-    }
+   // }
 }
 
 // Write 57h into CTRL_REG1 // Turn on the sensor, enable X, Y, and Z
@@ -165,7 +170,7 @@ void mpu_write_reg(uint8 RegAddr, uint16 RegData)
 
     // do
     // {
-    ql_I2cWrite(i2c_1, SalveAddr_w_8bit, RegAddr, param_data, 1);
+    ql_I2cWrite(i2c_2, SalveAddr_w_8bit, RegAddr, param_data, 1);
     // } while (--retry_count);
 }
 
@@ -178,7 +183,7 @@ void mpu_read_reg(uint8 RegAddr, uint16 *p_value)
 
 	do
     {
-        status = (ql_audio_errcode_e)ql_I2cRead(i2c_1, SalveAddr_r_8bit, RegAddr, temp_buf, 2);
+        status = (ql_audio_errcode_e)ql_I2cRead(i2c_2, SalveAddr_r_8bit, RegAddr, temp_buf, 2);
         		if (status != QL_AUDIO_SUCCESS)
 		{
             QL_I2C_LOG("\nError:[%dth] device[0x%x] addr[0x%x] failed\n", retry_count, SalveAddr_r_8bit, RegAddr);
@@ -197,8 +202,8 @@ void mpu_read_reg(uint8 RegAddr, uint16 *p_value)
 int16_t GetData(unsigned char Haddress, unsigned char Laddress)
 {
     uint8_t H, L;
-    ql_I2cRead(i2c_1, SalveAddr_r_8bit, Haddress, &H, 1);
-    ql_I2cRead(i2c_1, SalveAddr_r_8bit, Laddress, &L, 1);
+    ql_I2cRead(i2c_2, SalveAddr_r_8bit, Haddress, &H, 1);
+    ql_I2cRead(i2c_2, SalveAddr_r_8bit, Laddress, &L, 1);
     // QL_I2C_LOG("H:%d L: %d\n", H, L);
     return (int16_t)((((uint16)H) << 8) | L);
 }
@@ -232,23 +237,23 @@ void ql_i2c_demo_thread(void *param)
     /*operate the camera for the example*/
     ql_pin_set_func(41, 0);
     ql_pin_set_func(42, 0);
-    ql_I2cInit(i2c_1, STANDARD_MODE);
+    ql_I2cInit(i2c_2, STANDARD_MODE);
      //ql_rtos_task_sleep_ms(5000);
     Acc_Init();
     while (1)
     {
-        if (check())
-        {
+        //if (check())
+        //{
             print_ACC();
-        }
-        else
-        {
-            QL_I2C_LOG("\ni2c failed\n");
-        }
+      //  }
+        // else
+        // {
+        //     QL_I2C_LOG("\ni2c failed\n");
+        // }
         // QL_APP_I2C_LOG("I2C read_data = 0x%x", read_data);
-        // ql_I2cRead(i2c_1, SalveAddr_r_8bit, 0xf0, &read_data, 1);
+        // ql_I2cRead(i2c_2, SalveAddr_r_8bit, 0xf0, &read_data, 1);
         // QL_APP_I2C_LOG("I2C read_data = 0x%x", read_data);
-        // ql_I2cWrite(i2c_1, SalveAddr_w_8bit, 0x55, &data, 1);
+        // ql_I2cWrite(i2c_2, SalveAddr_w_8bit, 0x55, &data, 1);
         // read_data = 0;
         ql_rtos_task_sleep_ms(500);
     }

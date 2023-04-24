@@ -14,7 +14,10 @@
 
 #define RSP_CLOSE_OK "{\"RES\":\"CLOSE_OK\"}"
 #define RSP_CLOSE_FAIL "{\"RES\":\"CLOSE_FAIL\"}"
- #define CMD_KTTK "AT+CUSD=1,\"*101#\",15\r\n"
+
+#define RSP_GPS "{\"RES\":\"GPS_FAIL\"}"
+
+#define CMD_KTTK "AT+CUSD=1,\"*101#\",15\r\n"
 
 
 #endif

@@ -110,11 +110,11 @@ static void main_task_thread(void *param)
     ql_gpio_init(IO_SPEAKER, GPIO_OUTPUT, PULL_DOWN, LVL_LOW);
     ql_gpio_init(IO_LIGHT, GPIO_OUTPUT, PULL_DOWN, LVL_LOW);
    // ql_gpio_init(ACC_IN, GPIO_INPUT, PULL_UP, LVL_HIGH); // SDA
-    ql_gpio_deinit(ACC_IN);
+   // ql_gpio_deinit(ACC_IN);
     ql_int_register(ACC_IN, EDGE_TRIGGER,DEBOUNCE_EN,EDGE_FALLING,PULL_UP,ngat,NULL);
     ql_int_enable(ACC_IN);
     // PIN6: NET_STATUS - GPIO22 (FUNC:4)
-    //ql_pin_set_func(6, 4);
+    ql_pin_set_func(6, 4);
     ql_gpio_init(LED_STT, GPIO_OUTPUT, PULL_NONE, LVL_HIGH);
     ql_gpio_init(LED_MODE, GPIO_OUTPUT, PULL_NONE, LVL_HIGH);
 
@@ -196,11 +196,11 @@ void get_time()
 
 void send_gps()
 {
+
     if (strcmp(gps_ok, GPSOK) == 0)
     {
         cJSON *pRoot = cJSON_CreateObject();
         cJSON_AddStringToObject(pRoot, "RES", "GET_GPS");
-        int16_t signal = g_gps_data.avg_cnr;
         cJSON *pValue = cJSON_CreateObject();
         cJSON_AddStringToObject(pValue, "time", buff_time);
         cJSON_AddStringToObject(pValue, "localtion", buff_local);
@@ -212,7 +212,7 @@ void send_gps()
         cJSON_free((void *)GPS_info);
     }
     else
-    {
+    {  
         OUT_LOG("\nkhong co GPS\n");
     }
 }
