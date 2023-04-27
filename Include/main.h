@@ -40,7 +40,7 @@ ql_sem_t sleep_sem;
 
 // APPLICATION
 //#define SENSOR_LIS3DH
-//#define GNSS
+#define GNSS
 //#define SMS_APP
 //#define VOICE_APP
 

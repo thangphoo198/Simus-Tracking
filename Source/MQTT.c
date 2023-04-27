@@ -114,7 +114,10 @@ static void mqtt_inpub_data_cb(mqtt_client_t *client, void *arg, int pkt_id, con
             {
                 uint32_t vol = 0;
                 ql_get_battery_vol(&vol);
+                char buff1[30];
+                sprintf(buff1,"DIEN AP NGUON:  %d",vol);
                 QL_MQTT_LOG("DIEN AP NGUON:  %d\n", vol);
+                pub_mqtt(topic_gui,buff1);
             }
              else if (strcmp(val, "SEND_AT") == 0)
             {
@@ -143,7 +146,6 @@ static void mqtt_inpub_data_cb(mqtt_client_t *client, void *arg, int pkt_id, con
                 ql_rtos_sw_dog_disable();
                 ql_dev_set_modem_fun(QL_DEV_CFUN_MIN, 1,0);
                 INDEX_SLEEP=1;
-
                 if (ql_rtos_queue_release(sleep_index, 10, &INDEX_SLEEP, QL_WAIT_FOREVER) == QL_OSI_SUCCESS)
                 {
                     QL_MQTT_LOG("GUI sleep den HANG DOI OK => \n");

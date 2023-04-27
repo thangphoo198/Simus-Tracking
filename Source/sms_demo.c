@@ -201,15 +201,6 @@ void sms_demo_task(void *param)
             // QL_SMS_LOG("Dang doi SMS\n");
             ql_rtos_task_sleep_ms(500);
         }
-        uint8_t rec_sleep=0;
-        ql_rtos_semaphore_wait(sleep_sem, QL_WAIT_FOREVER);
-        if (ql_rtos_queue_wait(sleep_index, &rec_sleep, sizeof(uint32_t), 0) == QL_OSI_SUCCESS)
-        {
-            QL_SMS_LOG("co lenh sleep:%d\n", rec_sleep);
-            ql_rtos_semaphore_release(sleep_sem); 
-            //ql_rtos_task_sleep_ms(100);
-            ql_rtos_task_delete(NULL);
-        }
 
     }
 
