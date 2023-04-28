@@ -285,8 +285,8 @@ static void main_task_thread(void *param)
             char buff[256] = {0};
 
             //  int x,y,z;
-            // char buff3[256] = {0};
-            // print_GPS(&buff);
+           // char buff3[256] = {0};
+            print_GPS(&buff);
             // strcpy(buff3, buff);
             //     if (check())
             //     {
@@ -302,7 +302,7 @@ static void main_task_thread(void *param)
             //         OUT_LOG("i2c failed\n");
             //     }
             // //          strcat(buff3, buff2);
-            // pub_mqtt(topic_rec, buff);
+            pub_mqtt(topic_rec, buff);
             // ql_gpio_set_level(GPIO_2, Led==0?LVL_LOW:LVL_HIGH);
             // OUT_LOG("DU LIEU LAY DC:%s\n", buff3);
             ql_gpio_set_level(GPIO_22, Led2 == 0 ? LVL_LOW : LVL_HIGH);
