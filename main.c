@@ -7,131 +7,40 @@
 #include "ql_gpio.h"
 // #include "ql_pin_cfg.h"
 #include "ql_log.h"
-#include "ql_adc.h"
-#include "ql_uart.h"
-#include "ql_power.h"
-#include "ql_i2c.h"
-
 #include "DataDefine.h"
-
-#include "json.h"
-#include "gnss_demo.h"
 #include "cJSON.h"
+#include "main.h"
+#include "ql_api_rtc.h"
 
-// #include "GNSS.h"
 #define OUT_LOG DebugPrint
-
 #define INIT_CONFIG 101
 #define MAIN_TICK_100MS 102
 #define MAIN_TICK_3000MS 103
-
 ql_task_t main_task = NULL;
-// ql_task_t gnss_task = NULL;
 ql_timer_t main_timer = NULL;
-
-static uint32_t tickCount100MS = 0;
-static uint32_t tickCount3000MS = 0;
-
-// int adc1_value, adc2_value, adc3_value;
+static uint32_t tickCount500MS = 0,tickCount5000MS=0;
 static uint8_t Led = 0, Led2 = 0;
-
+ql_LvlMode in;
+bool noti=false;
 #define QL_FUN_NUM_UART_2_CTS 3
 #define QL_FUN_NUM_UART_3_TXD 4
-
-// for ledcfg demo
 #define QL_PIN_NUM_KEYOUT_5 82
-char *topic_rec = "EC200U_REC";
-char *topic_remote = "EC200U_REMOTE";
-
-#define jsonRoot "{\r\n"                                                                             \
-				 "\"imei\": \"8661111111111111\",\r\n"                                               \
-				 "\"Num\": 142,\r\n"                                                                 \
-				 "\"Value\": {\r\n"                                                                  \
-				 "\"name\": \"cx\",\r\n"                                                             \
-				 "\"age\": 18,\r\n"                                                                  \
-				 "\"blog\": \"https://blog.csdn.net/weixin_44570083/article/details/104285283\"\r\n" \
-				 "},\r\n"                                                                            \
-				 "\"hexArry\": [31, 56, 36, 1365, 263]\r\n"                                          \
-				 "}\r\n"
-
-//JSON解析
-
-void cJSON_Parsing()
-{
-	OUT_LOG("[cJSON_Test] cJSON_Parsing Start");
-	cJSON *pJsonRoot = cJSON_Parse(jsonRoot);
-	if (pJsonRoot != NULL)
-	{
-		OUT_LOG("[cJSON_Test] cJSON TRUE");
-		OUT_LOG("[cJSON_Test] cJSON:%s", jsonRoot);
-	}
-	else
-	{
-		OUT_LOG("[cJSON_Test] cJSON ERROR");
-	}
-	cJSON *pimeiAdress = cJSON_GetObjectItem(pJsonRoot, "imei");
-	if (pimeiAdress)
-	{
-		if (cJSON_IsString(pimeiAdress))
-			OUT_LOG("[cJSON_Test] get imeiAdress:%s", pimeiAdress->valuestring);
-	}
-	else
-		OUT_LOG("[cJSON_Test] get imeiAdress failed");
-}
-
-
-void cJSON_Generate()
-{
-	//取一下本地的station的mac地址，保存在全局变量tempMessage
-	OUT_LOG("[cJSON_Test] cJSON_Generate Start");
-	cJSON *pRoot = cJSON_CreateObject();
-
-	//新增一个字段imei到根点，数值是tempMessage
-	char tempMessage[] = "8661111111111111";
-	cJSON_AddStringToObject(pRoot, "imei", tempMessage);
-
-	//新增一个字段number到根点，数值是2
-	cJSON_AddNumberToObject(pRoot, "number", 2020);
-
-	cJSON *pValue = cJSON_CreateObject();
-	cJSON_AddStringToObject(pValue, "name", "cx");
-	cJSON_AddNumberToObject(pValue, "age", 17);
-	cJSON_AddItemToObject(pRoot, "value", pValue);
-
-	//数组初始化
-	int hex[5] = {11, 12, 13, 14, 15};
-	cJSON *pHex = cJSON_CreateIntArray(hex, 5); //创建一个长度为5的int型的数组json元素
-	cJSON_AddItemToObject(pRoot, "hex", pHex);	//将数组元素添加进pRoot
-
-	char *s = cJSON_Print(pRoot);
-	OUT_LOG("[cJSON_Test] creatJson:%s", s);
-	//释放内存
-	cJSON_free((void *)s);
-
-	//释放内存
-	//cJSON_Delete(pHex);
-	//释放内存
-	//cJSON_Delete(pValue);
-	//释放内存
-	cJSON_Delete(pRoot);
-	OUT_LOG("[cJSON_Test] cJSON_Generate Stop");
-}
-
-
-
+#define FEED_DOG_MAX_MISS_CNT   5
 void timer_callback(void)
 {
     ql_event_t event;
 
-    if (++tickCount100MS > 0)
+    if (++tickCount500MS > 0)
     {
-        tickCount100MS = 0;
+        tickCount500MS = 0;
         SendEventToThread(main_task, MAIN_TICK_100MS);
     }
+    Led2 ^= 1;
+    ql_gpio_set_level(LED_STT, Led2 == 0 ? LVL_LOW : LVL_HIGH);
 
-    if (++tickCount3000MS > 500)
+    if (++tickCount5000MS > 20)
     {
-        tickCount3000MS = 0;
+        tickCount5000MS = 0;
         SendEventToThread(main_task, MAIN_TICK_3000MS);
     }
 }
@@ -145,30 +54,6 @@ void SendEventToThread(ql_task_t thread, uint32_t sig)
 
     ql_rtos_event_send(thread, &event);
 }
-void Uart1_rev_callback(uint32 ind_type, ql_uart_port_number_e port, uint32 size)
-{
-
-    uint8_t Buffer[256], Index;
-
-    switch (ind_type)
-    {
-    case QUEC_UART_RX_OVERFLOW_IND: // rx buffer overflow
-    case QUEC_UART_RX_RECV_DATA_IND:
-        while (size)
-        {
-            memset(Buffer, 0x00, 255);
-            Index = 0;
-
-            Index = size > 255 ? 255 : size;
-
-            uint8_t ret = ql_uart_read(port, Buffer, Index);
-
-            Buffer[Index] = 0;
-
-            size -= Index;
-        }
-    }
-}
 uint8_t DebugInit(void)
 {
 
@@ -181,102 +66,101 @@ uint8_t DebugInit(void)
     uartConfig.parity_bit = 0;
     uartConfig.stop_bit = 1;
 
-    ql_uart_set_dcbconfig(QL_UART_PORT_1, &uartConfig);
+    ql_uart_set_dcbconfig(UART_DEBUG, &uartConfig);
 
-    ret = ql_uart_open(QL_UART_PORT_1);
-
-    if (ret == 0)
-    {
-        ret = ql_uart_register_cb(QL_UART_PORT_1, Uart1_rev_callback);
-    }
+    ret = ql_uart_open(UART_DEBUG);
 
     return ret;
 }
-
-extern print_GPS(char *dat);
-extern pub_mqtt(char *topic, char *mess);
-extern GetData(unsigned char Haddress, unsigned char Laddress);
-extern print_ACC();
-extern void GPS_task_thread(void *param);
-extern void mqtt_app_thread(void *arg);
-extern void sms_demo_task(void *param);
-extern void ql_i2c_demo_thread(void *param);
-extern void ql_gnss_demo_thread(void *param);
-extern void get_data(unsigned char *h, unsigned char *m, unsigned char *s);
-
-static void main_task_thread(void *param)
+void send_event()
 {
-    ql_event_t event;
-    DebugInit();
-    // string x="\r du lieu GNSS =>>> \n";
-    // ql_uart_write(QL_UART_PORT_1,x,x.length());
-
-    OUT_LOG("DANG khoi tao he thong... \n");
-
-    char version_buf[128] = {0};
-    ql_dev_get_firmware_version(version_buf, sizeof(version_buf));
-    OUT_LOG("Phien phan mem hien tai:  %s\n", version_buf);
-    ql_CamInit(320, 240);
-    ql_CamPowerOn();
-    ql_I2cInit(i2c_1, STANDARD_MODE);
-    Acc_Init();
-    cJSON_Parsing();
-    if (check())
+    cJSON *pRoot = cJSON_CreateObject();
+    cJSON_AddStringToObject(pRoot, "RES", "EVENT");
+    cJSON *pValue = cJSON_CreateObject();
+    cJSON_AddStringToObject(pValue, "type","OPEN");
+    cJSON_AddItemToObject(pRoot, "DATA", pValue);
+    char *event_info= cJSON_Print(pRoot);
+    OUT_LOG(event_info);
+    QlOSStatus ret;
+    ret=pub_mqtt(topic_tb, event_info);
+    if(ret!=QL_OSI_SUCCESS)
     {
-        OUT_LOG("I2CC OK");
-        OUT_LOG("THANH CONG\n");
-        int x = GetData(0x2B, 0x2A);
-        OUT_LOG("Du lieu ACC:%d", x);
+        OUT_LOG("gui that bai\n");
+        noti=false;
     }
     else
     {
-        OUT_LOG("i2c failed\n");
+        noti=true;
+        OUT_LOG("gui thanh cong\n");
     }
-    // PIN24 GPIO2 (FUNC0)
-    ql_pin_set_func(41, 0);
-    ql_pin_set_func(42, 0);
-    ql_pin_set_func(24, 0);
+    cJSON_free((void *)event_info);
+}
+void ngat(void *ctx)
+{
+    OUT_LOG("\nDA NGAT\n");
+        if(noti==false)
+        {
+            OUT_LOG("da gui thong bao\n");
+            send_event();
+        }
+}
+
+static void main_task_thread(void *param)
+{
+    ql_event_t event= {0};
+    DebugInit();
+    //ql_pin_set_func(24, 0);
     ql_gpio_init(GPIO_2, GPIO_OUTPUT, PULL_NONE, LVL_HIGH);
-
+    ql_gpio_init(IO_LOCK, GPIO_OUTPUT, PULL_DOWN, LVL_LOW);
+    ql_gpio_init(IO_SPEAKER, GPIO_OUTPUT, PULL_DOWN, LVL_LOW);
+    ql_gpio_init(IO_LIGHT, GPIO_OUTPUT, PULL_DOWN, LVL_LOW);
+   // ql_gpio_init(ACC_IN, GPIO_INPUT, PULL_UP, LVL_HIGH); // SDA
+    ql_gpio_deinit(ACC_IN);
+    ql_int_register(ACC_IN, EDGE_TRIGGER,DEBOUNCE_EN,EDGE_FALLING,PULL_UP,ngat,NULL);
+    ql_int_enable(ACC_IN);
     // PIN6: NET_STATUS - GPIO22 (FUNC:4)
-    ql_pin_set_func(6, 4);
-    ql_gpio_init(GPIO_22, GPIO_OUTPUT, PULL_NONE, LVL_HIGH);
+    //ql_pin_set_func(6, 4);
+    ql_gpio_init(LED_STT, GPIO_OUTPUT, PULL_NONE, LVL_HIGH);
+    ql_gpio_init(LED_MODE, GPIO_OUTPUT, PULL_NONE, LVL_HIGH);
 
-    ql_uart_write(QL_UART_PORT_1, "\r", 21);
-
-    // Init
     SendEventToThread(main_task, INIT_CONFIG);
-
-    // acc_init();
-    // if (acc_check())
-    // {
-    //     OUT_LOG("I2C OK");
-    //     OUT_LOG("THANH CONG\n");
-    //     // int x = GetData(0x2B, 0x2A);
-
-    //     // if(x!=0) OUT_LOG("Du lieu ACC:%d", x);
-    // }
-    // else
-    // {
-    //     OUT_LOG("i2c failed\n");
-    // }
-
-
+    // char buff_gps[50]={0};
 
     while (1)
     {
+
         ql_event_try_wait(&event);
+        uint16_t rec = 0;      
+        //ql_gpio_get_level(ACC_IN, &in); //
+        // if (in == LVL_LOW)
+        // {
+        //     // ql_rtos_task_sleep_ms(20);
+        //     ql_dev_set_modem_fun(QL_DEV_CFUN_FULL, 1, 0);
+        //     ql_mqtt_app_init();
+        //     //off_gnss();
+        //     OUT_LOG("\n ban da nhap phim\n");
+        //     if(noti==false)
+        //     {
+        //         OUT_LOG("da gui thong bao\n");
+        //         send_event();
+        //     }
+
+
+        // }
+        // else if (in == LVL_HIGH)
+        // {
+
+        //     //return;
+        // }
 
         switch (event.id)
         {
-
         case INIT_CONFIG:
-            ql_uart_write(QL_UART_PORT_1, "\r==>Init Configs", 16);
-            ql_rtos_timer_start(main_timer, 2, 1);
-
+            OUT_LOG("khoi tao OK\n");
+            ql_rtos_timer_start(main_timer, 1000, 1);
             break;
         case MAIN_TICK_100MS:
-            Led ^= 1;
+        get_time();
             break;
 
         case MAIN_TICK_3000MS:
@@ -285,8 +169,8 @@ static void main_task_thread(void *param)
             char buff[256] = {0};
 
             //  int x,y,z;
-           // char buff3[256] = {0};
-            print_GPS(&buff);
+            // char buff3[256] = {0};
+            // print_GPS(&buff);
             // strcpy(buff3, buff);
             //     if (check())
             //     {
@@ -302,74 +186,126 @@ static void main_task_thread(void *param)
             //         OUT_LOG("i2c failed\n");
             //     }
             // //          strcat(buff3, buff2);
-            pub_mqtt(topic_rec, buff);
+            // pub_mqtt(topic_rec, buff);
             // ql_gpio_set_level(GPIO_2, Led==0?LVL_LOW:LVL_HIGH);
             // OUT_LOG("DU LIEU LAY DC:%s\n", buff3);
             ql_gpio_set_level(GPIO_22, Led2 == 0 ? LVL_LOW : LVL_HIGH);
             break;
-
         default:
 
             break;
         }
+        // ql_rtos_semaphore_wait(sleep_sem, QL_WAIT_FOREVER);
+        // {    
+        // if (ql_rtos_queue_wait(sleep_index, &rec, sizeof(uint32_t),1) == QL_OSI_SUCCESS)
+        // {
+        //     OUT_LOG("co tin hieu sleep:%d\n", rec);     
+        //     ql_rtos_semaphore_release(sleep_sem); 
+
+        //     // ql_rtos_task_sleep_ms(100);
+        //     //ql_rtos_task_delete(NULL);
+        // } 
+        // }
+
     }
 }
 
-extern void GPS_task_thread(void *param);
-extern void mqtt_app_thread(void *arg);
-extern void sms_demo_task(void *param);
-extern void ql_i2c_demo_thread(void *param);
-extern void ql_gnss_demo_thread(void *param);
-
-// extern ql_gnss_app_init(void);
-
-void ql_enter_sleep_cb(void *ctx)
+void off_main()
 {
-    OUT_LOG("enter sleep cb\n");
-    ql_pin_set_func(QL_PIN_NUM_KEYOUT_5, QL_FUN_NUM_UART_2_CTS); // keyout5 pin need be low level when enter sleep, adjust the function to uart2_rts can do it
-    ql_gpio_set_level(GPIO_12, LVL_HIGH);                        // close mos linked to gnss, to avoid high current in sleep mode
-    ql_gpio_set_level(GPIO_11, LVL_LOW);                         // gpio11 need be low level when enter sleep to reduce leakage current to gnss
+            OUT_LOG("\nxoa main task \n");
+            ql_rtos_task_delete(main_task);
+}
+void get_time()
+{
+
+    int ret = 0;
+    int64_t time_sec=0,time_fix=0;
+    ql_rtc_time_t tm={0};
+    //int timezone=0;
+    ret = ql_rtc_get_time(&tm);
+    //time_sec += 60*60*7;
+   // ql_sec_conv_rtc_time(&time_sec,&tm);
+    //ret = ql_rtc_get_timezone(&timezone);
+
+    //time_fix+=FIX_HOUR;
+   // ql_sec_conv_rtc_time(&time_fix,&tm);
+
+    if(ret != QL_RTC_SUCCESS)
+    {
+        OUT_LOG("get time err");
+        return false; 
+    } 
+    //QL_PSMDEMO_LOG("time zone:%d\n",timezone);
+    OUT_LOG("TIME %d:%d:%d - %d/%d/%d \n", tm.tm_hour,tm.tm_min,tm.tm_sec,tm.tm_mday,tm.tm_mon,tm.tm_year);
+
 }
 
-// exit sleep callback function is executed after exiting sleep, custom can recover the information before sleep
-// Caution:callback functions cannot run too much code
-void ql_exit_sleep_cb(void *ctx)
+void send_gps()
 {
-    OUT_LOG("exit sleep cb\n");
-
-    ql_pin_set_func(QL_PIN_NUM_KEYOUT_5, QL_FUN_NUM_UART_3_TXD); // keyout5 pin used as gnss uart3_txd function, after exit sleep, set it to uart3_txd
+    if (strcmp(gps_ok, GPSOK) == 0)
+    {
+        cJSON *pRoot = cJSON_CreateObject();
+        cJSON_AddStringToObject(pRoot, "RES", "GET_GPS");
+        int16_t signal = g_gps_data.avg_cnr;
+        cJSON *pValue = cJSON_CreateObject();
+        cJSON_AddStringToObject(pValue, "time", buff_time);
+        cJSON_AddStringToObject(pValue, "localtion", buff_local);
+        cJSON_AddNumberToObject(pValue, "speed", speed);
+        cJSON_AddItemToObject(pRoot, "DATA", pValue);
+        char *GPS_info = cJSON_Print(pRoot);
+        OUT_LOG(GPS_info);
+        pub_mqtt(topic_gui, GPS_info);
+        cJSON_free((void *)GPS_info);
+    }
+    else
+    {
+        OUT_LOG("\nkhong co GPS\n");
+    }
 }
+
+extern pub_mqtt(char *topic, char *mess);
 
 int appimg_enter(void *param)
 {
     QlOSStatus err;
-    ql_dev_cfg_wdt(0);
-    ql_log_set_port(2);
+    ql_dev_cfg_wdt(1);
+    ql_log_set_port(0);
     ql_quec_trace_enable(1);
-
-    ql_rtos_sw_dog_disable();
-    // register sleep callback function
-    ql_sleep_register_cb(ql_enter_sleep_cb);
-    // register wakeup callback function
-    ql_wakeup_register_cb(ql_exit_sleep_cb);
-
+    // ql_rtos_sw_dog_enable;
     /*Create timer tick*/
+   // ql_osi_demo_init();
     err = ql_rtos_timer_create(&main_timer, main_task, timer_callback, NULL);
 
     /* main task*/
-    err = ql_rtos_task_create(&main_task, 5 * 1024, APP_PRIORITY_NORMAL, "Main_task", main_task_thread, NULL, 5);
+    err = ql_rtos_task_create(&main_task, 4 * 1024, APP_PRIORITY_NORMAL, "Main_task", main_task_thread, NULL, 5);
+    sleep_index=NULL;
+    sleep_sem=NULL;
+    err = ql_rtos_queue_create(&sleep_index, 10, 20);
+    if (err != QL_OSI_SUCCESS)
+    {
+        OUT_LOG("queue created failed, ret = 0x%x\n", err);
+    } 
+    //  err = ql_rtos_semaphore_create(&sleep_sem, 0);
+    // if (err != QL_OSI_SUCCESS)
+    // {
+    //     OUT_LOG("sem sleep created failed, ret = 0x%x\n", err);
+    // }   
+    // ql_rtos_semaphore_release(sleep_sem); 
 
-    /*GNSS task*/
-    // err = ql_rtos_task_create(&gnss_task, 5 * 1024, 25, "GNSS_task",  GPS_task_thread, NULL,3);
     ql_sms_app_init();
-    // ql_i2c_demo_init();
     ql_mqtt_app_init();
-    ql_gnss_app_init();
-    // ql_fota_http_app_init();
+    
+#ifdef GNSS
+    ql_gnss_app_init(); 
+#endif      
+#ifdef SENSOR_LIS3DH
+    ql_i2c_demo_init();
+#endif
 
     return err;
 }
 
 void appimg_exit(void)
 {
+    
 }

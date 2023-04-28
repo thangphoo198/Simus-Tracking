@@ -247,15 +247,20 @@ add_custom_target(unittests)
     set(ldscript ${SOURCE_TOP_DIR}/components/apploader/pack/app_flashimg.ld)
     set(target ${QL_APP_BUILD_VER})
     set(MainPath ${SOURCE_TOP_DIR}/main.c )
-    set(SourcePath ${SOURCE_TOP_DIR}/Source/GNSS.c
-        ${SOURCE_TOP_DIR}/Source/Driver_UART.c
-        ${SOURCE_TOP_DIR}/Source/MQTT.c
+    set(SourcePath
+    ${SOURCE_TOP_DIR}/Source/Driver_UART.c
+    ${SOURCE_TOP_DIR}/Source/MQTT.c
 	${SOURCE_TOP_DIR}/Source/sms_demo.c
 	${SOURCE_TOP_DIR}/Source/I2C_demo.c
 	${SOURCE_TOP_DIR}/Source/fota_http_demo.c
-	${SOURCE_TOP_DIR}/Source/json.c
 	${SOURCE_TOP_DIR}/Source/gnss_demo.c
 	${SOURCE_TOP_DIR}/Source/cJSON.c
+	${SOURCE_TOP_DIR}/Source/wifi_scan_demo.c
+	${SOURCE_TOP_DIR}/Source/power_demo.c
+	${SOURCE_TOP_DIR}/Source/nw_demo.c
+#	${SOURCE_TOP_DIR}/Source/psm_demo.c
+
+
     )
 
 

@@ -8,45 +8,31 @@
 #include "DataDefine.h"
 
 #include "gnss_demo.h"
-
+#include "cJSON.h"
 #include "ql_uart.h"
+#include "main.h"
 /*===========================================================================
  * Macro Definition
  ===========================================================================*/
 
 #define MAX_UINT32 4294967295U
-//#define QL_GNSSDEMO_LOG_LEVEL             QL_LOG_LEVEL_INFO
+// #define QL_GNSSDEMO_LOG_LEVEL             QL_LOG_LEVEL_INFO
 #define QL_GNSSDEMO_LOG DebugPrint
 #define QL_GNSSDEMO_PUSH DebugPrint
 #define nmea_dbg_log DebugPrint
 
 // #define QL_GNSSDEMO_LOG(msg, ...)         QL_LOG(QL_GNSSDEMO_LOG_LEVEL, "ql_GNSSDEMO", msg, ##__VA_ARGS__)
 // #define QL_GNSSDEMO_LOG_PUSH(msg, ...)    QL_LOG_PUSH("ql_GNSSDEMO", msg, ##__VA_ARGS__)
-//#define nmea_dbg_log(msg, ...)            QL_LOG(QL_GNSSDEMO_LOG_LEVEL,"ql_nmaea", msg, ##__VA_ARGS__)
+// #define nmea_dbg_log(msg, ...)            QL_LOG(QL_GNSSDEMO_LOG_LEVEL,"ql_nmaea", msg, ##__VA_ARGS__)
 /*===========================================================================
  * Variate
  ===========================================================================*/
 ql_task_t gnss_task = NULL;
-ql_gnss_data_t g_gps_data = {0};
 nmeasrc_sentences nmea_handle = {0};
 char gnss_device_info[100] = {0};
 static uint32 prev_ms_gsv = 0;
-
 unsigned char nmea_buff[256];
 static bool tick_overflow = FALSE;
-/*===========================================================================
- * Functions
- ===========================================================================*/
-
-void print_GPS(char *dat)
-{
-    int i = 0;
-    for (i = 0; i < strlen(nmea_buff); i++)
-    {
-        dat[i] = nmea_buff[i];
-    }
-}
-
 void ql_gnss_notify_cb(uint32 ind_type, ql_uart_port_number_e port, uint32 size)
 {
     if (ind_type == QUEC_UART_RX_RECV_DATA_IND)
@@ -63,6 +49,12 @@ void ql_gnss_notify_cb(uint32 ind_type, ql_uart_port_number_e port, uint32 size)
         QL_GNSSDEMO_LOG("gnss demo recv overflow error!");
     }
 }
+void off_gnss()
+{
+    ql_gnss_switch(GNSS_DISABLE);
+    QL_GNSSDEMO_LOG("gnss demo thread exit\n");
+    ql_rtos_task_delete(NULL);   
+}
 
 static void ql_gnss_demo_thread(void *param)
 {
@@ -76,7 +68,6 @@ static void ql_gnss_demo_thread(void *param)
     struct nmea_s *nmea = NULL;
     unsigned char *recbuff = NULL;
     ql_gnss_apflashdatarecv_e datarecv_status = 0;
-
     /* open GNSS */
     ret = ql_gnss_switch(GNSS_ENABLE);
     if (ret == QL_GNSS_ALREADY_OPEN)
@@ -108,7 +99,7 @@ static void ql_gnss_demo_thread(void *param)
 
     while (1)
     {
-		
+
         if (ql_event_try_wait(&event) != 0)
         {
             continue;
@@ -209,45 +200,25 @@ static void ql_gnss_demo_thread(void *param)
                     }
                     memset(nmea_buff, 0, sizeof(nmea_buff));
                     memcpy(nmea_buff, start, jmin(sizeof(nmea_buff) - 1, end - start - 1));
-                    QL_GNSSDEMO_LOG("\r \n GPS:=> %s\r\n", nmea_buff);
+                    // QL_GNSSDEMO_LOG("\r \n GPS:=> %s\r\n", nmea_buff);
                     /* nmea string parse */
                     nmea = nmea_parse(start, end - start + 1, 1);
                     if (nmea)
                     {
-                        ret = nmea_value_update(nmea, &g_gps_data);
-                        
-                        // if (ret == 0)
-                        // {
-                        //     //QL_GNSSDEMO_LOG("DU lieu nmea hop le\n");
-                        //     QL_GNSSDEMO_LOG("Vi do la:%f,Kinh do:%f tin hieu:%d,toc do:%f \n",g_gps_data.latitude,g_gps_data.longitude,g_gps_data.gps_signal,g_gps_data.gps_speed);
-
-                        //     // char *val="$GNRMC,141854.00,A,2100.50925,N,10546.92273,E,0.000,,011222,,,A,V*18";
-                        //     // int ret = nmea_parse_rmc(nmea, val);
-                        //     // if(ret==0)
-                        //     // {
-                        //     // int x= nmea_value_update(nmea, &g_gps_data);
-                        //     // if(x==0)
-                        //     // {
-
-                        //     //     QL_GNSSDEMO_LOG("KINH DO:%f,%f VI DO\n",g_gps_data.latitude,g_gps_data.longitude);
-                        //     // }
-                        //     // }
-                        //     // else
-                        //     // {
-                        //     //      QL_GNSSDEMO_LOG("update failed\n");
-
-                        //     // }
-                            
-                        // }
-                        // else
-                        // {
-                        //     nmea_dbg_log("nmea_parse_rmc failed. \r\n");
-                        //     // goto _error;
-                        //     QL_GNSSDEMO_LOG("nmea_value_update error GSV:%s\r\n", nmea_buff);
-                        // }
-                        // QL_GNSSDEMO_LOG("Vi do la:%.6f,Kinh do:%.6f\n tin hieu:%d,toc do:%.2f",g_gps_data.latitude,g_gps_data.longitude,g_gps_data.gps_signal,g_gps_data.gps_speed);
-                        // QL_GNSSDEMO_LOG("tin hieu:%d,toc do:%.2f YEAR:%d \n", g_gps_data.gps_signal, g_gps_data.gps_speed,g_gps_data.time.tm_year);
-                        //  g_gps_data->
+                        nmea_value_update(nmea, &g_gps_data);
+                        lat = g_gps_data.latitude;
+                        uint32_t t = g_gps_data.UTC;
+                        if (lat > 0)
+                        {
+                            sprintf(gps_ok, "%s", GPSOK);
+                            sprintf(buff_time, "%d-%d/%d/20%d", t, g_gps_data.time.tm_mday, g_gps_data.time.tm_mon, g_gps_data.time.tm_year);
+                            sprintf(buff_local, "%.7f,%.7f", g_gps_data.latitude, g_gps_data.longitude);
+                            QL_GNSSDEMO_LOG("\n %s -- %s\n", buff_local, buff_time);
+                        }
+                        else
+                        {
+                            sprintf(gps_ok, "%s", GPSFAIL);
+                        }
                         if (nmea->data)
                         {
                             free(nmea->data);
@@ -273,7 +244,7 @@ exit:
         recbuff = NULL;
     }
     ql_gnss_switch(GNSS_DISABLE);
-    QL_GNSSDEMO_LOG("gnss demo thread exit, param 0x%x", param);
+    QL_GNSSDEMO_LOG("gnss demo thread exit, param 0x%x\n", param);
     ql_rtos_task_delete(NULL);
 }
 
@@ -281,7 +252,7 @@ void ql_gnss_app_init(void)
 {
     QlOSStatus err = QL_OSI_SUCCESS;
 
-    err = ql_rtos_task_create(&gnss_task, 4096, APP_PRIORITY_NORMAL, "ql_gnssdemo", ql_gnss_demo_thread, NULL, 5);
+    err = ql_rtos_task_create(&gnss_task, 4 * 4096, APP_PRIORITY_LOW, "ql_gnssdemo", ql_gnss_demo_thread, NULL, 5);
     if (err != QL_OSI_SUCCESS)
     {
         QL_GNSSDEMO_LOG("gnss demo task created failed");
@@ -1152,7 +1123,7 @@ struct nmea_s *nmea_parse(char *sentence, int length, int check_checksum)
         nmea_dbg_log("nmea get type unknown! \r\n");
         return NULL;
     }
-   // nmea_dbg_log("\n nmea get type success! \r\n");
+    // nmea_dbg_log("\n nmea get type success! \r\n");
 
     sat_type = nmea_satellite_check(sentence);
 

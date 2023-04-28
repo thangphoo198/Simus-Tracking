@@ -15,7 +15,7 @@
 
 extern void UART_Printf(uint8_t UARTx, char* str, ...);
 #if DEBUG_LEVEL
-	#define DebugPrint(String...)		 UART_Printf(QL_UART_PORT_1, String)
+	#define DebugPrint(String...)		 UART_Printf(QL_USB_PORT_MODEM, String) //uart port
 #else
 	#define DebugPrint(String...)
 #endif
