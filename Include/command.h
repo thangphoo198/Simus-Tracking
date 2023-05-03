@@ -9,6 +9,9 @@
 
 #define RSP_SHUTDOWN_OK "{\"RES\":\"SHUTDOWN_OK\"}"
 #define RSP_SHUTDOWN_FAIL "{\"RES\":\"SHUTDOWN_FAIL\"}"
+#define RSP_SPEAKER_ON_OK "{\"RES\":\"SPEAKER_ON_OK\"}"
+#define RSP_SPEAKER_ON_FAIL "{\"RES\":\"SPEAKER_ON_FAIL\"}"
+
 #define RSP_POWER_ON_OK "{\"RES\":\"POWER_ON_OK\"}"
 #define RSP_POWER_ON_FAIL "{\"RES\":\"POWER_ON_FAIL\"}"
 

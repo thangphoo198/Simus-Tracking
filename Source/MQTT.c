@@ -150,21 +150,13 @@ static void mqtt_inpub_data_cb(mqtt_client_t *client, void *arg, int pkt_id, con
                 pub_mqtt(topic_gui, GPS_info);
                 cJSON_free((void *)GPS_info);
                 }
-            }   
-            // else if (strcmp(val, "SHUTDOWN") == 0)
-            // {
-            //     ql_LvlMode stt;
-            //     ql_gpio_get_level(IO_LOCK, &stt);
-            //     if(stt==LVL_HIGH) {
-            //          QL_MQTT_LOG("MAY DANG TAT \n");
-            //          pub_mqtt(topic_gui, RSP_SHUTDOWN_FAIL);
-            //     }
-            //     else{                  
-            //         ql_gpio_set_level(IO_LOCK, LVL_HIGH);
-            //         pub_mqtt(topic_gui, RSP_SHUTDOWN_OK);
-            //         QL_MQTT_LOG("TAT MAY OK\n");
-
-            //     }
+            }
+            else if (strcmp(val, "SHUTDOWN") == 0)
+            {
+                ql_gpio_set_level(IO_LOCK, LVL_HIGH);
+                pub_mqtt(topic_gui, RSP_SHUTDOWN_OK);
+                QL_MQTT_LOG("TAT MAY OK\n");
+            }
 
             //     // ql_power_down(POWD_NORMAL);
             // }
@@ -191,6 +183,7 @@ static void mqtt_inpub_data_cb(mqtt_client_t *client, void *arg, int pkt_id, con
                 QL_MQTT_LOG("BAT LOA\n");
 
                 ql_gpio_set_level(IO_LOCK, LVL_HIGH);
+                pub_mqtt(topic_gui, RSP_SPEAKER_ON_OK);
                 // ql_power_down(POWD_NORMAL);
             }
             else if (strcmp(val, "TAT LOA") == 0)

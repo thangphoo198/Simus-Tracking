@@ -38,7 +38,7 @@ void timer_callback(void)
     Led2 ^= 1;
     ql_gpio_set_level(LED_STT, Led2 == 0 ? LVL_LOW : LVL_HIGH);
 
-    if (++tickCount5000MS > 20)
+    if (++tickCount5000MS > 10)
     {
         tickCount5000MS = 0;
         SendEventToThread(main_task, MAIN_TICK_3000MS);
@@ -155,12 +155,12 @@ static void main_task_thread(void *param)
             break;
         case MAIN_TICK_100MS:
         get_time();
+        ql_gpio_set_level(LED_MODE, Led == 0 ? LVL_LOW : LVL_HIGH);
+        Led^=1;
             break;
 
         case MAIN_TICK_3000MS:
-            Led^=1;
             send_gps();
-            ql_gpio_set_level(LED_MODE, Led == 0 ? LVL_LOW : LVL_HIGH);
                   
             break;
         default:

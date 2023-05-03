@@ -212,7 +212,7 @@ static void ql_gnss_demo_thread(void *param)
                         if (lat > 0)
                         {
                             sprintf(gps_ok, "%s", GPSOK);
-                            sprintf(buff_time, "%d-%d/%d/20%d -acc:%.2f signal:%d", t, g_gps_data.time.tm_mday, g_gps_data.time.tm_mon, g_gps_data.time.tm_year,g_gps_data.hdop,g_gps_data.gps_signal);
+                            sprintf(buff_time, "%d-%d/%d/20%d -acc:%.2f signal:%d", t, g_gps_data.time.tm_mday, g_gps_data.time.tm_mon, g_gps_data.time.tm_year,g_gps_data.hdop);
                             sprintf(buff_local, "%.7f,%.7f", g_gps_data.latitude, g_gps_data.longitude);
                             QL_GNSSDEMO_LOG("\n %s -- %s\n", buff_local, buff_time);
                         }
