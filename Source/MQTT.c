@@ -116,7 +116,10 @@ static void mqtt_inpub_data_cb(mqtt_client_t *client, void *arg, int pkt_id, con
             {
                 uint32_t vol = 0;
                 ql_get_battery_vol(&vol);
+                char buff1[30];
+                sprintf(buff1,"DIEN AP NGUON:  %d",vol);
                 QL_MQTT_LOG("DIEN AP NGUON:  %d\n", vol);
+                pub_mqtt(topic_gui,buff1);
             }
              else if (strcmp(val, "SEND_AT") == 0)
             {
@@ -130,7 +133,26 @@ static void mqtt_inpub_data_cb(mqtt_client_t *client, void *arg, int pkt_id, con
             {
                 QL_MQTT_LOG("\n DI ngu sau 10s\n");
                 ql_power_app_init();
+<<<<<<< HEAD
             }    
+=======
+                ql_rtos_sw_dog_disable();
+                ql_dev_set_modem_fun(QL_DEV_CFUN_MIN, 1,0);
+                INDEX_SLEEP=1;
+                if (ql_rtos_queue_release(sleep_index, 10, &INDEX_SLEEP, QL_WAIT_FOREVER) == QL_OSI_SUCCESS)
+                {
+                    QL_MQTT_LOG("GUI sleep den HANG DOI OK => \n");
+                    ql_rtos_semaphore_release(sleep_sem);
+                }
+                else
+                {
+                    QL_MQTT_LOG("GUI sleep HANG DOI FAILED => \n");
+                }     
+              //  off_main();
+                ql_rtos_task_delete(NULL);
+                //ON_MQTT=0;
+            }   
+>>>>>>> 68483ae1d324d202823d1f8a44ab12ef6010b5e4
 
              else if (strcmp(val, "GET_GPS") == 0)
             {
@@ -153,9 +175,13 @@ static void mqtt_inpub_data_cb(mqtt_client_t *client, void *arg, int pkt_id, con
             }
             else if (strcmp(val, "SHUTDOWN") == 0)
             {
+<<<<<<< HEAD
                 ql_gpio_set_level(IO_LOCK, LVL_HIGH);
                 pub_mqtt(topic_gui, RSP_SHUTDOWN_OK);
                 QL_MQTT_LOG("TAT MAY OK\n");
+=======
+            //ql_power_down(POWD_NORMAL);
+>>>>>>> 68483ae1d324d202823d1f8a44ab12ef6010b5e4
             }
 
             //     // ql_power_down(POWD_NORMAL);
@@ -456,6 +482,51 @@ exit:
 
     return;
 }
+<<<<<<< HEAD
+=======
+
+QlOSStatus sub_mqtt(char *topic)
+{
+    if (ql_mqtt_sub_unsub(&mqtt_cli, topic, 1, mqtt_requst_result_cb, NULL, 1) == MQTTCLIENT_WOUNDBLOCK)
+    {
+        QL_MQTT_LOG("\ndang sub topic:%s\n", topic_nhan);
+        ql_rtos_semaphore_wait(mqtt_semp, QL_WAIT_FOREVER);
+        return QL_OSI_SUCCESS;
+    }
+    else
+    {
+        return 1;
+    }
+}
+
+void feed_dog_callback1(uint32 id_type, void *ctx)
+{	
+	ql_event_t event;
+
+	if(id_type == QUEC_KERNEL_FEED_DOG)
+	{
+		QL_MQTT_LOG("feed dog callback run\n");
+		event.id = QUEC_KERNEL_FEED_DOG;
+		if(ql_rtos_event_send(mqtt_task, &event) != QL_OSI_SUCCESS)
+		{
+			QL_MQTT_LOG("send feed_dog event to demo task failed\n");
+		}	
+		else
+		{
+			QL_MQTT_LOG("send feed dog event to mqtttask ok\n");
+            if(sub_mqtt(topic_nhan)==QL_OSI_SUCCESS)
+            {
+                QL_MQTT_LOG("\nSUB TOPIC:%s OK\n",topic_nhan);
+            }
+
+		}
+	}
+}
+
+
+
+
+>>>>>>> 68483ae1d324d202823d1f8a44ab12ef6010b5e4
 void reconnect()
 {
     int adc_value = 0;
