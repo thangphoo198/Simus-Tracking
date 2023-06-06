@@ -193,16 +193,51 @@ static void mqtt_inpub_data_cb(mqtt_client_t *client, void *arg, int pkt_id, con
             {
                 ql_nw_app_init();
             }
-            // else if (strcmp(val, "NWM_SAVE") == 0)
-            // {
-            //     cJSON *info = cJSON_GetObjectItem(pJsonRoot, "INFO");
-            //     char *val2 = info->valuestring;
-            //     int err = ql_cust_nvm_fwrite(val2, strlen(val2), 1);
-            //     if (err)
-            //     {
-            //         QL_MQTT_LOG("Ghi thanh cong\n");
-            //     }
-            // }
+            else if (strcmp(val, "SETTING") == 0)
+            {
+                cJSON *info = cJSON_GetObjectItem(pJsonRoot, "DATA");
+                cJSON *pSleep = cJSON_GetObjectItem(info, "time_sleep");
+                cJSON *pGps = cJSON_GetObjectItem(info, "time_update_gps");
+                cJSON *pSos = cJSON_GetObjectItem(info, "phone_sos");
+                if (pSleep)
+                {
+                    if (cJSON_IsNumber(pSleep))
+                    {
+                        QL_MQTT_LOG("time sleep:%d",pSleep->valueint);
+                    }
+
+                }
+                if (pGps)
+                {
+                   if(cJSON_IsNumber(pGps)) /* code */
+                   {
+                    QL_MQTT_LOG("time gps:%d",pGps->valueint);
+                   }
+                }
+                 if (pSos)
+                {
+                   if(cJSON_IsNumber(pSos)) /* code */
+                   {
+                    QL_MQTT_LOG("time gps:%s",pSos->valuestring);
+                   }
+                }                     
+        cJSON *pRoot = cJSON_CreateObject();
+        cJSON_AddStringToObject(pRoot, "RES", "GET_SETTING");
+        cJSON *pValue = cJSON_CreateObject();
+        cJSON_AddNumberToObject(pValue, "time_sleep",pSleep->valueint);
+        cJSON_AddNumberToObject(pValue, "time_update_gps", pGps->valueint);
+        cJSON_AddStringToObject(pValue, "phone_sos", pSos->valuestring);
+        cJSON_AddItemToObject(pRoot, "DATA", pValue);
+        char *GPS_info = cJSON_Print(pRoot);
+        QL_MQTT_LOG(GPS_info);
+        pub_mqtt(topic_gui, GPS_info);
+        cJSON_free((void *)GPS_info);
+        int err = ql_cust_nvm_fwrite(GPS_info, strlen(GPS_info), 1);
+        if (err)
+        {
+                   QL_MQTT_LOG("Ghi thanh cong:%d\n",strlen(GPS_info));
+        }
+        }
             // else if (strcmp(val, "NWM_READ") == 0)
             // {
             //     char buffer[100] = {0};
@@ -517,6 +552,7 @@ void reconnect()
     {
         QL_MQTT_LOG("SUB TOPIC:%s OK", topic_nhan);
     }
+    
     else
     {
         QL_MQTT_LOG("\n ket noi lai failed\n");
