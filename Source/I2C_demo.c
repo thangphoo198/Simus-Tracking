@@ -163,10 +163,10 @@ void mpu_write_reg(uint8 RegAddr, uint16 RegData)
     // RegAddr = RegAddr|((RegData>>8)&0x01);
     param_data[0] = (uint8)(RegData & 0xFF);
 
-    // do
-    // {
+    do
+    {
     ql_I2cWrite(i2c_1, SalveAddr_w_8bit, RegAddr, param_data, 1);
-    // } while (--retry_count);
+    } while (--retry_count);
 }
 
 void mpu_read_reg(uint8 RegAddr, uint16 *p_value)
