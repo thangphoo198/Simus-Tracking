@@ -33,8 +33,8 @@
 #define HTTP_HEAD_RANGE_LENGTH_MAX  50
 #define HTTP_DLOAD_URL                      "http://103.200.20.78:8001/api/dl/firmware?k=d79cb2d8-dcd9-11ed-9909-ca6afe7e4d60&s=abcdef&v=1.266"
 
-#define RSP_FOTA_OK "{\"RSP\":\"FOTA_OK\"}"
-#define RSP_FOTA_FAIL "{\"RSP\":\"FOTA_FAIL\"}"
+#define RSP_FOTA_OK "{\"RES\":\"FOTA_OK\"}"
+#define RSP_FOTA_FAIL "{\"RES\":\"FOTA_FAIL\"}"
 
 
 

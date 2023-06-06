@@ -208,13 +208,17 @@ static void ql_gnss_demo_thread(void *param)
                         nmea_value_update(nmea, &g_gps_data);
                         lat = g_gps_data.latitude;
                         speed=g_gps_data.gps_speed;
-                        uint32_t t = g_gps_data.UTC;
+                        acc=g_gps_data.hdop;
+                       // uint32_t t = g_gps_data.UTC;
+
                         if (lat > 0)
                         {
+                            
                             sprintf(gps_ok, "%s", GPSOK);
-                            sprintf(buff_time, "%d-%d/%d/20%d -acc:%.2f signal:%d", t, g_gps_data.time.tm_mday, g_gps_data.time.tm_mon, g_gps_data.time.tm_year,g_gps_data.hdop);
-                            sprintf(buff_local, "%.7f,%.7f", g_gps_data.latitude, g_gps_data.longitude);
-                            QL_GNSSDEMO_LOG("\n %s -- %s\n", buff_local, buff_time);
+                           // sprintf(buff_time, "UTC:%d / %u:%u:%u-%d/%d/20%d",t,g_gps_data.time,g_gps_data.time.tm_min,g_gps_data.time.tm_sec, g_gps_data.time.tm_mday, g_gps_data.time.tm_mon, g_gps_data.time.tm_year);
+                            sprintf(buff_local, "%.6f,%.6f", g_gps_data.latitude, g_gps_data.longitude);
+                            sprintf(buff_acc_dir, "%.2f", acc);
+                           // QL_GNSSDEMO_LOG("\n %s -- %s\n", buff_local, buff_time);
                         }
                         else
                         {
