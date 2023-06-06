@@ -41,6 +41,8 @@ void UART_Putc(uint8_t UARTx, uint8_t c){
     ql_uart_write(UARTx, &c, 1);
 }
 
+
+
 void UART_Puts(uint8_t UARTx, char* s)
 {
 	 while(*s != '\0')

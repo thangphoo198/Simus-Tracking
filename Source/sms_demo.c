@@ -24,6 +24,7 @@ WHEN              WHO         WHAT, WHERE, WHY
 #include "ql_log.h"
 #include "DataDefine.h"
 #include "main.h"
+#include "ql_power.h"
 
 ql_task_t sms_task = NULL;
 ql_sem_t sms_init_sem = NULL;
@@ -53,8 +54,17 @@ void read_sms(uint8_t index)
         QL_SMS_LOG("\nSDT: %s\n", token);
         token = strtok(NULL, ",");
         token = strtok(NULL, ",");
-        token = strtok(NULL, ",");
+        token = strtok(NULL, "V");
         QL_SMS_LOG("\nNOI DUNG: %s\n", token);
+        if(strcmp(token,"RESET")==0)
+        {
+            ql_power_reset(RESET_NORMAL);
+        }
+        else if(strcmp(token,"FOTA")==0)
+        {
+            ql_fota_http_app_init();
+        }
+        
         // Lấy ra toàn bộ token
         // for (size_t i = 0; i < 3; i++)
         // {

@@ -1,0 +1,522 @@
+[33mcommit 92f375fee3af424b9f885063683b2d5e35f071d5[m[33m ([m[1;36mHEAD -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m
+Merge: 7913dce 68483ae
+Author: MAY BAN CUA TOI <th20206@gmail.com>
+Date:   Thu May 4 06:43:17 2023 +0700
+
+    up
+
+[33mcommit 7913dce3b56b0da00670ae5f66025ca961e3f545[m
+Author: MAY BAN CUA TOI <th20206@gmail.com>
+Date:   Thu May 4 06:40:32 2023 +0700
+
+    up
+
+[33mcommit 68483ae1d324d202823d1f8a44ab12ef6010b5e4[m
+Merge: 0b85070 1d2a5b1
+Author: thang-pro <th20206@gmail.com>
+Date:   Fri Apr 28 08:03:01 2023 +0700
+
+    Merge branch 'main' of https://github.com/thangphoo198/Simus-Tracking into main
+
+[33mcommit 0b85070dba988ce20712d7f8a17703416e0eae8b[m
+Author: thang-pro <th20206@gmail.com>
+Date:   Fri Apr 28 07:59:49 2023 +0700
+
+    up
+
+[33mcommit 1d2a5b1245a2ed1efebb024a936769341783a706[m
+Author: thang <th20206@gmail.com>
+Date:   Thu Apr 27 16:45:35 2023 +0700
+
+    up
+
+[33mcommit 19d91bac881be2101de09ba626f4726f8c87a122[m
+Author: MAY BAN CUA TOI <th20206@gmail.com>
+Date:   Mon Apr 24 23:31:25 2023 +0700
+
+    up
+
+[33mcommit 969c3795a1a31384da824fb63fa83653ef860e15[m
+Author: thang <th20206@gmail.com>
+Date:   Thu Apr 20 18:16:08 2023 +0700
+
+    updayye
+
+[33mcommit 8e7b42bda8987cd6c0d0b99a17109e6c8541caef[m
+Merge: 82d9e72 8ee7d23
+Author: MAY BAN CUA TOI <th20206@gmail.com>
+Date:   Wed Apr 19 19:06:25 2023 +0700
+
+    up
+
+[33mcommit 82d9e723fcfd2b4e643ea83cd73b31ef3c8042e4[m
+Author: MAY BAN CUA TOI <th20206@gmail.com>
+Date:   Wed Apr 19 18:59:36 2023 +0700
+
+    up
+
+[33mcommit 8ee7d236efdf93ea4ba7d22fd03bb00163e341e5[m
+Author: thang <th20206@gmail.com>
+Date:   Wed Apr 19 17:21:56 2023 +0700
+
+    up interupt gpio
+
+[33mcommit 2099f935dbb722754a7858cc724cdcacb8e0b880[m
+Author: thang <th20206@gmail.com>
+Date:   Tue Apr 18 17:43:50 2023 +0700
+
+    up
+
+[33mcommit 586ae47ec6e436d7e596fafef1e7b1c54e57cc0f[m
+Author: thang <th20206@gmail.com>
+Date:   Sat Apr 15 11:31:57 2023 +0700
+
+    update queue
+
+[33mcommit 61b7ff24e9b574ff53a9ff7a1c14b0eff369ed71[m
+Merge: 2efc41b a680281
+Author: thang <th20206@gmail.com>
+Date:   Fri Apr 14 10:36:05 2023 +0700
+
+    Merge branch 'main' of https://github.com/thangphoo198/Simus-Tracking
+
+[33mcommit 2efc41b7897f57b67b63f45b046ba2fc26087ef3[m
+Author: thang <th20206@gmail.com>
+Date:   Fri Apr 14 10:35:11 2023 +0700
+
+    up
+
+[33mcommit a6802819d136994022c3d3222e38508236472e7d[m
+Author: MAY BAN CUA TOI <th20206@gmail.com>
+Date:   Fri Apr 14 01:04:16 2023 +0700
+
+    update BLE SUPPORT
+
+[33mcommit 914876e17bc7dea5ddd2d41245d07d19cb943f05[m
+Author: thang <th20206@gmail.com>
+Date:   Thu Apr 13 18:09:05 2023 +0700
+
+    up
+
+[33mcommit 3778276989784cc5eaaca6b78b99d8e049c533b7[m
+Author: MAY BAN CUA TOI <th20206@gmail.com>
+Date:   Thu Apr 13 00:54:03 2023 +0700
+
+    up
+
+[33mcommit 7df9c251c282be9c35f13c5d4fc68c36e5842a21[m
+Author: thang <th20206@gmail.com>
+Date:   Wed Apr 12 18:19:58 2023 +0700
+
+    update
+
+[33mcommit 82ae3c2bf3ee74a08dfda7ff2168a570a7072e87[m
+Author: thang <th20206@gmail.com>
+Date:   Tue Apr 11 17:35:50 2023 +0700
+
+    update
+
+[33mcommit 8ba452b4af3631edb6def7327d94665b024ea854[m
+Author: thang <th20206@gmail.com>
+Date:   Sat Apr 8 11:27:14 2023 +0700
+
+    up
+
+[33mcommit 6b27362afda2627a4fcb625953d89c6dbc2aed36[m
+Author: thang <th20206@gmail.com>
+Date:   Thu Apr 6 11:18:58 2023 +0700
+
+    d
+
+[33mcommit 094ac2305f6ae528371450b8984bf47810a71215[m
+Author: MAY BAN CUA TOI <th20206@gmail.com>
+Date:   Wed Apr 5 15:06:11 2023 +0700
+
+    up
+
+[33mcommit e8099cd46fd398712e723910a55dabc03885b21a[m
+Author: thang <th20206@gmail.com>
+Date:   Tue Apr 4 17:40:24 2023 +0700
+
+    up
+
+[33mcommit d04ce29bfcf0fb008644c4f25f313cfafb98ce12[m
+Author: thang <th20206@gmail.com>
+Date:   Mon Apr 3 18:07:44 2023 +0700
+
+    i
+
+[33mcommit a2b8565947887e73c9080a3ff99942e125800a0e[m
+Author: MAY BAN CUA TOI <th20206@gmail.com>
+Date:   Mon Apr 3 00:28:10 2023 +0700
+
+    up
+
+[33mcommit fac2fd0b35039fdab9d84abdc1c5a885eec186ff[m
+Author: MAY BAN CUA TOI <th20206@gmail.com>
+Date:   Mon Apr 3 00:23:22 2023 +0700
+
+    update
+
+[33mcommit 08b0c84ddbcd78034d9b2b52be3f08898064fa1d[m
+Author: thang <th20206@gmail.com>
+Date:   Sat Apr 1 17:22:51 2023 +0700
+
+    update
+
+[33mcommit 320d771de015e57136380a00ce32d4612e146799[m
+Author: thang <th20206@gmail.com>
+Date:   Fri Mar 31 18:20:19 2023 +0700
+
+    update smS
+
+[33mcommit bbd2cf7367f64c6619ee3d707ba5dc186564f6a1[m
+Merge: 3c98a04 5ea9018
+Author: thang <th20206@gmail.com>
+Date:   Fri Mar 31 08:19:45 2023 +0700
+
+    Merge branch 'main' of https://github.com/thangphoo198/Simus-Tracking
+
+[33mcommit 3c98a0447d90955c348d248aa50c04ea35e95df6[m
+Author: thang <th20206@gmail.com>
+Date:   Fri Mar 31 08:19:39 2023 +0700
+
+    up
+
+[33mcommit 5ea9018c75f3575427694b89e0af3a3a113e1dcb[m
+Author: MAY BAN CUA TOI <th20206@gmail.com>
+Date:   Thu Mar 30 23:07:43 2023 +0700
+
+    update
+
+[33mcommit 1a3d4ebbb85de2398619198a0b2deaa9f18583b2[m
+Author: thang <th20206@gmail.com>
+Date:   Thu Mar 30 18:15:27 2023 +0700
+
+    update fota_ok
+
+[33mcommit 22c3502fa60ddf464ab56c0ff9334b20b68b23b3[m
+Author: MAY BAN CUA TOI <th20206@gmail.com>
+Date:   Thu Mar 30 01:05:24 2023 +0700
+
+    update
+
+[33mcommit 8435b916077029ac7d8aeaa96509cf43bb4aa07f[m
+Author: thang <th20206@gmail.com>
+Date:   Wed Mar 29 18:17:42 2023 +0700
+
+    uP
+
+[33mcommit 8c982e57f4adab31672601879b3c8e3f10d3c5b4[m
+Merge: 1ee69d1 ed8a8fe
+Author: thang <th20206@gmail.com>
+Date:   Wed Mar 29 08:55:19 2023 +0700
+
+    Merge branch 'main' of https://github.com/thangphoo198/Simus-Tracking
+
+[33mcommit 1ee69d12c1ab4ba395cc658c048a4d2317cfd6d5[m
+Author: thang <th20206@gmail.com>
+Date:   Wed Mar 29 08:55:13 2023 +0700
+
+    i
+
+[33mcommit ed8a8fedca72ab37be3d4a0cb657e71c28bdf4a2[m
+Author: MAY BAN CUA TOI <th20206@gmail.com>
+Date:   Wed Mar 29 00:41:29 2023 +0700
+
+    update main
+
+[33mcommit eee130d2b4b5930df01563665960dbeeaef40ac0[m
+Author: thang <th20206@gmail.com>
+Date:   Tue Mar 28 17:28:50 2023 +0700
+
+    update WIFI SCAN
+
+[33mcommit d582bb87f75effbcdd73964ddda7e341bdaa0a6a[m
+Merge: 884cf17 dc46482
+Author: thang <th20206@gmail.com>
+Date:   Tue Mar 28 08:54:55 2023 +0700
+
+    Merge branch 'main' of https://github.com/thangphoo198/Simus-Tracking
+
+[33mcommit 884cf17954da214ab7aff0e2bb36cefa828d04bf[m
+Author: thang <th20206@gmail.com>
+Date:   Tue Mar 28 08:54:47 2023 +0700
+
+    update
+
+[33mcommit dc4648251ca7cdc0b86e8fbf80dd3ad038429b9b[m
+Author: MAY BAN CUA TOI <th20206@gmail.com>
+Date:   Tue Mar 28 00:04:53 2023 +0700
+
+    update SCAN WIFI
+
+[33mcommit a2a8525dc99a0b6149f88e440dab416952aec37d[m
+Author: thang <th20206@gmail.com>
+Date:   Mon Mar 27 17:57:41 2023 +0700
+
+    update WIFI SCAN
+
+[33mcommit cd6edea71baf623e940a2741551a3930b79debd3[m
+Author: MAY BAN CUA TOI <th20206@gmail.com>
+Date:   Mon Mar 27 02:13:39 2023 +0700
+
+    update LBS
+
+[33mcommit 4f6c966de03e126f14725c1c63c2b88266c58ca9[m
+Merge: 4d6000f 20a5da5
+Author: MAY BAN CUA TOI <th20206@gmail.com>
+Date:   Sun Mar 26 22:57:16 2023 +0700
+
+    up
+
+[33mcommit 4d6000f847cf976998964b7e9305b74da7584449[m
+Author: MAY BAN CUA TOI <th20206@gmail.com>
+Date:   Sun Mar 26 22:55:00 2023 +0700
+
+    UPDATE CAM BIEN ACC LIS3DH
+
+[33mcommit 20a5da5509084fade269fa9b4fffb47dbf5bc131[m
+Author: thang <th20206@gmail.com>
+Date:   Sat Mar 25 16:19:03 2023 +0700
+
+    update
+
+[33mcommit 7a5d9f8f61056d58184fcb6ea7d3d1ff4ca13ba8[m
+Author: thang <th20206@gmail.com>
+Date:   Thu Mar 23 17:34:53 2023 +0700
+
+    update CSQ
+
+[33mcommit 3ce6bc3e1bb3735df3c7e7001c536b74bc4c60c1[m
+Merge: 2b690a1 4bb11ce
+Author: thang <th20206@gmail.com>
+Date:   Thu Mar 23 08:37:31 2023 +0700
+
+    Merge branch 'main' of https://github.com/thangphoo198/Simus-Tracking
+
+[33mcommit 2b690a1939ea692d24df19e0fcb6af0e28b598aa[m
+Author: thang <th20206@gmail.com>
+Date:   Thu Mar 23 08:34:54 2023 +0700
+
+    update ibs
+
+[33mcommit 4bb11ce9c0e115197b7d60df84fcfe37d3b2ad5b[m
+Author: MAY BAN CUA TOI <th20206@gmail.com>
+Date:   Wed Mar 22 23:11:16 2023 +0700
+
+    update
+
+[33mcommit 117cd9ffdc456b95b051eda018a3662c71da3b53[m
+Author: thang <th20206@gmail.com>
+Date:   Wed Mar 22 17:53:43 2023 +0700
+
+    update 22/3
+
+[33mcommit e4c74bf0f146a14fa19763f64f1eefd6753bd901[m
+Author: thang <th20206@gmail.com>
+Date:   Wed Mar 22 10:22:04 2023 +0700
+
+    j
+
+[33mcommit 912ca659f4a71701881c3cab27fabad30563892d[m
+Merge: e945214 8d52ba4
+Author: thang <th20206@gmail.com>
+Date:   Wed Mar 22 10:13:01 2023 +0700
+
+    g
+
+[33mcommit 8d52ba48f0237755f988f3946bfadd8560304a2f[m
+Author: MAY BAN CUA TOI <th20206@gmail.com>
+Date:   Sat Feb 25 22:51:31 2023 +0700
+
+    update 25/2
+
+[33mcommit d45fd5e0be568d7f1fe6cf8916e95d7faf8afbae[m
+Author: MAY BAN CUA TOI <th20206@gmail.com>
+Date:   Thu Dec 22 08:37:09 2022 +0700
+
+    update
+
+[33mcommit 95929c3c7e1e8411dea3d6fcfbc1d46e0b93d8c9[m
+Author: MAY BAN CUA TOI <th20206@gmail.com>
+Date:   Sat Dec 17 22:01:46 2022 +0700
+
+    update CJSON
+
+[33mcommit e945214781d71a30857d2402b4307df85b52bbf0[m
+Author: thang <th20206@gmail.com>
+Date:   Sat Dec 17 08:56:07 2022 +0700
+
+    ddd
+
+[33mcommit 5a11fa62608e2ef5abadc8f181e3cfe8a8cc8a64[m
+Merge: 3175efc 3fe06e0
+Author: thang <th20206@gmail.com>
+Date:   Sat Dec 17 08:55:29 2022 +0700
+
+    Merge branch 'main' of https://github.com/thangphoo198/Simus-Tracking
+
+[33mcommit 3fe06e0bf63bddce127d66558b1448de252346cf[m
+Author: MAY BAN CUA TOI <th20206@gmail.com>
+Date:   Sat Dec 17 08:54:45 2022 +0700
+
+    update CJSON
+
+[33mcommit 581311908d7b3dd00e2a779a5403dfd9a9b8b70e[m
+Author: MAY BAN CUA TOI <th20206@gmail.com>
+Date:   Sat Dec 17 08:50:48 2022 +0700
+
+    g
+
+[33mcommit 3175efcc60dab28b764027ee8d02107652d49261[m
+Author: thang <th20206@gmail.com>
+Date:   Fri Dec 16 16:40:47 2022 +0700
+
+    update Json
+
+[33mcommit 167621ad49ac663d38aa711a2909c0eea82a4554[m
+Merge: f7063a8 1497f6c
+Author: MAY BAN CUA TOI <th20206@gmail.com>
+Date:   Thu Dec 15 22:37:56 2022 +0700
+
+    Merge branch 'main' of https://github.com/thangphoo198/Simus-Tracking
+
+[33mcommit f7063a830ed392677851ac7e303574f1787f76bd[m
+Author: MAY BAN CUA TOI <th20206@gmail.com>
+Date:   Thu Dec 15 22:33:16 2022 +0700
+
+    sd
+
+[33mcommit 1497f6cd1ed21d32c94509739ceafdc232387e15[m
+Author: thang <th20206@gmail.com>
+Date:   Thu Dec 15 17:58:41 2022 +0700
+
+    update cJson
+
+[33mcommit fcca5ff8a9fad1423ec30fe0d1b84f2cc830b068[m
+Author: MAY BAN CUA TOI <th20206@gmail.com>
+Date:   Sun Dec 11 01:13:46 2022 +0700
+
+    hello
+
+[33mcommit a213998f3dacbec0ef5b9776f5a633ef4d24c954[m
+Merge: 0dcd1af 90c77ff
+Author: MAY BAN CUA TOI <th20206@gmail.com>
+Date:   Sun Dec 11 01:12:56 2022 +0700
+
+    Merge branch 'main' of https://github.com/thangphoo198/Simus-Tracking
+
+[33mcommit 0dcd1af8a0fbf1eab8791ac4f92a479427b64d86[m
+Author: MAY BAN CUA TOI <th20206@gmail.com>
+Date:   Sun Dec 11 01:09:36 2022 +0700
+
+    hello
+
+[33mcommit 90c77ffdbe1f0729d058d313364b110af5071eca[m
+Author: thang <th20206@gmail.com>
+Date:   Fri Dec 9 17:39:15 2022 +0700
+
+    update IC2C
+
+[33mcommit c40811c2c34b5f6a02a86268e2e24592e0013d41[m
+Author: thang <th20206@gmail.com>
+Date:   Fri Dec 9 16:39:24 2022 +0700
+
+    update IC2C
+
+[33mcommit 09a1f3a07693f50c4d80fcf2c641d118a9b4c001[m
+Author: thang <th20206@gmail.com>
+Date:   Sat Dec 3 17:10:25 2022 +0700
+
+    update
+
+[33mcommit e2c3d6754033293f76049dfdbe374e6762eadae2[m
+Author: thang-pro <th20206@gmail.com>
+Date:   Thu Dec 1 21:49:35 2022 +0700
+
+    them RMC PASSTER
+
+[33mcommit 9957816c3adb54102af4a6bed332248a2d9792a8[m
+Author: thang <th20206@gmail.com>
+Date:   Thu Dec 1 17:52:00 2022 +0700
+
+    fix
+
+[33mcommit 44016275f8fb3620ca3a2ac87fef52e4393cd45b[m
+Author: MAY BAN CUA TOI <th20206@gmail.com>
+Date:   Thu Dec 1 03:57:13 2022 +0700
+
+    Fix sms
+
+[33mcommit b4fa6aa6760f33b741b0dc157dcee39c5d0f0c3f[m
+Author: thang <th20206@gmail.com>
+Date:   Wed Nov 30 18:31:12 2022 +0700
+
+    update gnss
+
+[33mcommit 4393520c9089c738888b138f99239b56e8d9d799[m
+Author: thang <th20206@gmail.com>
+Date:   Tue Nov 29 18:48:47 2022 +0700
+
+    update sms
+
+[33mcommit bd08649f83308a56f12a67d5df1f34499098088f[m
+Author: thang <th20206@gmail.com>
+Date:   Tue Nov 29 10:39:34 2022 +0700
+
+    update fota
+
+[33mcommit ff630360bf8562cc0a41de1f69e2c50c7afbd4ad[m
+Author: thang <th20206@gmail.com>
+Date:   Tue Nov 29 10:38:25 2022 +0700
+
+    update fota
+
+[33mcommit 4a56f5c4adb37fed5eed5ce0feaf3c43870a9b67[m
+Author: MAY BAN CUA TOI <th20206@gmail.com>
+Date:   Tue Nov 29 07:43:13 2022 +0700
+
+    FOTA QUA MQTT bang lenh CMD FOTA
+
+[33mcommit 9ebc58a2f8f350ebaf4265eda6f8c07a69160493[m
+Author: MAY BAN CUA TOI <th20206@gmail.com>
+Date:   Tue Nov 29 01:48:56 2022 +0700
+
+    FOTA QUA MQTT bang lenh CMD FOTA
+
+[33mcommit 902dfd1f984dc971a77982bb71cd93324afa251e[m
+Author: thang <th20206@gmail.com>
+Date:   Mon Nov 28 18:33:49 2022 +0700
+
+    update fota
+
+[33mcommit 92dee3de38937b3e68771f58837cfd620e18d931[m
+Author: MAY BAN CUA TOI <th20206@gmail.com>
+Date:   Mon Nov 28 07:36:53 2022 +0700
+
+    update hang doi
+
+[33mcommit d8620cf1c2e0f7247da37aa87fd1bc2e1c60ee12[m
+Author: MAY BAN CUA TOI <th20206@gmail.com>
+Date:   Mon Nov 28 07:29:24 2022 +0700
+
+    update hang doi
+
+[33mcommit 98a7d136e7f3522fe20ef553bf9e2e34d37d97da[m
+Author: MAY BAN CUA TOI <th20206@gmail.com>
+Date:   Mon Nov 28 01:03:45 2022 +0700
+
+    update hang doi
+
+[33mcommit 59470cb1ec54837d5ce1b4892d8d73675c2085ae[m
+Author: MAY BAN CUA TOI <th20206@gmail.com>
+Date:   Mon Nov 28 00:26:47 2022 +0700
+
+    update
+
+[33mcommit dabe09ddc1f45e86871fde7851b767c9f5f962c9[m
+Author: thangphoo198 <94382583+thangphoo198@users.noreply.github.com>
+Date:   Mon Nov 28 00:17:19 2022 +0700
+
+    Initial commit

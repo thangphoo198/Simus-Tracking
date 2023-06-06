@@ -18,6 +18,8 @@
 #include "ql_i2c.h"
 #include "I2C_demo.h"
 #include "ql_audio.h"
+#include "main.h"
+#include "ql_gpio.h"
 
 /*===========================================================================
  * Macro Definition
@@ -98,27 +100,61 @@ uint8_t mpu_read_reg8(uint8_t RegAddr)
     ql_I2cRead(i2c_1, SalveAddr_r_8bit, RegAddr, &x, 1);
     return x;
 }
+void ngat2(void *ctx)
+{
+    // mpu_read_reg(0x21); //read register to reset high-pass filter
+	// mpu_read_reg(0x26); //read register to set reference acceleration
+	// mpu_read_reg(0x31); //Read INT1_SRC to de-latch;
+    QL_I2C_LOG("\nDA NGAT 22\n");
+    ql_gpio_set_level(SENSOR_IN, LVL_HIGH);
+        // if(noti==false)
+        // {
+        //     OUT_LOG("da gui thong bao\n");      
+        //     send_event();
+
+
+        // }
+}
+void keu()
+{
+  ql_gpio_set_level(IO_SPEAKER, LVL_HIGH);   
+  ql_rtos_task_sleep_ms(500);
+  ql_gpio_set_level(IO_SPEAKER, LVL_LOW);
+  ql_rtos_task_sleep_ms(500);
+  ql_gpio_set_level(IO_SPEAKER, LVL_HIGH);   
+  ql_rtos_task_sleep_ms(500);
+  ql_gpio_set_level(IO_SPEAKER, LVL_LOW);
+  ql_rtos_task_sleep_ms(500);
+  ql_gpio_set_level(IO_SPEAKER, LVL_HIGH);
+  ql_rtos_task_sleep_ms(500);
+  ql_gpio_set_level(IO_SPEAKER, LVL_LOW);  
+
+}
 
 void Acc_Init()
 {
+    // ql_int_register(SENSOR_IN, EDGE_TRIGGER,DEBOUNCE_EN,EDGE_RISING,PULL_DOWN,ngat2,NULL);
+    // ql_int_enable(SENSOR_IN);
     if (check())
     {
-        ql_rtos_task_sleep_ms(50);
+        ql_rtos_task_sleep_ms(2000);
         QL_I2C_LOG("\n tim thay CAM BIEN\n");
         mpu_write_reg(REG1, 0x57); //Turn on the sensor, enable X, Y, and Z ODR = 100 Hz
-        mpu_write_reg(REG4, 0x18); //+4g
-       // mpu_write_reg(REG2, 0x09); // High-pass filter enabled on interrupt activity 1
-      //  mpu_write_reg(REG3, 0x40); // Interrupt activity 1 driven to INT1 pad
+        mpu_write_reg(REG4, 0x00); //+4g
+        mpu_write_reg(REG2, 0x00); // High-pass filter enabled on interrupt activity 1
+        mpu_write_reg(REG3, 0x40); // Interrupt activity 1 driven to INT1 pad
 
       //  mpu_write_reg(REG6, 0x20); // High-pass filter enabled on interrupt activity 2
-        // mpu_write_reg(REG5, 0x08); // move
-        // mpu_write_reg(INT2_THS, 0); // Threshold = 250 mg
-        // mpu_write_reg(INT2_CFG,0x0A);
-        // mpu_write_reg(INT2_DURATION, 0x01); // Duration = 0
+        mpu_write_reg(REG5, 0x08);  // Default value is 00 for no latching. Interrupt signals on INT1 pin is not latched.
+        mpu_write_reg(INT1_THS, 0x10); // Threshold = 250 mg
+       
+        mpu_write_reg(INT1_DURATION, 0x00); //Duration = 1LSBs * (1/10Hz) = 0.1s.
+        mpu_read_reg8(LIS3DH_REG_REFERENCE);
+         mpu_write_reg(INT1_CFG,0x0A); // Enable XLIE, YLIE, ZLIE interrupt generation, OR logic.
         // uint16_t dataToWrite = 0 | (4 << 1);
         // dataToWrite|=0x20;
         // mpu_write_reg(REG6, dataToWrite); // High-pass filter enabled on interrupt activity 2
-        uint8_t x = mpu_read_reg8(INT2_CFG);
+        uint8_t x = mpu_read_reg8(INT1_CFG);
         QL_I2C_LOG("doc cau hinh:%u\n",x);
 
         // mpu_write_reg(INT1_DURATION, 0x00); // Duration = 0
@@ -126,6 +162,24 @@ void Acc_Init()
         //  ql_I2cWrite(i2c_1, SalveAddr_w_8bit, LIS3DH_REG_TEMPCFG, 0x80, 1);
         // ql_I2cWrite(i2c_1,SalveAddr_w_8bit,0x6c,tmp,0x01);
         // mpu_write_reg(LIS3DH_REG_TEMPCFG,0x80);
+
+
+//         void init_ACC(void)
+// {
+// 	// configurations for control registers
+// 	writeRegister(0x20, 0x57); //Write 57h into CTRL_REG1;      // Turn on the sensor, enable X, Y, Z axes with ODR = 100Hz normal mode.
+// 	writeRegister(0x21, 0x09); //Write 09h into CTRL_REG2;      // High-pass filter (HPF) enabled
+// 	writeRegister(0x22, 0x40); //Write 40h into CTRL_REG3;      // ACC AOI1 interrupt signal is routed to INT1 pin.
+// 	writeRegister(0x23, 0x00); //Write 00h into CTRL_REG4;      // Full Scale = +/-2 g
+// 	writeRegister(0x24, 0x08); //Write 08h into CTRL_REG5;      // Default value is 00 for no latching. Interrupt signals on INT1 pin is not latched.
+// 																//Users don’t need to read the INT1_SRC register to clear the interrupt signal.
+// 	// configurations for wakeup and motionless detection
+// 	writeRegister(0x32, 0x10); //Write 10h into INT1_THS;          // Threshold (THS) = 16LSBs * 15.625mg/LSB = 250mg.
+// 	writeRegister(0x33, 0x00); //Write 00h into INT1_DURATION;     // Duration = 1LSBs * (1/10Hz) = 0.1s.
+// 	//readRegister();  //Dummy read to force the HP filter to set reference acceleration/tilt value
+// 	writeRegister(0x30, 0x2A); //Write 2Ah into INT1_CFG;          // Enable XLIE, YLIE, ZLIE interrupt generation, OR logic.
+
+// }
     }
 }
 
@@ -155,7 +209,7 @@ void Acc_Init()
 void mpu_write_reg(uint8 RegAddr, uint16 RegData)
 {
     uint8 param_data[3] = {0x00};
-    // uint8 retry_count = 5;
+     uint8 retry_count = 5;
 
     param_data[0] = (uint8)((RegData >> 8) & 0xFF);
     param_data[1] = (uint8)(RegData & 0xff);
@@ -193,7 +247,6 @@ void mpu_read_reg(uint8 RegAddr, uint16 *p_value)
 
 }
 
-
 int16_t GetData(unsigned char Haddress, unsigned char Laddress)
 {
     uint8_t H, L;
@@ -205,9 +258,9 @@ int16_t GetData(unsigned char Haddress, unsigned char Laddress)
 
 void print_ACC()
 {
-    int16_t x = GetData(OUT_XH, OUT_XL);
-    int16_t y = GetData(OUT_YH, OUT_YL);
-    int16_t z = GetData(OUT_ZH, OUT_ZL);
+         x = GetData(OUT_XH, OUT_XL);
+         y = GetData(OUT_YH, OUT_YL);
+         z = GetData(OUT_ZH, OUT_ZL);
     float x_g, y_g, z_g;
     uint8_t lsb_value = 8; // +-4g
     x_g = lsb_value * ((float)x / LIS3DH_LSB16_TO_KILO_LSB10);
@@ -224,6 +277,18 @@ void print_ACC()
     float rms = sqrt(x2 + y2 + z2) / 16384.0;    // Độ rung lắc, chuyển đổi từ đơn v
     sprintf(buff, "\nGx: %.2f  Gy:%.2f  Gz:%.2f rung:%.2f X:%d Y:%d Z:%d  \n", x_g, y_g, z_g,rms,x,y,z);
     QL_I2C_LOG(buff);
+    // ql_LvlMode stt_sen;
+    // ql_gpio_get_level(SENSOR_IN, &stt_sen);
+    // if(stt_sen==LVL_HIGH)
+    // {
+    // keu();
+    // uint16_t dat;
+    // mpu_read_reg(0x21,&dat); //read register to reset high-pass filter
+	// mpu_read_reg(0x26,&dat); //read register to set reference acceleration
+	// mpu_read_reg(0x31,&dat); //Read INT1_SRC to de-latch;  
+    // QL_I2C_LOG("\nNGAT int1: %d\n",stt_sen);
+    // ql_gpio_set_level(SENSOR_IN, LVL_LOW);
+    // }
 
 }
 
@@ -240,6 +305,7 @@ void ql_i2c_demo_thread(void *param)
         if (check())
         {
             print_ACC();
+            
         }
         else
         {
