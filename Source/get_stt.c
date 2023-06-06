@@ -38,7 +38,6 @@ void get_stt()
     ql_gpio_get_level(ACC_IN, &stt_lock);
     cJSON *pRoot = cJSON_CreateObject();
     ql_adc_get_volt(QL_ADC0_CHANNEL, &adc_value);
-    ql_rtos_task_sleep_ms(100);
     ql_adc_get_volt(QL_ADC2_CHANNEL, &adc_value1);
     vin = adc_value / (R2 / (R1 + R2));
     vin1 = adc_value1 / (R2 / (R1 + R2));

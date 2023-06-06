@@ -46,6 +46,11 @@ uint8_t INDEX_SLEEP;
 ql_queue_t sleep_index;
 ql_sem_t sleep_sem;
 
+
+
+uint32_t time_sleep,time_update_gps;
+char *phone_sos;
+
 // APPLICATION
 #define SENSOR_LIS3DH
 #define GNSS

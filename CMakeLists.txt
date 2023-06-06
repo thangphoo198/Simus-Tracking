@@ -261,7 +261,7 @@ add_custom_target(unittests)
     ${SOURCE_TOP_DIR}/Source/get_stt.c
     ${SOURCE_TOP_DIR}/Source/get_gps.c
     ${SOURCE_TOP_DIR}/Source/remote.c
-#	${SOURCE_TOP_DIR}/Source/psm_demo.c
+	${SOURCE_TOP_DIR}/Source/setting.c
 
 
     )
