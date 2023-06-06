@@ -1,3 +1,0 @@
-IRHVAC {"Vendor":"DAIKIN160","Model":-1,"Mode":"Cool","Power":"On","Celsius":"On","Temp":25,"FanSpeed":"Medium","SwingV":"Auto","SwingH":"Off"}
-
-IRHVAC {"Vendor":"DAIKIN160","Model":-1,"Mode":"Cool","Power":"Off","Celsius":"On","Temp":25,"FanSpeed":"Medium","SwingV":"Auto","SwingH":"Off"}
