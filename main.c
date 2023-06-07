@@ -135,6 +135,12 @@ static void main_task_thread(void *param)
     ql_gpio_init(LED_STT, GPIO_OUTPUT, PULL_NONE, LVL_HIGH);
     ql_gpio_init(LED_MODE, GPIO_OUTPUT, PULL_NONE, LVL_HIGH);
     SendEventToThread(main_task, INIT_CONFIG);
+    //doc_epprom();
+    // if(json_setting!=NULL)
+    // {
+    // OUT_LOG("\n%s\n",json_setting);
+    // apply_setting_epprom(json_setting);
+    // }
     // char buff_gps[50]={0};
     while (1)
     {

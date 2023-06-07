@@ -76,6 +76,11 @@ void remote()
 
         // ql_power_down(POWD_NORMAL);
     }
+    else if (strcmp(val1, "GET_SETTING") == 0)
+    {
+        doc_epprom();
+        pub_mqtt(topic_gui, json_setting);
+    }
             for(uint8_t i=0;i<strlen(val1);i++)
             {
                 val1[i]=0;

@@ -19,7 +19,7 @@ extern pub_mqtt(char *topic, char *mess);
 static void setting_thread(void *arg)
 {
 
-    setting();
+    setting(json_setting);
     ql_rtos_task_delete(NULL);
 }
 
@@ -35,21 +35,21 @@ void setting(char *json)
     {
         if (cJSON_IsNumber(pSleep))
         {
-            OUT_LOG("time sleep:%d", pSleep->valueint);
+            OUT_LOG("time sleep:%d\n", pSleep->valueint);
         }
     }
     if (pGps)
     {
         if (cJSON_IsNumber(pGps)) /* code */
         {
-            OUT_LOG("time gps:%d", pGps->valueint);
+            OUT_LOG("time gps:%d\n", pGps->valueint);
         }
     }
     if (pSos)
     {
-        if (cJSON_IsNumber(pSos)) /* code */
+        if (cJSON_IsString(pSos)) /* code */
         {
-            OUT_LOG("time gps:%s", pSos->valuestring);
+            OUT_LOG("phone SOS:%s\n", pSos->valuestring);
         }
     }
     cJSON *pRoot = cJSON_CreateObject();
@@ -66,8 +66,9 @@ void setting(char *json)
     ghi_epprom(GPS_info);
     apply_setting(pSleep->valueint,pGps->valueint,pSos->valuestring);
     cJSON_free((void *)GPS_info);
-    cJSON_Delete(pRoot);
-    cJSON_Delete(pValue);
+    // cJSON_Delete(pRoot);
+
+    // cJSON_Delete(pValue);
 }
 void ghi_epprom(char *buff)
 {
@@ -77,13 +78,17 @@ void ghi_epprom(char *buff)
         OUT_LOG("Ghi thanh cong:%d\n", strlen(buff));
     }
 }
-void doc_epprom(char *out)
+void doc_epprom()
 {
 
-    if (ql_cust_nvm_fread(out, 128, 1))
+    if (ql_cust_nvm_fread(json_setting, 128, 1) )
     {
-        OUT_LOG("du lieu doc dc:%s", out);
+        if(json_setting!=NULL)
+        {
+        OUT_LOG("du lieu doc dc:%s", json_setting);
+        }
     }
+    
 }
 
 apply_setting(uint32_t Time_sleep,uint32_t Time_gps, char *sdt_sos)
@@ -92,13 +97,46 @@ apply_setting(uint32_t Time_sleep,uint32_t Time_gps, char *sdt_sos)
 time_sleep=Time_sleep;
 time_update_gps=Time_gps;
 strcpy(phone_sos,sdt_sos);
+OUT_LOG("phone:%s\n",phone_sos);
+}
+void apply_setting_epprom(char *json)
+{
+
+    cJSON *pJsonRoot = cJSON_Parse(json);
+    cJSON *info = cJSON_GetObjectItem(pJsonRoot, "DATA");
+    cJSON *pSleep = cJSON_GetObjectItem(info, "time_sleep");
+    cJSON *pGps = cJSON_GetObjectItem(info, "time_update_gps");
+    cJSON *pSos = cJSON_GetObjectItem(info, "phone_sos");
+    if (pSleep)
+    {
+        if (cJSON_IsNumber(pSleep))
+        {
+            OUT_LOG("time sleep:%d\n", pSleep->valueint);
+        }
+    }
+    if (pGps)
+    {
+        if (cJSON_IsNumber(pGps)) /* code */
+        {
+            OUT_LOG("time gps:%d\n", pGps->valueint);
+        }
+    }
+    if (pSos)
+    {
+        if (cJSON_IsString(pSos)) /* code */
+        {
+            OUT_LOG("phone SOS:%s\n", pSos->valuestring);
+        }
+    }
+    apply_setting(pSleep->valueint,pGps->valueint,pSos->valuestring);
+
 }
 
 void setting_init(void)
 {
     QlOSStatus err = QL_OSI_SUCCESS;
 
-    err = ql_rtos_task_create(&setting_task, 1024, APP_PRIORITY_LOW, "QNWDEMO", setting_thread, NULL, 5);
+    err = ql_rtos_task_create(&setting_task, 4*1024, APP_PRIORITY_LOW, "QNWDEMO", setting_thread, NULL, 5);
     if (err != QL_OSI_SUCCESS)
     {
         OUT_LOG("created task failed");

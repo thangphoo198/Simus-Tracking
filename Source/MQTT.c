@@ -130,13 +130,6 @@ static void mqtt_inpub_data_cb(mqtt_client_t *client, void *arg, int pkt_id, con
         {
             char *val = cmd->valuestring;
             QL_MQTT_LOG("get CMD :%s", val);
-            if(strlen(val)<20)
-            {
-            strcpy(val1, val);
-            QL_MQTT_LOG("\nget REMOTE :%s\n", val1);
-            ql_remote_app_init();
-            }
-
             // for(uint8_t i=0;i<strlen(val);i++)
             // {
             //     val1[i]=val[i];
@@ -195,19 +188,24 @@ static void mqtt_inpub_data_cb(mqtt_client_t *client, void *arg, int pkt_id, con
             }
             else if (strcmp(val, "SETTING") == 0)
             {
+                 //QL_MQTT_LOG("\n%s\n",payload);
+                strcpy(json_setting,payload);
+                QL_MQTT_LOG("\nget SETTINGSS :%s\n", json_setting);
                 setting_init();
-            }
-            else if (strcmp(val, "GET_SETTING") == 0)
-            {
-                char *out;
-                doc_epprom(&out);
-                QL_MQTT_LOG("\n%s\n",out);
-                pub_mqtt(topic_gui,out);
-
             }
             else if (strcmp(val, "SCAN_WIFI") == 0)
             {
                 ql_wifiscan_app_init();
+            }
+            else
+            {
+                // ql_wifiscan_app_init();
+                if (strlen(val) < 20)
+                {
+                    strcpy(val1, val);
+                    QL_MQTT_LOG("\nget REMOTE :%s\n", val1);
+                    ql_remote_app_init();
+                }
             }
         }
     }
