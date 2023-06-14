@@ -145,8 +145,7 @@ static void main_task_thread(void *param)
     while (1)
     {
 
-        ql_event_try_wait(&event);
-        uint16_t rec = 0;      
+        ql_event_try_wait(&event); 
 
         switch (event.id)
         {
@@ -180,12 +179,6 @@ void get_time()
     ql_rtc_time_t tm={0};
     //int timezone=0;
     ret = ql_rtc_get_time(&tm);
-    //time_sec += 60*60*7;
-   // ql_sec_conv_rtc_time(&time_sec,&tm);
-    //ret = ql_rtc_get_timezone(&timezone);
-
-    //time_fix+=FIX_HOUR;
-   // ql_sec_conv_rtc_time(&time_fix,&tm);
 
     if(ret != QL_RTC_SUCCESS)
     {
@@ -215,6 +208,7 @@ void get_GPS()
     OUT_LOG(GPS_info);
     pub_mqtt(topic_gui, GPS_info);
     cJSON_free((void *)GPS_info);
+   // cJSON_Delete(pRoot);
 }
 void send_gps()
 {

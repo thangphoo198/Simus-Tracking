@@ -98,6 +98,7 @@ void get_stt()
     pub_mqtt(topic_gui, info);
 
     cJSON_free((void *)info);
+    //cJSON_Delete(pRoot);
 }
 
 void ql_stt_app_init(void)

@@ -43,6 +43,7 @@ void get_GNSS()
     OUT_LOG(GPS_info);
     pub_mqtt(topic_gui, GPS_info);
     cJSON_free((void *)GPS_info);
+   // cJSON_Delete(pRoot);
     }
     else
     {
