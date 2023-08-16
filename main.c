@@ -12,7 +12,6 @@
 #include "main.h"
 #include "ql_api_rtc.h"
 #include "ql_power.h"
-
 #define OUT_LOG DebugPrint
 #define INIT_CONFIG 101
 #define MAIN_TICK_100MS 102
@@ -23,11 +22,6 @@ static uint32_t tickCount500MS = 0,tickCount5000MS=0;
 static uint8_t Led = 0, Led2 = 0;
 ql_LvlMode in;
 bool noti=false;
-#define QL_FUN_NUM_UART_2_CTS 3
-#define QL_FUN_NUM_UART_3_TXD 4
-#define QL_PIN_NUM_KEYOUT_5 82
-#define FEED_DOG_MAX_MISS_CNT   5
-
 void timer_callback(void)
 {
     ql_event_t event;
@@ -117,6 +111,19 @@ void send_event()
     cJSON_free((void *)event_info);
 }
 
+static void _pwrkey_release_callback(void)
+{
+   // ql_event_t event;
+
+   // event.id = QUEC_PWRKEY_RELEASE_IND;
+
+    //ql_rtos_event_send(pwrkey_task, &event);
+    OUT_LOG("\nDA BAM NUT NGUON - chuyen dong!\n");
+}
+static void _pwrkey_longpress_callback(void)
+{
+    OUT_LOG("\Khong co chuyen dong trong 1 phut\n");
+}
 static void main_task_thread(void *param)
 {
     ql_event_t event= {0};
@@ -126,7 +133,7 @@ static void main_task_thread(void *param)
     ql_gpio_init(IO_LOCK, GPIO_OUTPUT, PULL_DOWN, LVL_LOW);
     ql_gpio_init(IO_SPEAKER, GPIO_OUTPUT, PULL_DOWN, LVL_LOW);
     ql_gpio_init(IO_LIGHT, GPIO_OUTPUT, PULL_DOWN, LVL_LOW);
-    // ql_gpio_init(SENSOR_IN, GPIO_INPUT, PULL_UP, LVL_HIGH); // SDA
+    ql_gpio_init(SENSOR_IN, GPIO_INPUT, PULL_DOWN, LVL_LOW); // SDA
     // ql_gpio_deinit(SENSOR_IN);
     // ql_int_register(SENSOR_IN, EDGE_TRIGGER,DEBOUNCE_EN,EDGE_FALLING,PULL_UP,ngat,NULL);
     // ql_int_enable(SENSOR_IN);
@@ -135,7 +142,11 @@ static void main_task_thread(void *param)
     ql_gpio_init(LED_STT, GPIO_OUTPUT, PULL_NONE, LVL_HIGH);
     ql_gpio_init(LED_MODE, GPIO_OUTPUT, PULL_NONE, LVL_HIGH);
     SendEventToThread(main_task, INIT_CONFIG);
-    //doc_epprom();
+    doc_epprom();
+    ql_pwrkey_release_cb_register(_pwrkey_release_callback);
+    ql_pwrkey_longpress_cb_register(_pwrkey_longpress_callback, 180000);    // k chuyen dong trong 3 phut
+    ql_pwrkey_shutdown_time_set(99999); 
+
     // if(json_setting!=NULL)
     // {
     // OUT_LOG("\n%s\n",json_setting);
@@ -151,7 +162,7 @@ static void main_task_thread(void *param)
         {
         case INIT_CONFIG:
             OUT_LOG("khoi tao OK\n");
-            ql_rtos_timer_start(main_timer, 2000, 1);
+            ql_rtos_timer_start(main_timer, 500, 1);
             break;
         case MAIN_TICK_100MS:
         get_time();
@@ -260,7 +271,7 @@ int appimg_enter(void *param)
    ql_mqtt_app_init();
     
 #ifdef GNSS
-    ql_gnss_app_init(); 
+    ql_gnss_app_init();     
 #endif      
 #ifdef SENSOR_LIS3DH
     ql_i2c_demo_init();

@@ -259,7 +259,7 @@ void ql_power_app_init(void)
 
 //     ql_event_t event;
 
-//     ql_pwrkey_shutdown_time_set(3000);                              // long pressed 3s shutdown
+ //    ql_pwrkey_shutdown_time_set(3000);                              // long pressed 3s shutdown
 //     ql_pwrkey_callback_register(_pwrkey_demo_callback);             // long press & release trigger
 //     ql_pwrkey_longpress_cb_register(_pwrkey_longpress_callback, 7000);    // long press & not release, long pressed 7s trigger
 //     ql_pwrkey_press_cb_register(_pwrkey_press_callback);

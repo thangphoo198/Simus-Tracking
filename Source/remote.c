@@ -12,6 +12,7 @@
 #include "ql_gpio.h"
 #include "ql_adc.h"
 #include "command.h"
+#include "ql_power.h"
 
 #define OUT_LOG DebugPrint
 ql_task_t remote_task = NULL;
@@ -81,10 +82,20 @@ void remote()
         doc_epprom();
         pub_mqtt(topic_gui, json_setting);
     }
+
+     else if (strcmp(val1, "SHUTDOWN") == 0)
+    {
+        OUT_LOG("TAT MAY:\n");
+
+        //ql_gpio_set_level(IO_LIGHT, LVL_LOW);
+        pub_mqtt(topic_gui, "shutdownw OK");
+
+        ql_power_down(POWD_NORMAL);
+    } 
             for(uint8_t i=0;i<strlen(val1);i++)
             {
                 val1[i]=0;
-            }
+            }              
 
 }
 void ql_remote_app_init(void)

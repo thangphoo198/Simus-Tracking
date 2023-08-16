@@ -63,20 +63,22 @@
 #define OUT_ZL 0x2C
 #define OUT_ZH 0x2D
 
-
-
 #define LIS3DSH_OUT_TEMP 0x0C
 
 #define LIS3DH_LSB16_TO_KILO_LSB10 \
     64000
 #define SENSORS_GRAVITY_EARTH (9.80665F)
-
-typedef enum
-{
-    DET_STOP,
-    DET_MOVE,
-    //...
-} event_t;
+#define PI (3.14592)
+// typedef enum
+// {
+//     DET_STOP,
+//     DET_MOVE,
+//     //...
+// } event_t;
+// typedef struct
+// {
+//     float ax, ay, az;
+// } lis_angel;
 
 char check()
 {
@@ -100,37 +102,34 @@ uint8_t mpu_read_reg8(uint8_t RegAddr)
     ql_I2cRead(i2c_1, SalveAddr_r_8bit, RegAddr, &x, 1);
     return x;
 }
-void ngat2(void *ctx)
-{
-    // mpu_read_reg(0x21); //read register to reset high-pass filter
-	// mpu_read_reg(0x26); //read register to set reference acceleration
-	// mpu_read_reg(0x31); //Read INT1_SRC to de-latch;
-    QL_I2C_LOG("\nDA NGAT 22\n");
-    ql_gpio_set_level(SENSOR_IN, LVL_HIGH);
-        // if(noti==false)
-        // {
-        //     OUT_LOG("da gui thong bao\n");      
-        //     send_event();
+// void ngat2(void *ctx)
+// {
+//     // mpu_read_reg(0x21); //read register to reset high-pass filter
+//     // mpu_read_reg(0x26); //read register to set reference acceleration
+//     // mpu_read_reg(0x31); //Read INT1_SRC to de-latch;
+//     QL_I2C_LOG("\nDA NGAT 22\n");
+//     ql_gpio_set_level(SENSOR_IN, LVL_HIGH);
+//     // if(noti==false)
+//     // {
+//     //     OUT_LOG("da gui thong bao\n");
+//     //     send_event();
 
-
-        // }
-}
+//     // }
+// }
 void keu()
 {
-  ql_gpio_set_level(IO_SPEAKER, LVL_HIGH);   
-  ql_rtos_task_sleep_ms(500);
-  ql_gpio_set_level(IO_SPEAKER, LVL_LOW);
-  ql_rtos_task_sleep_ms(500);
-  ql_gpio_set_level(IO_SPEAKER, LVL_HIGH);   
-  ql_rtos_task_sleep_ms(500);
-  ql_gpio_set_level(IO_SPEAKER, LVL_LOW);
-  ql_rtos_task_sleep_ms(500);
-  ql_gpio_set_level(IO_SPEAKER, LVL_HIGH);
-  ql_rtos_task_sleep_ms(500);
-  ql_gpio_set_level(IO_SPEAKER, LVL_LOW);  
-
+    ql_gpio_set_level(IO_SPEAKER, LVL_HIGH);
+    ql_rtos_task_sleep_ms(500);
+    ql_gpio_set_level(IO_SPEAKER, LVL_LOW);
+    ql_rtos_task_sleep_ms(500);
+    ql_gpio_set_level(IO_SPEAKER, LVL_HIGH);
+    ql_rtos_task_sleep_ms(500);
+    ql_gpio_set_level(IO_SPEAKER, LVL_LOW);
+    ql_rtos_task_sleep_ms(500);
+    ql_gpio_set_level(IO_SPEAKER, LVL_HIGH);
+    ql_rtos_task_sleep_ms(500);
+    ql_gpio_set_level(IO_SPEAKER, LVL_LOW);
 }
-
 void Acc_Init()
 {
     // ql_int_register(SENSOR_IN, EDGE_TRIGGER,DEBOUNCE_EN,EDGE_RISING,PULL_DOWN,ngat2,NULL);
@@ -139,47 +138,20 @@ void Acc_Init()
     {
         ql_rtos_task_sleep_ms(2000);
         QL_I2C_LOG("\n tim thay CAM BIEN\n");
-        mpu_write_reg(REG1, 0x57); //Turn on the sensor, enable X, Y, and Z ODR = 100 Hz
-        mpu_write_reg(REG4, 0x00); //+4g
-        mpu_write_reg(REG2, 0x00); // High-pass filter enabled on interrupt activity 1
+        mpu_write_reg(REG1, 0x2F); // Turn on the sensor, enable X, Y, and Z ODR = 100 Hz
+        mpu_write_reg(REG2, 0x09); // High-pass filter enabled on interrupt activity 1
         mpu_write_reg(REG3, 0x40); // Interrupt activity 1 driven to INT1 pad
+        mpu_write_reg(REG4, 0x00); //+-2g
+        //  mpu_write_reg(REG6, 0x20); // High-pass filter enabled on interrupt activity 2
+        mpu_write_reg(REG5, 0x08);     // Default value is 00 for no latching. Interrupt signals on INT1 pin is not latched.
+        mpu_write_reg(INT1_THS, 0x20); // Threshold = 250 mg
 
-      //  mpu_write_reg(REG6, 0x20); // High-pass filter enabled on interrupt activity 2
-        mpu_write_reg(REG5, 0x08);  // Default value is 00 for no latching. Interrupt signals on INT1 pin is not latched.
-        mpu_write_reg(INT1_THS, 0x10); // Threshold = 250 mg
-       
-        mpu_write_reg(INT1_DURATION, 0x00); //Duration = 1LSBs * (1/10Hz) = 0.1s.
+        mpu_write_reg(INT1_DURATION, 0x00); // Duration = 1LSBs * (1/10Hz) = 0.1s.
         mpu_read_reg8(LIS3DH_REG_REFERENCE);
-         mpu_write_reg(INT1_CFG,0x0A); // Enable XLIE, YLIE, ZLIE interrupt generation, OR logic.
-        // uint16_t dataToWrite = 0 | (4 << 1);
-        // dataToWrite|=0x20;
-        // mpu_write_reg(REG6, dataToWrite); // High-pass filter enabled on interrupt activity 2
+        mpu_write_reg(INT1_CFG, 0x2A); // Configure desired wake-up event
         uint8_t x = mpu_read_reg8(INT1_CFG);
-        QL_I2C_LOG("doc cau hinh:%u\n",x);
+        QL_I2C_LOG("doc cau hinh:%u\n", x);
 
-        // mpu_write_reg(INT1_DURATION, 0x00); // Duration = 0
-
-        //  ql_I2cWrite(i2c_1, SalveAddr_w_8bit, LIS3DH_REG_TEMPCFG, 0x80, 1);
-        // ql_I2cWrite(i2c_1,SalveAddr_w_8bit,0x6c,tmp,0x01);
-        // mpu_write_reg(LIS3DH_REG_TEMPCFG,0x80);
-
-
-//         void init_ACC(void)
-// {
-// 	// configurations for control registers
-// 	writeRegister(0x20, 0x57); //Write 57h into CTRL_REG1;      // Turn on the sensor, enable X, Y, Z axes with ODR = 100Hz normal mode.
-// 	writeRegister(0x21, 0x09); //Write 09h into CTRL_REG2;      // High-pass filter (HPF) enabled
-// 	writeRegister(0x22, 0x40); //Write 40h into CTRL_REG3;      // ACC AOI1 interrupt signal is routed to INT1 pin.
-// 	writeRegister(0x23, 0x00); //Write 00h into CTRL_REG4;      // Full Scale = +/-2 g
-// 	writeRegister(0x24, 0x08); //Write 08h into CTRL_REG5;      // Default value is 00 for no latching. Interrupt signals on INT1 pin is not latched.
-// 																//Users don’t need to read the INT1_SRC register to clear the interrupt signal.
-// 	// configurations for wakeup and motionless detection
-// 	writeRegister(0x32, 0x10); //Write 10h into INT1_THS;          // Threshold (THS) = 16LSBs * 15.625mg/LSB = 250mg.
-// 	writeRegister(0x33, 0x00); //Write 00h into INT1_DURATION;     // Duration = 1LSBs * (1/10Hz) = 0.1s.
-// 	//readRegister();  //Dummy read to force the HP filter to set reference acceleration/tilt value
-// 	writeRegister(0x30, 0x2A); //Write 2Ah into INT1_CFG;          // Enable XLIE, YLIE, ZLIE interrupt generation, OR logic.
-
-// }
     }
 }
 
@@ -205,11 +177,10 @@ void Acc_Init()
 // 13. (Insert your code here) // Event handling
 // 14. Go to 9
 
-
 void mpu_write_reg(uint8 RegAddr, uint16 RegData)
 {
     uint8 param_data[3] = {0x00};
-     uint8 retry_count = 5;
+    uint8 retry_count = 5;
 
     param_data[0] = (uint8)((RegData >> 8) & 0xFF);
     param_data[1] = (uint8)(RegData & 0xff);
@@ -219,32 +190,30 @@ void mpu_write_reg(uint8 RegAddr, uint16 RegData)
 
     do
     {
-    ql_I2cWrite(i2c_1, SalveAddr_w_8bit, RegAddr, param_data, 1);
+        ql_I2cWrite(i2c_1, SalveAddr_w_8bit, RegAddr, param_data, 1);
     } while (--retry_count);
 }
 
 void mpu_read_reg(uint8 RegAddr, uint16 *p_value)
 {
-	ql_audio_errcode_e status = QL_AUDIO_SUCCESS;
-	uint8 temp_buf[2];
-	uint8 retry_count = 5;
-  //  RegAddr = (RegAddr << 1) & 0xFE;
+    ql_audio_errcode_e status = QL_AUDIO_SUCCESS;
+    uint8 temp_buf[2];
+    uint8 retry_count = 5;
+    //  RegAddr = (RegAddr << 1) & 0xFE;
 
-	do
+    do
     {
         status = (ql_audio_errcode_e)ql_I2cRead(i2c_1, SalveAddr_r_8bit, RegAddr, temp_buf, 2);
-        		if (status != QL_AUDIO_SUCCESS)
-		{
+        if (status != QL_AUDIO_SUCCESS)
+        {
             QL_I2C_LOG("\nError:[%dth] device[0x%x] addr[0x%x] failed\n", retry_count, SalveAddr_r_8bit, RegAddr);
         }
         else
         {
-		*p_value = (((uint16)temp_buf[0]) << 8) | temp_buf[1];
-		break;
+            *p_value = (((uint16)temp_buf[0]) << 8) | temp_buf[1];
+            break;
         }
-	}
-     while (--retry_count);
-
+    } while (--retry_count);
 }
 
 int16_t GetData(unsigned char Haddress, unsigned char Laddress)
@@ -255,14 +224,18 @@ int16_t GetData(unsigned char Haddress, unsigned char Laddress)
     // QL_I2C_LOG("H:%d L: %d\n", H, L);
     return (int16_t)((((uint16)H) << 8) | L);
 }
+float rad2deg(float rad)
+{
+    return rad * 180 / PI;
+}
 
 void print_ACC()
 {
-         x = GetData(OUT_XH, OUT_XL);
-         y = GetData(OUT_YH, OUT_YL);
-         z = GetData(OUT_ZH, OUT_ZL);
+    x = GetData(OUT_XH, OUT_XL);
+    y = GetData(OUT_YH, OUT_YL);
+    z = GetData(OUT_ZH, OUT_ZL);
     float x_g, y_g, z_g;
-    uint8_t lsb_value = 8; // +-4g
+    uint8_t lsb_value = 4; // +-4g
     x_g = lsb_value * ((float)x / LIS3DH_LSB16_TO_KILO_LSB10);
     y_g = lsb_value * ((float)y / LIS3DH_LSB16_TO_KILO_LSB10);
     z_g = lsb_value * ((float)z / LIS3DH_LSB16_TO_KILO_LSB10);
@@ -270,52 +243,41 @@ void print_ACC()
     y_g *= SENSORS_GRAVITY_EARTH;
     z_g *= SENSORS_GRAVITY_EARTH;
     char buff[50] = {0};
-    float alpha = 0.8;                           // Hệ số bộ lọc trung bình trượt
-    float x2 = x * x * alpha + x2 * (1 - alpha); // Bộ lọc trung bình trượt trên trục X
-    float y2 = y * y * alpha + y2 * (1 - alpha); // Bộ lọc trung bình trượt trên trục Y
-    float z2 = z * z * alpha + z2 * (1 - alpha); // Bộ lọc trung bình trượt trên trục Z
-    float rms = sqrt(x2 + y2 + z2) / 16384.0;    // Độ rung lắc, chuyển đổi từ đơn v
-    sprintf(buff, "\nGx: %.2f  Gy:%.2f  Gz:%.2f rung:%.2f X:%d Y:%d Z:%d  \n", x_g, y_g, z_g,rms,x,y,z);
+    float ay = atan2(z_g, x_g);
+    float angle_degrees = rad2deg(ay);
+
+    sprintf(buff, "\nGx: %.2f  Gy:%.2f  Gz:%.2f  X:%d Y:%d Z:%d angle:%.3f  \n", x_g, y_g, z_g, x, y, z, angle_degrees);
     QL_I2C_LOG(buff);
-    // ql_LvlMode stt_sen;
-    // ql_gpio_get_level(SENSOR_IN, &stt_sen);
-    // if(stt_sen==LVL_HIGH)
-    // {
-    // keu();
-    // uint16_t dat;
-    // mpu_read_reg(0x21,&dat); //read register to reset high-pass filter
-	// mpu_read_reg(0x26,&dat); //read register to set reference acceleration
-	// mpu_read_reg(0x31,&dat); //Read INT1_SRC to de-latch;  
-    // QL_I2C_LOG("\nNGAT int1: %d\n",stt_sen);
-    // ql_gpio_set_level(SENSOR_IN, LVL_LOW);
-    // }
-
+    ql_LvlMode stt_sen;
+    ql_gpio_get_level(SENSOR_IN, &stt_sen);
+    if (stt_sen == LVL_HIGH)
+    {
+        QL_I2C_LOG("\nNGAT int1: %d\n", stt_sen);
+        keu();
+        uint16_t dat;
+        mpu_read_reg(0x21, &dat); // read register to reset high-pass filter
+        mpu_read_reg(0x26, &dat); // read register to set reference acceleration
+        mpu_read_reg(0x31, &dat); // Read INT1_SRC to de-latch;
+        ql_gpio_set_level(SENSOR_IN, LVL_LOW);
+    }
 }
-
 void ql_i2c_demo_thread(void *param)
 {
     /*operate the camera for the example*/
     ql_pin_set_func(41, 0);
     ql_pin_set_func(42, 0);
     ql_I2cInit(i2c_1, STANDARD_MODE);
-     //ql_rtos_task_sleep_ms(5000);
     Acc_Init();
     while (1)
     {
         if (check())
         {
             print_ACC();
-            
         }
         else
         {
             QL_I2C_LOG("\ni2c failed\n");
         }
-        // QL_APP_I2C_LOG("I2C read_data = 0x%x", read_data);
-        // ql_I2cRead(i2c_1, SalveAddr_r_8bit, 0xf0, &read_data, 1);
-        // QL_APP_I2C_LOG("I2C read_data = 0x%x", read_data);
-        // ql_I2cWrite(i2c_1, SalveAddr_w_8bit, 0x55, &data, 1);
-        // read_data = 0;
         ql_rtos_task_sleep_ms(500);
     }
 }

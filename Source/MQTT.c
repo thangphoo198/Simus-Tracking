@@ -522,8 +522,8 @@ int ql_mqtt_app_init(void)
     QlOSStatus err = QL_OSI_SUCCESS;
 
     err = ql_rtos_task_create(&mqtt_task, 16 * 1024,APP_PRIORITY_HIGH, "mqtt_app", mqtt_app_thread, NULL, 5);
-    ql_rtos_swdog_register((ql_swdog_callback)feed_dog_callback1, mqtt_task);  
-    ql_rtos_sw_dog_enable(10000, 3);
+    //ql_rtos_swdog_register((ql_swdog_callback)feed_dog_callback1, mqtt_task);  
+   // ql_rtos_sw_dog_enable(10000, 3);
     if (err != QL_OSI_SUCCESS)
     {
         QL_MQTT_LOG("\rmqtt_app init failed");
