@@ -143,7 +143,7 @@ void Acc_Init()
         mpu_write_reg(REG3, 0x40); // Interrupt activity 1 driven to INT1 pad
         mpu_write_reg(REG4, 0x00); //+-2g
         //  mpu_write_reg(REG6, 0x20); // High-pass filter enabled on interrupt activity 2
-        mpu_write_reg(REG5, 0x08);     // Default value is 00 for no latching. Interrupt signals on INT1 pin is not latched.
+        mpu_write_reg(REG5, 0x00); //08    // Default value is 00 for no latching. Interrupt signals on INT1 pin is not latched.
         mpu_write_reg(INT1_THS, 0x20); // Threshold = 250 mg
 
         mpu_write_reg(INT1_DURATION, 0x00); // Duration = 1LSBs * (1/10Hz) = 0.1s.
@@ -249,17 +249,17 @@ void print_ACC()
     sprintf(buff, "\nGx: %.2f  Gy:%.2f  Gz:%.2f  X:%d Y:%d Z:%d angle:%.3f  \n", x_g, y_g, z_g, x, y, z, angle_degrees);
     QL_I2C_LOG(buff);
     ql_LvlMode stt_sen;
-    ql_gpio_get_level(SENSOR_IN, &stt_sen);
-    if (stt_sen == LVL_HIGH)
-    {
-        QL_I2C_LOG("\nNGAT int1: %d\n", stt_sen);
-        keu();
-        uint16_t dat;
-        mpu_read_reg(0x21, &dat); // read register to reset high-pass filter
-        mpu_read_reg(0x26, &dat); // read register to set reference acceleration
-        mpu_read_reg(0x31, &dat); // Read INT1_SRC to de-latch;
-        ql_gpio_set_level(SENSOR_IN, LVL_LOW);
-    }
+    // ql_gpio_get_level(SENSOR_IN, &stt_sen);
+    // if (stt_sen == LVL_HIGH)
+    // {
+    //     QL_I2C_LOG("\nNGAT int1: %d\n", stt_sen);
+    //     keu();
+    //     uint16_t dat;
+    //     mpu_read_reg(0x21, &dat); // read register to reset high-pass filter
+    //     mpu_read_reg(0x26, &dat); // read register to set reference acceleration
+    //     mpu_read_reg(0x31, &dat); // Read INT1_SRC to de-latch;
+    //     ql_gpio_set_level(SENSOR_IN, LVL_LOW);
+    // }
 }
 void ql_i2c_demo_thread(void *param)
 {

@@ -218,7 +218,7 @@ static void ql_gnss_demo_thread(void *param)
                            // sprintf(buff_time, "UTC:%d / %u:%u:%u-%d/%d/20%d",t,g_gps_data.time,g_gps_data.time.tm_min,g_gps_data.time.tm_sec, g_gps_data.time.tm_mday, g_gps_data.time.tm_mon, g_gps_data.time.tm_year);
                             sprintf(buff_local, "%.6f,%.6f", g_gps_data.latitude, g_gps_data.longitude);
                             sprintf(buff_acc_dir, "%.2f", acc);
-                           // QL_GNSSDEMO_LOG("\n %s -- %s\n", buff_local, buff_time);
+                            QL_GNSSDEMO_LOG("\n %s -- %s\n", buff_local, buff_time);
                         }
                         else
                         {

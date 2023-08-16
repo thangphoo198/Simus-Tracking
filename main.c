@@ -112,7 +112,17 @@ void send_event()
 }
 static void _pwrkey_longpress_callback(void)
 {
-    OUT_LOG("\Khong co chuyen dong trong 1 phut\n");
+    OUT_LOG("\Khong co chuyen dong trong 1 phut - TAT NGUON sau 5s\n");
+   // pub_mqtt(topic_gui, "Khong co chuyen dong trong 3 phut TAT NGUON sau 5s");
+   // ql_rtos_task_sleep_ms(5000);
+   // ql_power_down(POWD_NORMAL);
+   
+   
+    ql_event_t event;
+
+    event.id = QUEC_PWRKEY_LONGPRESS_IND;
+
+    ql_rtos_event_send(main_task, &event);
 
 }
 static void _pwrkey_release_callback(void)
@@ -123,7 +133,12 @@ static void _pwrkey_release_callback(void)
 
     //ql_rtos_event_send(pwrkey_task, &event);
     OUT_LOG("\nDA BAM NUT NGUON - chuyen dong!\n");
-    ql_pwrkey_longpress_cb_register(_pwrkey_longpress_callback,30000 );    // k chuyen dong trong 3 phut
+    // uint16_t dat;
+    // mpu_read_reg(0x21, &dat); // read register to reset high-pass filter
+    // mpu_read_reg(0x26, &dat); // read register to set reference acceleration
+    // mpu_read_reg(0x31, &dat); // Read INT1_SRC to de-latch;
+    // ql_gpio_set_level(SENSOR_IN, LVL_LOW);
+    ql_pwrkey_longpress_cb_register(_pwrkey_longpress_callback,50000 );    // k chuyen dong trong 3 phut
 }
 static void main_task_thread(void *param)
 {
@@ -145,6 +160,7 @@ static void main_task_thread(void *param)
     SendEventToThread(main_task, INIT_CONFIG);
     doc_epprom();
     ql_pwrkey_release_cb_register(_pwrkey_release_callback);
+    ql_pwrkey_longpress_cb_register(_pwrkey_longpress_callback,50000 );
     ql_pwrkey_shutdown_time_set(99999999); 
 
     // if(json_setting!=NULL)
@@ -173,6 +189,9 @@ static void main_task_thread(void *param)
             send_gps();             
             Led ^= 1;
             ql_gpio_set_level(LED_MODE, Led == 0 ? LVL_LOW : LVL_HIGH);
+            break;
+        case QUEC_PWRKEY_LONGPRESS_IND:
+            ql_power_down(POWD_NORMAL);
             break;
         default:
 
