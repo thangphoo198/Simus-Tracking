@@ -110,7 +110,11 @@ void send_event()
     }
     cJSON_free((void *)event_info);
 }
+static void _pwrkey_longpress_callback(void)
+{
+    OUT_LOG("\Khong co chuyen dong trong 1 phut\n");
 
+}
 static void _pwrkey_release_callback(void)
 {
    // ql_event_t event;
@@ -119,10 +123,7 @@ static void _pwrkey_release_callback(void)
 
     //ql_rtos_event_send(pwrkey_task, &event);
     OUT_LOG("\nDA BAM NUT NGUON - chuyen dong!\n");
-}
-static void _pwrkey_longpress_callback(void)
-{
-    OUT_LOG("\Khong co chuyen dong trong 1 phut\n");
+    ql_pwrkey_longpress_cb_register(_pwrkey_longpress_callback,30000 );    // k chuyen dong trong 3 phut
 }
 static void main_task_thread(void *param)
 {
@@ -144,8 +145,7 @@ static void main_task_thread(void *param)
     SendEventToThread(main_task, INIT_CONFIG);
     doc_epprom();
     ql_pwrkey_release_cb_register(_pwrkey_release_callback);
-    ql_pwrkey_longpress_cb_register(_pwrkey_longpress_callback, 180000);    // k chuyen dong trong 3 phut
-    ql_pwrkey_shutdown_time_set(99999); 
+    ql_pwrkey_shutdown_time_set(99999999); 
 
     // if(json_setting!=NULL)
     // {
