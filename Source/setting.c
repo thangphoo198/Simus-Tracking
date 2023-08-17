@@ -9,8 +9,8 @@
 #include "DataDefine.h"
 #include "cJSON.h"
 #include "main.h"
-#include "ql_gpio.h"
 #include "ql_adc.h"
+#include "ql_fs.h"
 
 #define OUT_LOG DebugPrint
 ql_task_t setting_task = NULL;
@@ -61,31 +61,36 @@ void setting(char *json)
     cJSON_AddItemToObject(pRoot, "DATA", pValue);
 
     char *GPS_info = cJSON_Print(pRoot);
-    OUT_LOG(GPS_info);
-    pub_mqtt(topic_gui, GPS_info);
+    // OUT_LOG(GPS_info);
     ghi_epprom(GPS_info);
     apply_setting(pSleep->valueint,pGps->valueint,pSos->valuestring);
+    pub_mqtt(topic_gui, SETTING_OK);
     cJSON_free((void *)GPS_info);
-    // cJSON_Delete(pRoot);
-
-    // cJSON_Delete(pValue);
+    cJSON_Delete(pRoot);
 }
+
 void ghi_epprom(char *buff)
 {
-
     if (ql_cust_nvm_fwrite(buff, strlen(buff), 1))
     {
         OUT_LOG("Ghi thanh cong:%d\n", strlen(buff));
     }
 }
+
 void doc_epprom()
 {
 
     if (ql_cust_nvm_fread(json_setting, 128, 1) )
     {
-        if(json_setting!=NULL)
+        if(json_setting!=NULL&&strlen(json_setting)>30)
         {
         OUT_LOG("du lieu doc dc:%s", json_setting);
+        apply_setting_epprom(json_setting);
+        }
+        else
+        {
+           OUT_LOG("\ndu lieu bi trong:%n"); 
+           time_sleep=180;
         }
     }
     
@@ -93,8 +98,11 @@ void doc_epprom()
 
 apply_setting(uint32_t Time_sleep,uint32_t Time_gps, char *sdt_sos)
 {
-
-time_sleep=Time_sleep;
+if (Time_sleep < 10 || Time_sleep > 4096)
+{
+   time_sleep=180; // mac dinh sleep trong 3 phut
+}
+else time_sleep=Time_sleep;
 time_update_gps=Time_gps;
 strcpy(phone_sos,sdt_sos);
 OUT_LOG("phone:%s\n",phone_sos);
@@ -111,6 +119,7 @@ void apply_setting_epprom(char *json)
     {
         if (cJSON_IsNumber(pSleep))
         {
+
             OUT_LOG("time sleep:%d\n", pSleep->valueint);
         }
     }
@@ -129,7 +138,7 @@ void apply_setting_epprom(char *json)
         }
     }
     apply_setting(pSleep->valueint,pGps->valueint,pSos->valuestring);
-
+    cJSON_Delete(pJsonRoot);
 }
 
 void setting_init(void)

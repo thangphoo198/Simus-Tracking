@@ -54,6 +54,8 @@ void put_kttk(char *buff)
             char *GPS_info = cJSON_Print(pRoot);
             QL_MQTT_LOG(GPS_info);        
             pub_mqtt(topic_gui, GPS_info);
+            cJSON_free((void *)GPS_info);
+            cJSON_Delete(pRoot);
         }
         else
         {
@@ -160,6 +162,7 @@ static void mqtt_inpub_data_cb(mqtt_client_t *client, void *arg, int pkt_id, con
                else if (strcmp(val, "SAVE_CONFIG") == 0)
             {
                 //ql_mxml_app_init();  
+
             }                             
 
             else if (strcmp(val, "GET_STT") == 0)
@@ -522,8 +525,8 @@ int ql_mqtt_app_init(void)
     QlOSStatus err = QL_OSI_SUCCESS;
 
     err = ql_rtos_task_create(&mqtt_task, 16 * 1024,APP_PRIORITY_HIGH, "mqtt_app", mqtt_app_thread, NULL, 5);
-    //ql_rtos_swdog_register((ql_swdog_callback)feed_dog_callback1, mqtt_task);  
-   // ql_rtos_sw_dog_enable(10000, 3);
+    ql_rtos_swdog_register((ql_swdog_callback)feed_dog_callback1, mqtt_task);  
+    ql_rtos_sw_dog_enable(10000, 3);
     if (err != QL_OSI_SUCCESS)
     {
         QL_MQTT_LOG("\rmqtt_app init failed");

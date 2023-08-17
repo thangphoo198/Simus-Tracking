@@ -242,12 +242,12 @@ void print_ACC()
     x_g *= SENSORS_GRAVITY_EARTH;
     y_g *= SENSORS_GRAVITY_EARTH;
     z_g *= SENSORS_GRAVITY_EARTH;
-    char buff[50] = {0};
-    float ay = atan2(z_g, x_g);
-    float angle_degrees = rad2deg(ay);
+    // char buff[50] = {0};
+    // float ay = atan2(z_g, x_g);
+    // float angle_degrees = rad2deg(ay);
 
-    sprintf(buff, "\nGx: %.2f  Gy:%.2f  Gz:%.2f  X:%d Y:%d Z:%d angle:%.3f  \n", x_g, y_g, z_g, x, y, z, angle_degrees);
-    QL_I2C_LOG(buff);
+    // sprintf(buff, "\nGx: %.2f  Gy:%.2f  Gz:%.2f  X:%d Y:%d Z:%d angle:%.3f  \n", x_g, y_g, z_g, x, y, z, angle_degrees);
+    // QL_I2C_LOG(buff);
     ql_LvlMode stt_sen;
     // ql_gpio_get_level(SENSOR_IN, &stt_sen);
     // if (stt_sen == LVL_HIGH)

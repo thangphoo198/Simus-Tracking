@@ -41,20 +41,6 @@ void timer_callback(void)
         SendEventToThread(main_task, MAIN_TICK_3000MS);
     }
 
-        // cJSON *pRoot = cJSON_CreateObject();
-        // cJSON_AddStringToObject(pRoot, "RES", "SENSOR_DATA");
-        // cJSON *pValue = cJSON_CreateObject();
-        // cJSON_AddNumberToObject(pValue, "X",x);
-        // cJSON_AddNumberToObject(pValue, "Y", y);
-        // cJSON_AddNumberToObject(pValue, "Z", z);
-        // // cJSON_AddNumberToObject(pValue, "accuracy", acc);
-        // // cJSON_AddNumberToObject(pValue, "direction", dir);
-        // cJSON_AddItemToObject(pRoot, "DATA", pValue);
-        // char *GPS_info = cJSON_Print(pRoot);
-        // OUT_LOG(GPS_info);
-        // pub_mqtt(topic_gui, GPS_info);
-        // cJSON_free((void *)GPS_info);
-
 }
 
 void SendEventToThread(ql_task_t thread, uint32_t sig)
@@ -113,10 +99,6 @@ void send_event()
 static void _pwrkey_longpress_callback(void)
 {
     OUT_LOG("\Khong co chuyen dong trong 1 phut - TAT NGUON sau 5s\n");
-   // pub_mqtt(topic_gui, "Khong co chuyen dong trong 3 phut TAT NGUON sau 5s");
-   // ql_rtos_task_sleep_ms(5000);
-   // ql_power_down(POWD_NORMAL);
-   
    
     ql_event_t event;
 
@@ -138,7 +120,7 @@ static void _pwrkey_release_callback(void)
     // mpu_read_reg(0x26, &dat); // read register to set reference acceleration
     // mpu_read_reg(0x31, &dat); // Read INT1_SRC to de-latch;
     // ql_gpio_set_level(SENSOR_IN, LVL_LOW);
-    ql_pwrkey_longpress_cb_register(_pwrkey_longpress_callback,50000 );    // k chuyen dong trong 3 phut
+    ql_pwrkey_longpress_cb_register(_pwrkey_longpress_callback,time_sleep*1000);    // k chuyen dong trong 3 phut
 }
 static void main_task_thread(void *param)
 {
@@ -160,15 +142,7 @@ static void main_task_thread(void *param)
     SendEventToThread(main_task, INIT_CONFIG);
     doc_epprom();
     ql_pwrkey_release_cb_register(_pwrkey_release_callback);
-    ql_pwrkey_longpress_cb_register(_pwrkey_longpress_callback,50000 );
     ql_pwrkey_shutdown_time_set(99999999); 
-
-    // if(json_setting!=NULL)
-    // {
-    // OUT_LOG("\n%s\n",json_setting);
-    // apply_setting_epprom(json_setting);
-    // }
-    // char buff_gps[50]={0};
     while (1)
     {
 
@@ -219,8 +193,7 @@ void get_time()
     uint16_t hour=tm.tm_hour+7;
     if(hour>23) {hour=0;}
     sprintf(buff_time,"%d:%d:%d %d/%d/%d", hour,tm.tm_min,tm.tm_sec,tm.tm_mday,tm.tm_mon,tm.tm_year);
-    OUT_LOG(buff_time);
-
+    //OUT_LOG(buff_time);
 }
 void get_GPS()
 {
@@ -238,7 +211,7 @@ void get_GPS()
     OUT_LOG(GPS_info);
     pub_mqtt(topic_gui, GPS_info);
     cJSON_free((void *)GPS_info);
-   // cJSON_Delete(pRoot);
+    cJSON_Delete(pRoot);
 }
 void send_gps()
 {

@@ -39,13 +39,13 @@ WHEN			  WHO		  WHAT, WHERE, WHY
 ql_task_t ql_wifiscan_app_task = NULL;
 char *out;
 extern pub_mqtt(char *topic, char *mess);
+cJSON *root, *cars, *car;
 void ql_wifiscan_ap_info_output(uint16_t ap_cnt, ql_wifi_ap_info_s *p_ap_infos)
 {
     if (NULL == p_ap_infos)
     {
         return;
     }
-    cJSON *root, *cars, *car;
     // char buff[100]={0};
     root = cJSON_CreateObject();
     cars = cJSON_CreateArray();
@@ -202,6 +202,7 @@ static void ql_wifiscan_app_thread(void *param)
             // ql_rtos_task_sleep_ms(5000);
             // ql_rtos_semaphore_delete(mqtt_semp);
             cJSON_free((void *)out);
+            cJSON_Delete(root);
             ql_rtos_task_delete(ql_wifiscan_app_task);
             // ql_wifiscan_async_start();
         }

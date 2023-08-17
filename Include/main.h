@@ -5,19 +5,20 @@
 static ql_gnss_data_t g_gps_data;
 static uint8_t gps_status=0;
 #define NSIM 0
-// #define MQTT_CLIENT_USER "vstracking-pro"
-// #define MQTT_CLIENT_PASS "thang123"
 // #define MQTT_CLIENT_SRV_URL "mqtt://14.225.254.159:1883"        // onenet
 // #define MQTT_CLIENT_ONENET_SSL_URL "mqtt://14.225.254.159:1883" // onenet SSL
-#define MQTT_CLIENT_USER ""
-#define MQTT_CLIENT_PASS ""
-#define MQTT_CLIENT_SRV_URL "mqtt://broker.hivemq.com:1883"        // onenet
-#define MQTT_CLIENT_ONENET_SSL_URL "mqtt://broker.hivemq.com:1883" // onenet SSL
+#define MQTT_CLIENT_SRV_URL "mqtt://14.225.204.254:1883"        // onenet
+#define MQTT_CLIENT_USER "vstracking-pro"
+#define MQTT_CLIENT_PASS "thang123"
+//#define MQTT_CLIENT_ONENET_SSL_URL "mqtt://broker.hivemq.com:1883" // onenet SSL
 #define topic_remote "/EC200U_REMOTE"
 #define topic_rec "/EC200U_REC"
 #define topic_event "/EC200U_EVENT"
 
 #define GPS_NULL "{\"RES\":\"GET_GPS\",\"DATA\":\"null\"}"
+#define SETTING_OK "{\"RES\":\"SETTING_OK\"}"
+#define SETTING_FAIL "{\"RES\":\"SETTING_FAIL\"}"
+#define GET_SETTING_FAIL "{\"RES\":\"GET_SETTING_FAIL\"}"
 //#define UART_DEBUG QL_USB_PORT_MODEM
 #define UART_DEBUG QL_USB_PORT_MODEM
 #define GPSOK "GPS_OK"

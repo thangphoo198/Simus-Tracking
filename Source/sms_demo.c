@@ -56,14 +56,29 @@ void read_sms(uint8_t index)
         token = strtok(NULL, ",");
         token = strtok(NULL, "V");
         QL_SMS_LOG("\nNOI DUNG: %s\n", token);
-        if(strcmp(token,"RESET")==0)
+        if(strstr(token,"SETIP")!=NULL)
         {
-            ql_power_reset(RESET_NORMAL);
+             char *IP = strtok(token, ","); //IP
+             IP= strtok(NULL, ","); //broker
+             QL_SMS_LOG("\n broker: %s ",IP);
+             char buff[30]={0};
+             sprintf(buff,"mqtt://%s:",IP);
+             IP = strtok(NULL, ","); //broker
+             xoamotkytu(IP,'\"');
+             char buff_sever[50]={0};
+             strcpy(buff_sever, buff);
+             strcat(buff_sever, IP);
+             QL_SMS_LOG("MQTT: %s \n",buff_sever);
+            //  sprintf(buff,"\n mqtt://%s:%s\n",IP); //mqtt://14.225.254.159:1883
         }
-        else if(strcmp(token,"FOTA")==0)
-        {
-            ql_fota_http_app_init();
-        }
+        // if(strcmp(token,"RESET")==0)
+        // {
+        //     ql_power_reset(RESET_NORMAL);
+        // }
+        // else if(strcmp(token,"FOTA")==0)
+        // {
+        //     ql_fota_http_app_init();
+        // }
         
         // Lấy ra toàn bộ token
         // for (size_t i = 0; i < 3; i++)

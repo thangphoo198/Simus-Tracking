@@ -66,7 +66,7 @@ static void nw_app_thread(void *arg)
         QL_NW_DEMO_LOG("\n%s\n", SIM_info);
         pub_mqtt(topic_gui,SIM_info);
         cJSON_free((void *)SIM_info);
-        // cJSON_Delete(pRoot);
+        cJSON_Delete(pRoot);
         // cJSON_Delete(pValue);
     }
     else if (cell_info->lte_info_valid)
@@ -87,7 +87,7 @@ static void nw_app_thread(void *arg)
         QL_NW_DEMO_LOG("\n%s\n", SIM_info);
         pub_mqtt(topic_gui,SIM_info);
         cJSON_free((void *)SIM_info);
-        // cJSON_Delete(pRoot);
+        cJSON_Delete(pRoot);
         // cJSON_Delete(pValue);
     }
     // while(1)

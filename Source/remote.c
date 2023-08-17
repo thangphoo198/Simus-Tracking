@@ -23,7 +23,6 @@ static void stt_remote_thread(void *arg)
 
     OUT_LOG("\n TASK REMOTE %s\n",val1);
     remote(val1);
-
     ql_rtos_task_delete(NULL);
 }
 void remote()
@@ -80,7 +79,14 @@ void remote()
     else if (strcmp(val1, "GET_SETTING") == 0)
     {
         doc_epprom();
+        if(json_setting!=NULL&&strlen(json_setting)>30)
+        {
         pub_mqtt(topic_gui, json_setting);
+        }
+        else
+        {
+        pub_mqtt(topic_gui, GET_SETTING_FAIL); 
+        }
     }
 
      else if (strcmp(val1, "SHUTDOWN") == 0)
