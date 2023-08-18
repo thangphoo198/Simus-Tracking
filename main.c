@@ -19,7 +19,7 @@
 ql_task_t main_task = NULL;
 ql_timer_t main_timer = NULL;
 static uint32_t tickCount500MS = 0,tickCount5000MS=0;
-static uint8_t Led = 0, Led2 = 0;
+static uint8_t Led=0,Led2=0;
 ql_LvlMode in;
 bool noti=false;
 void timer_callback(void)
@@ -98,28 +98,29 @@ void send_event()
 }
 static void _pwrkey_longpress_callback(void)
 {
-    OUT_LOG("\Khong co chuyen dong trong 1 phut - TAT NGUON sau 5s\n");
    
+    if (strcmp(gps_ok, GPSOK) != 0)
+    {
+    OUT_LOG("\Khong co chuyen dong trong %dS - TAT NGUON sau 5s\n",time_sleep);
     ql_event_t event;
-
     event.id = QUEC_PWRKEY_LONGPRESS_IND;
-
     ql_rtos_event_send(main_task, &event);
+    }
+    OUT_LOG("\Khong co chuyen dong trong \n");
 
 }
 static void _pwrkey_release_callback(void)
 {
-   // ql_event_t event;
-
-   // event.id = QUEC_PWRKEY_RELEASE_IND;
-
-    //ql_rtos_event_send(pwrkey_task, &event);
     OUT_LOG("\nDA BAM NUT NGUON - chuyen dong!\n");
     // uint16_t dat;
     // mpu_read_reg(0x21, &dat); // read register to reset high-pass filter
     // mpu_read_reg(0x26, &dat); // read register to set reference acceleration
     // mpu_read_reg(0x31, &dat); // Read INT1_SRC to de-latch;
     // ql_gpio_set_level(SENSOR_IN, LVL_LOW);
+    // mpu_read_reg8(0x21);
+    // mpu_read_reg8(0x26);
+    // mpu_read_reg(0x31);
+    // OUT_LOG("\nRESET CAM BIEN LIS3DH XONG!\n");
     ql_pwrkey_longpress_cb_register(_pwrkey_longpress_callback,time_sleep*1000);    // k chuyen dong trong 3 phut
 }
 static void main_task_thread(void *param)
@@ -127,7 +128,7 @@ static void main_task_thread(void *param)
     ql_event_t event= {0};
     DebugInit();  
     //ql_pin_set_func(24, 0);
-    ql_gpio_init(GPIO_2, GPIO_OUTPUT, PULL_NONE, LVL_HIGH);
+   // ql_gpio_init(GPIO_2, GPIO_OUTPUT, PULL_NONE, LVL_HIGH);
     ql_gpio_init(IO_LOCK, GPIO_OUTPUT, PULL_DOWN, LVL_LOW);
     ql_gpio_init(IO_SPEAKER, GPIO_OUTPUT, PULL_DOWN, LVL_LOW);
     ql_gpio_init(IO_LIGHT, GPIO_OUTPUT, PULL_DOWN, LVL_LOW);
@@ -136,13 +137,13 @@ static void main_task_thread(void *param)
     // ql_int_register(SENSOR_IN, EDGE_TRIGGER,DEBOUNCE_EN,EDGE_FALLING,PULL_UP,ngat,NULL);
     // ql_int_enable(SENSOR_IN);
     // PIN6: NET_STATUS - GPIO22 (FUNC:4)
-    ql_pin_set_func(6, 4);
+   // ql_pin_set_func(6, 4);
     ql_gpio_init(LED_STT, GPIO_OUTPUT, PULL_NONE, LVL_HIGH);
     ql_gpio_init(LED_MODE, GPIO_OUTPUT, PULL_NONE, LVL_HIGH);
-    SendEventToThread(main_task, INIT_CONFIG);
     doc_epprom();
     ql_pwrkey_release_cb_register(_pwrkey_release_callback);
     ql_pwrkey_shutdown_time_set(99999999); 
+    SendEventToThread(main_task, INIT_CONFIG);
     while (1)
     {
 
@@ -152,7 +153,7 @@ static void main_task_thread(void *param)
         {
         case INIT_CONFIG:
             OUT_LOG("khoi tao OK\n");
-            ql_rtos_timer_start(main_timer, 500, 1);
+            ql_rtos_timer_start(main_timer, 1000, 1);
             break;
         case MAIN_TICK_100MS:
         get_time();
@@ -161,10 +162,9 @@ static void main_task_thread(void *param)
             break;
         case MAIN_TICK_3000MS:
             send_gps();             
-            Led ^= 1;
-            ql_gpio_set_level(LED_MODE, Led == 0 ? LVL_LOW : LVL_HIGH);
             break;
         case QUEC_PWRKEY_LONGPRESS_IND:
+            ql_rtos_task_sleep_s(5);
             ql_power_down(POWD_NORMAL);
             break;
         default:
@@ -242,14 +242,12 @@ int appimg_enter(void *param)
     QlOSStatus err;
     ql_dev_cfg_wdt(1);
     ql_log_set_port(0);
-    ql_quec_trace_enable(1);
+    ql_quec_trace_enable(0);
     // ql_rtos_sw_dog_enable;
    // ql_rtos_sw_dog_disable;
     /*Create timer tick*/
-   // ql_osi_demo_init();
     err = ql_rtos_timer_create(&main_timer, main_task, timer_callback, NULL);
     err= ql_autosleep_enable(QL_ALLOW_SLEEP);
-
     /* main task*/
     err = ql_rtos_task_create(&main_task, 4 * 1024, APP_PRIORITY_NORMAL, "Main_task", main_task_thread, NULL, 5);
     //  err = ql_rtos_semaphore_create(&sleep_sem, 0);

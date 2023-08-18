@@ -137,22 +137,132 @@ void Acc_Init()
     if (check())
     {
         ql_rtos_task_sleep_ms(2000);
-        QL_I2C_LOG("\n tim thay CAM BIEN\n");
-        mpu_write_reg(REG1, 0x2F); // Turn on the sensor, enable X, Y, and Z ODR = 100 Hz
-        mpu_write_reg(REG2, 0x09); // High-pass filter enabled on interrupt activity 1
-        mpu_write_reg(REG3, 0x40); // Interrupt activity 1 driven to INT1 pad
-        mpu_write_reg(REG4, 0x00); //+-2g
-        //  mpu_write_reg(REG6, 0x20); // High-pass filter enabled on interrupt activity 2
-        mpu_write_reg(REG5, 0x00); //08    // Default value is 00 for no latching. Interrupt signals on INT1 pin is not latched.
-        mpu_write_reg(INT1_THS, 0x20); // Threshold = 250 mg
+        init_sen();
+        // QL_I2C_LOG("\n tim thay CAM BIEN\n");
+        // mpu_write_reg(REG1, 0x2F); // Turn on the sensor, enable X, Y, and Z ODR = 100 Hz
+        // mpu_write_reg(REG2, 0x09); // High-pass filter enabled on interrupt activity 1
+        // mpu_write_reg(REG3, 0x40); // Interrupt activity 1 driven to INT1 pad
+        // mpu_write_reg(REG4, 0x00); //+-2g
+        // //  mpu_write_reg(REG6, 0x20); // High-pass filter enabled on interrupt activity 2
+        // mpu_write_reg(REG5, 0x00); //08    // Default value is 00 for no latching. Interrupt signals on INT1 pin is not latched.
+        // mpu_write_reg(INT1_THS, 0x20); // Threshold = 250 mg
 
-        mpu_write_reg(INT1_DURATION, 0x00); // Duration = 1LSBs * (1/10Hz) = 0.1s.
-        mpu_read_reg8(LIS3DH_REG_REFERENCE);
-        mpu_write_reg(INT1_CFG, 0x2A); // Configure desired wake-up event
-        uint8_t x = mpu_read_reg8(INT1_CFG);
-        QL_I2C_LOG("doc cau hinh:%u\n", x);
+        // mpu_write_reg(INT1_DURATION, 0x00); // Duration = 0
+           mpu_read_reg8(LIS3DH_REG_REFERENCE);
+        // mpu_write_reg(INT1_CFG, 0x2A); // Configure desired wake-up event
+             uint8_t x = mpu_read_reg8(INT1_CFG);
+             QL_I2C_LOG("doc cau hinh:%u\n", x);
 
     }
+}
+void init_sen()
+{
+
+ applySettings(50,6); // 10Hz, 2range (4,6,8,16g)
+  //Detection threshold can be from 1 to 127 and depends on the Range
+  //chosen above, change it and test accordingly to your application
+  //Duration = timeDur x Seconds / sampleRate
+ config_int(8,1); //thresold, time_du
+
+}
+
+void applySettings(accelSampleRate,accelRange)
+{
+	uint8_t dataToWrite = 0;  //Temporary variable
+	
+	//Build CTRL_REG1
+
+	// page 16 set CTRL_REG1[3](LPen bit)
+	dataToWrite |= 0x08;
+
+	//  Convert ODR
+	switch(accelSampleRate)
+	{
+		case 1:
+		dataToWrite |= (0x01 << 4);
+		break;
+		case 10:
+		dataToWrite |= (0x02 << 4);
+		break;
+		case 25:
+		dataToWrite |= (0x03 << 4);
+		break;
+		case 50:
+		dataToWrite |= (0x04 << 4);
+		break;
+		case 100:
+		dataToWrite |= (0x05 << 4);
+		break;
+		case 200:
+		dataToWrite |= (0x06 << 4);
+		break;
+		default:
+		case 400:
+		dataToWrite |= (0x07 << 4);
+		break;
+		case 1600:
+		dataToWrite |= (0x08 << 4);
+		break;
+		case 5000:
+		dataToWrite |= (0x09 << 4);
+		break;
+	}
+
+	dataToWrite |= (1 & 0x01) << 2;
+	dataToWrite |= (1 & 0x01) << 1;
+	dataToWrite |= (1 & 0x01);
+	//Now, write the patched together data
+
+	mpu_write_reg(REG1, dataToWrite);
+
+	//Build CTRL_REG4
+	dataToWrite = 0; //Start Fresh!
+
+	//  Convert scaling
+	switch(accelRange)
+	{	
+		default:
+		case 2:
+		dataToWrite |= (0x00 << 4);
+		break;
+		case 4:
+		dataToWrite |= (0x01 << 4);
+		break;
+		case 8:
+		dataToWrite |= (0x02 << 4);
+		break;
+		case 16:
+		dataToWrite |= (0x03 << 4);
+		break;
+	}
+
+	//Now, write the patched together data
+	mpu_write_reg(REG4, dataToWrite);
+}
+void config_int( uint8_t threshold,uint8_t timeDur,bool	polarity )
+{
+	uint8_t dataToWrite = 0;  //Temporary variable
+	uint8_t regToWrite = INT1_CFG;
+
+	//Build INT_CFG 0x30 or 0x34
+	//Detect movement or stop
+     dataToWrite |= 0x0A;
+	// else 							dataToWrite |= 0x05;
+
+	mpu_write_reg(regToWrite, dataToWrite);
+	//Build INT_THS 0x32 or 0x36
+	regToWrite += 2;
+	mpu_write_reg(regToWrite, threshold);
+
+	//Build INT_DURATION 0x33 or 0x37
+	regToWrite++;
+
+	mpu_write_reg(regToWrite, timeDur);
+
+	dataToWrite = 0 | (polarity << 1);
+
+	//Attach configuration to Interrupt X
+    mpu_write_reg(REG3, 0x40);
 }
 
 // Write 57h into CTRL_REG1 // Turn on the sensor, enable X, Y, and Z
@@ -224,10 +334,10 @@ int16_t GetData(unsigned char Haddress, unsigned char Laddress)
     // QL_I2C_LOG("H:%d L: %d\n", H, L);
     return (int16_t)((((uint16)H) << 8) | L);
 }
-float rad2deg(float rad)
-{
-    return rad * 180 / PI;
-}
+// float rad2deg(float rad)
+// {
+//     return rad * 180 / PI;
+// }
 
 void print_ACC()
 {
@@ -242,13 +352,13 @@ void print_ACC()
     x_g *= SENSORS_GRAVITY_EARTH;
     y_g *= SENSORS_GRAVITY_EARTH;
     z_g *= SENSORS_GRAVITY_EARTH;
-    // char buff[50] = {0};
+   // char buff[50] = {0};
     // float ay = atan2(z_g, x_g);
     // float angle_degrees = rad2deg(ay);
 
-    // sprintf(buff, "\nGx: %.2f  Gy:%.2f  Gz:%.2f  X:%d Y:%d Z:%d angle:%.3f  \n", x_g, y_g, z_g, x, y, z, angle_degrees);
-    // QL_I2C_LOG(buff);
-    ql_LvlMode stt_sen;
+    //sprintf(buff, "\nGx: %.2f  Gy:%.2f  Gz:%.2f  X:%d Y:%d Z:%d   \n", x_g, y_g, z_g, x, y, z);
+    //QL_I2C_LOG(buff);
+   // ql_LvlMode stt_sen;
     // ql_gpio_get_level(SENSOR_IN, &stt_sen);
     // if (stt_sen == LVL_HIGH)
     // {
@@ -263,7 +373,6 @@ void print_ACC()
 }
 void ql_i2c_demo_thread(void *param)
 {
-    /*operate the camera for the example*/
     ql_pin_set_func(41, 0);
     ql_pin_set_func(42, 0);
     ql_I2cInit(i2c_1, STANDARD_MODE);

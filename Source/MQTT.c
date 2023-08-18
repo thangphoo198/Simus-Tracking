@@ -26,7 +26,7 @@
 char mqtt_client[50] = {0};
 char *SIM_info;
 // publist
-u8_t ON_MQTT=1;
+u8_t ON_MQTT = 1;
 #define QL_MQTT_LOG DebugPrint
 extern char *buff;
 ql_task_t mqtt_task = NULL;
@@ -38,61 +38,59 @@ uint16_t sim_cid;
 int profile_idx = 1;
 struct mqtt_connect_client_info_t client_info = {0};
 
-#define QL_VIRT_AT_RX_BUFF_SIZE                1024
+#define QL_VIRT_AT_RX_BUFF_SIZE 1024
 
 void put_kttk(char *buff)
 {
-        if(strlen(buff) > 50)
-        {
+    if (strlen(buff) > 50)
+    {
 
-            cJSON *pRoot = cJSON_CreateObject();
-            cJSON_AddStringToObject(pRoot, "RES", "KTTK");
-            xoamotkytu(buff,'\"');
-            xoamotkytu(buff,'\r');
-            xoamotkytu(buff,'\n');
-            cJSON_AddStringToObject(pRoot, "DATA", buff);
-            char *GPS_info = cJSON_Print(pRoot);
-            QL_MQTT_LOG(GPS_info);        
-            pub_mqtt(topic_gui, GPS_info);
-            cJSON_free((void *)GPS_info);
-            cJSON_Delete(pRoot);
-        }
-        else
+        cJSON *pRoot = cJSON_CreateObject();
+        cJSON_AddStringToObject(pRoot, "RES", "KTTK");
+        xoamotkytu(buff, '\"');
+        xoamotkytu(buff, '\r');
+        xoamotkytu(buff, '\n');
+        cJSON_AddStringToObject(pRoot, "DATA", buff);
+        char *GPS_info = cJSON_Print(pRoot);
+        QL_MQTT_LOG(GPS_info);
+        pub_mqtt(topic_gui, GPS_info);
+        cJSON_free((void *)GPS_info);
+        cJSON_Delete(pRoot);
+    }
+    else
+    {
+        QL_MQTT_LOG("size small!\n");
+    }
+}
+
+void xoamotkytu(char *a, char c)
+{
+    int n = strlen(a);
+    for (int i = 0; i < n; i++)
+        if (a[i] == c)
         {
-            QL_MQTT_LOG("size small!\n"); 
+            for (int j = i--; j < n; j++)
+                a[j] = a[j + 1];
+            n--;
         }
 }
 
-void  xoamotkytu(char *a, char c)
-{
-    int n=strlen(a);
-    for(int i=0;i<n;i++)
-        if(a[i]==c)
-        {
-            for(int j=i--; j<n;j++)
-                a[j]=a[j+1];
-            n--;
-        }
-} 
-
 void ql_virt_at0_notify_cb(unsigned int ind_type, unsigned int size)
 {
-    unsigned char *recv_buff = calloc(1, QL_VIRT_AT_RX_BUFF_SIZE+1);
+    unsigned char *recv_buff = calloc(1, QL_VIRT_AT_RX_BUFF_SIZE + 1);
     unsigned int real_size = 0;
-    
-    if(QUEC_VIRT_AT_RX_RECV_DATA_IND == ind_type)
+
+    if (QUEC_VIRT_AT_RX_RECV_DATA_IND == ind_type)
     {
-        memset(recv_buff, 0, QL_VIRT_AT_RX_BUFF_SIZE+1);
-        real_size= MIN(size, QL_VIRT_AT_RX_BUFF_SIZE);
+        memset(recv_buff, 0, QL_VIRT_AT_RX_BUFF_SIZE + 1);
+        real_size = MIN(size, QL_VIRT_AT_RX_BUFF_SIZE);
         ql_virt_at_read(QL_VIRT_AT_PORT_0, recv_buff, real_size);
         QL_MQTT_LOG("VAT0 => %s \n", recv_buff);
         put_kttk(recv_buff);
-        //put_kttk(buff_kttk);
-
+        // put_kttk(buff_kttk);
     }
     free(recv_buff);
     recv_buff = NULL;
-
 }
 
 mqtt_connect_result_cb(mqtt_client_t *client, void *arg, mqtt_connection_status_e status)
@@ -111,7 +109,6 @@ static void mqtt_state_exception_cb(mqtt_client_t *client)
     QL_MQTT_LOG("\rmqtt session abnormal disconnect\n");
     QL_MQTT_LOG("\rthu ket noi lai\n");
     reconnect();
-    
 }
 
 static void mqtt_requst_result_cb(mqtt_client_t *client, void *arg, int err)
@@ -142,40 +139,38 @@ static void mqtt_inpub_data_cb(mqtt_client_t *client, void *arg, int pkt_id, con
 
                 ql_fota_http_app_init();
             }
-             else if (strcmp(val, "SEND_AT") == 0)
+            else if (strcmp(val, "SEND_AT") == 0)
             {
                 cJSON *sdt = cJSON_GetObjectItem(pJsonRoot, "INFO");
-                char *val1 = sdt->valuestring;               
-                //char *cmd2 ="AT+QSCLK=1\r\n";
-                ql_virt_at_write(QL_VIRT_AT_PORT_0, (unsigned char*)val1, strlen((char *)val1));   
-                 QL_MQTT_LOG("\n da gui:%s\n",val1);               
-                //l_power_app_init();
-
-            }   
-
-              else if (strcmp(val, "KTTK") == 0)
-            {
-                ql_virt_at_write(QL_VIRT_AT_PORT_0, (unsigned char*)CMD_KTTK, strlen((char *)CMD_KTTK));   
-                QL_MQTT_LOG("\n da gui:%s\n",CMD_KTTK);  
-                //ON_MQTT=0;
+                char *val1 = sdt->valuestring;
+                // char *cmd2 ="AT+QSCLK=1\r\n";
+                ql_virt_at_write(QL_VIRT_AT_PORT_0, (unsigned char *)val1, strlen((char *)val1));
+                QL_MQTT_LOG("\n da gui:%s\n", val1);
+                // l_power_app_init();
             }
-               else if (strcmp(val, "SAVE_CONFIG") == 0)
-            {
-                //ql_mxml_app_init();  
 
-            }                             
+            else if (strcmp(val, "KTTK") == 0)
+            {
+                ql_virt_at_write(QL_VIRT_AT_PORT_0, (unsigned char *)CMD_KTTK, strlen((char *)CMD_KTTK));
+                QL_MQTT_LOG("\n da gui:%s\n", CMD_KTTK);
+                // ON_MQTT=0;
+            }
+            else if (strcmp(val, "SAVE_CONFIG") == 0)
+            {
+                // ql_mxml_app_init();
+            }
 
             else if (strcmp(val, "GET_STT") == 0)
             {
-               ql_stt_app_init();
-            //ql_power_down(POWD_NORMAL);
+                ql_stt_app_init();
+                // ql_power_down(POWD_NORMAL);
             }
 
-             else if (strcmp(val, "GET_GPS") == 0)
+            else if (strcmp(val, "GET_GPS") == 0)
             {
                 ql_stt_gps_init();
             }
-         
+
             // else if (strcmp(val, "SMS_PAIR") == 0)
             // {
             //     cJSON *sdt = cJSON_GetObjectItem(pJsonRoot, "SDT");
@@ -183,7 +178,7 @@ static void mqtt_inpub_data_cb(mqtt_client_t *client, void *arg, int pkt_id, con
             //     cJSON *info = cJSON_GetObjectItem(pJsonRoot, "INFO");
             //     char *val2 = info->valuestring;
             //     gui_sms(val1, val2);
-                
+
             // }
             else if (strcmp(val, "GET_SIM") == 0)
             {
@@ -191,8 +186,8 @@ static void mqtt_inpub_data_cb(mqtt_client_t *client, void *arg, int pkt_id, con
             }
             else if (strcmp(val, "SETTING") == 0)
             {
-                 //QL_MQTT_LOG("\n%s\n",payload);
-                strcpy(json_setting,payload);
+                // QL_MQTT_LOG("\n%s\n",payload);
+                strcpy(json_setting, payload);
                 QL_MQTT_LOG("\nget SETTINGSS :%s\n", json_setting);
                 setting_init();
             }
@@ -262,8 +257,8 @@ static void mqtt_app_thread(void *arg)
     strcat(topic_gui, topic_rec);
     strcpy(topic_nhan, imei);
     strcat(topic_nhan, topic_remote);
-    strcpy(topic_tb,imei);
-    strcat(topic_tb,topic_event);
+    strcpy(topic_tb, imei);
+    strcat(topic_tb, topic_event);
     strcpy(mqtt_client, imei);
     strcat(mqtt_client, MQTT_CLIENT_IDENTITY);
     // strcpy(topic_rec,imei);
@@ -361,11 +356,11 @@ static void mqtt_app_thread(void *arg)
         QL_MQTT_LOG("\rconnect ssl %d onenet mode %d\n", case_id, is_user_onenet);
         // if (case_id == 0)
         // {
-            QL_MQTT_LOG("\nchon id-0\n");
-            client_info.ssl_cfg = NULL;
-            ret = ql_mqtt_connect(&mqtt_cli, MQTT_CLIENT_SRV_URL, mqtt_connect_result_cb, NULL, (const struct mqtt_connect_client_info_t *)&client_info, mqtt_state_exception_cb);
-            QL_MQTT_LOG("\rmqtt_cli:%d\n", mqtt_cli);
-     //   }
+        QL_MQTT_LOG("\nchon id-0\n");
+        client_info.ssl_cfg = NULL;
+        ret = ql_mqtt_connect(&mqtt_cli, MQTT_CLIENT_SRV_URL, mqtt_connect_result_cb, NULL, (const struct mqtt_connect_client_info_t *)&client_info, mqtt_state_exception_cb);
+        QL_MQTT_LOG("\rmqtt_cli:%d\n", mqtt_cli);
+        //   }
         // else
         // {
         //     struct mqtt_ssl_config_t quectel_ssl_cfg = {
@@ -388,7 +383,7 @@ static void mqtt_app_thread(void *arg)
                 ql_mqtt_client_deinit(&mqtt_cli);
                 break;
             }
-             QL_MQTT_LOG("\nDA KET NOI\n");
+            QL_MQTT_LOG("\nDA KET NOI\n");
         }
         else
         {
@@ -404,7 +399,6 @@ static void mqtt_app_thread(void *arg)
         while (mqtt_connected == 1)
         {
 
-
             ql_event_t test_event = {0};
             if (ql_event_try_wait(&test_event) != 0)
             {
@@ -414,123 +408,124 @@ static void mqtt_app_thread(void *arg)
             if (test_event.id == QUEC_KERNEL_FEED_DOG)
             {
                 QL_MQTT_LOG("\ndemo task receive feed dog event\n");
-
-            }
-             if(sub_mqtt(topic_nhan)==QL_OSI_SUCCESS)
-            {
-                QL_MQTT_LOG("\nSUB TOPIC:%s OK\n",topic_nhan);
-                if (ql_rtos_feed_dog() != QL_OSI_SUCCESS)
+                if (sub_mqtt(topic_nhan) == QL_OSI_SUCCESS)
                 {
-                    QL_MQTT_LOG("feed dog failed\n");
+                    QL_MQTT_LOG("\nSUB TOPIC:%s OK\n", topic_nhan);
+                    if (ql_rtos_feed_dog() == QL_OSI_SUCCESS)
+                    {
+                        QL_MQTT_LOG("feed dog OK, MQTT OK\n");
+                    }
                 }
                 else
                 {
-                     QL_MQTT_LOG("FEEED DOG OK\n");
+                    QL_MQTT_LOG("MQTT FAILED, KICH HOẠT WATDOG\n");
                 }
-            }           
-          ql_rtos_task_sleep_s(10);
+            }
+             ql_rtos_task_sleep_s(10);
+        }
+        if (mqtt_connected == 1 && ql_mqtt_disconnect(&mqtt_cli, mqtt_disconnect_result_cb, NULL) == MQTTCLIENT_WOUNDBLOCK)
+        {
+            QL_MQTT_LOG("\r=====wait disconnect result");
+            ql_rtos_semaphore_wait(mqtt_semp, QL_WAIT_FOREVER);
+        }
+        //  QL_MQTT_LOG("\r==============mqtt_client_test[%d] end=======%x=========\n", run_num, &mqtt_cli);
+        ql_mqtt_client_deinit(&mqtt_cli);
+        mqtt_connected = 0;
+        ql_rtos_task_sleep_s(1);
+    exit:
+        if (is_user_onenet == 1)
+        {
+            free((void *)client_id);
+            free((void *)client_user);
+            free((void *)client_pass);
+            client_id = NULL;
+            client_user = NULL;
+            client_pass = NULL;
+        }
+
+        ql_rtos_semaphore_delete(mqtt_semp);
+        ql_rtos_task_delete(mqtt_task);
+
+        return;
+    }
+}
+
+    QlOSStatus sub_mqtt(char *topic)
+    {
+        if (ql_mqtt_sub_unsub(&mqtt_cli, topic, 1, mqtt_requst_result_cb, NULL, 1) == MQTTCLIENT_WOUNDBLOCK)
+        {
+            QL_MQTT_LOG("\ndang sub topic:%s\n", topic_nhan);
+            ql_rtos_semaphore_wait(mqtt_semp, QL_WAIT_FOREVER);
+            return QL_OSI_SUCCESS;
+        }
+        else
+        {
+            return 1;
         }
     }
-    if (mqtt_connected == 1 && ql_mqtt_disconnect(&mqtt_cli, mqtt_disconnect_result_cb, NULL) == MQTTCLIENT_WOUNDBLOCK)
+
+    void feed_dog_callback1(uint32 id_type, void *ctx)
     {
-        QL_MQTT_LOG("\r=====wait disconnect result");
-        ql_rtos_semaphore_wait(mqtt_semp, QL_WAIT_FOREVER);
-    }
-    //  QL_MQTT_LOG("\r==============mqtt_client_test[%d] end=======%x=========\n", run_num, &mqtt_cli);
-    ql_mqtt_client_deinit(&mqtt_cli);
-    mqtt_connected = 0;
-    ql_rtos_task_sleep_s(1);
-exit:
-    if (is_user_onenet == 1)
-    {
-        free((void *)client_id);
-        free((void *)client_user);
-        free((void *)client_pass);
-        client_id = NULL;
-        client_user = NULL;
-        client_pass = NULL;
-    }
-
-    ql_rtos_semaphore_delete(mqtt_semp);
-    ql_rtos_task_delete(mqtt_task);
-
-    return;
-}
-
-QlOSStatus sub_mqtt(char *topic)
-{
-    if (ql_mqtt_sub_unsub(&mqtt_cli, topic, 1, mqtt_requst_result_cb, NULL, 1) == MQTTCLIENT_WOUNDBLOCK)
-    {
-        QL_MQTT_LOG("\ndang sub topic:%s\n", topic_nhan);
-        ql_rtos_semaphore_wait(mqtt_semp, QL_WAIT_FOREVER);
-        return QL_OSI_SUCCESS;
-    }
-    else
-    {
-        return 1;
-    }
-}
-
-void feed_dog_callback1(uint32 id_type, void *ctx)
-{	
-	ql_event_t event;
-
-	if(id_type == QUEC_KERNEL_FEED_DOG)
-	{
-		QL_MQTT_LOG("feed dog callback run\n");
-		event.id = QUEC_KERNEL_FEED_DOG;
-		if(ql_rtos_event_send(mqtt_task, &event) != QL_OSI_SUCCESS)
-		{
-			QL_MQTT_LOG("send feed_dog event to demo task failed\n");
-		}	
-		else
-		{
-			QL_MQTT_LOG("send feed dog event to mqtttask ok\n");
-            if(sub_mqtt(topic_nhan)==QL_OSI_SUCCESS)
+        ql_event_t event;
+        if (id_type == QUEC_KERNEL_FEED_DOG)
+        {
+            QL_MQTT_LOG("feed dog callback run\n");
+            event.id = QUEC_KERNEL_FEED_DOG;
+            if (ql_rtos_event_send(mqtt_task, &event) != QL_OSI_SUCCESS)
             {
-                QL_MQTT_LOG("\n===>> SUB TOPIC:%s OK\n",topic_nhan);
+                QL_MQTT_LOG("send feed_dog event to MQTT task failed\n");
             }
-
-		}
-	}
-}
-
-
-
-
-void reconnect()
-{
-    int adc_value = 0;
-    ql_adc_get_volt(QL_ADC0_CHANNEL, &adc_value);
-    char MQTT_CLI[50] = {0};
-    sprintf(MQTT_CLI, "%s0x%d", client_info.client_id, adc_value);
-    client_info.client_id = MQTT_CLI;
-    QL_MQTT_LOG("\rKET NOI LAI MQTT clien:%s\n", client_info.client_id);
-    ql_mqtt_connect(&mqtt_cli, MQTT_CLIENT_SRV_URL, mqtt_connect_result_cb, NULL, (const struct mqtt_connect_client_info_t *)&client_info, mqtt_state_exception_cb);
-    if (sub_mqtt(topic_nhan) == QL_OSI_SUCCESS)
-    {
-        QL_MQTT_LOG("SUB TOPIC:%s OK", topic_nhan);
-    }
-    
-    else
-    {
-        QL_MQTT_LOG("\n ket noi lai failed\n");
-        ql_rtos_task_sleep_ms(5000);
-    }
-}
-
-extern delete_all_sms();
-int ql_mqtt_app_init(void)
-{
-    QlOSStatus err = QL_OSI_SUCCESS;
-
-    err = ql_rtos_task_create(&mqtt_task, 16 * 1024,APP_PRIORITY_HIGH, "mqtt_app", mqtt_app_thread, NULL, 5);
-    ql_rtos_swdog_register((ql_swdog_callback)feed_dog_callback1, mqtt_task);  
-    ql_rtos_sw_dog_enable(10000, 3);
-    if (err != QL_OSI_SUCCESS)
-    {
-        QL_MQTT_LOG("\rmqtt_app init failed");
+            else
+            {
+                QL_MQTT_LOG("FEED DOG OK\n");
+                // if(sub_mqtt(topic_nhan)==QL_OSI_SUCCESS)
+                // {
+                //     QL_MQTT_LOG("\n===>> SUB TOPIC:%s OK\n",topic_nhan);
+                //     QL_MQTT_LOG("FEEED DOG OK\n");
+                //     // ql_gpio_set_level(LED_MODE, LVL_HIGH);
+                //     // ql_rtos_task_sleep_ms(100);
+                //     // ql_gpio_set_level(LED_MODE, LVL_LOW);
+                //     // ql_rtos_task_sleep_ms(100);
+                //     // ql_gpio_set_level(LED_MODE, LVL_HIGH);
+                //     // ql_rtos_task_sleep_ms(100);
+                //     // ql_gpio_set_level(LED_MODE, LVL_LOW);
+                //     // ql_rtos_task_sleep_ms(100);
+                // }
+            }
+        }
     }
 
-    return err;
-}
+    void reconnect()
+    {
+        int adc_value = 0;
+        ql_adc_get_volt(QL_ADC0_CHANNEL, &adc_value);
+        char MQTT_CLI[50] = {0};
+        sprintf(MQTT_CLI, "%s0x%d", client_info.client_id, adc_value);
+        client_info.client_id = MQTT_CLI;
+        QL_MQTT_LOG("\rKET NOI LAI MQTT clien:%s\n", client_info.client_id);
+        ql_mqtt_connect(&mqtt_cli, MQTT_CLIENT_SRV_URL, mqtt_connect_result_cb, NULL, (const struct mqtt_connect_client_info_t *)&client_info, mqtt_state_exception_cb);
+        if (sub_mqtt(topic_nhan) == QL_OSI_SUCCESS)
+        {
+            QL_MQTT_LOG("SUB TOPIC:%s OK", topic_nhan);
+        }
+
+        else
+        {
+            QL_MQTT_LOG("\n ket noi lai failed\n");
+            ql_rtos_task_sleep_ms(5000);
+        }
+    }
+
+    int ql_mqtt_app_init(void)
+    {
+        QlOSStatus err = QL_OSI_SUCCESS;
+        err = ql_rtos_task_create(&mqtt_task, 16 * 1024, APP_PRIORITY_HIGH, "mqtt_app", mqtt_app_thread, NULL, 5);
+        ql_rtos_swdog_register((ql_swdog_callback)feed_dog_callback1, mqtt_task);
+        ql_rtos_sw_dog_enable(10000, 3);
+        if (err != QL_OSI_SUCCESS)
+        {
+            QL_MQTT_LOG("\rmqtt_app init failed");
+        }
+
+        return err;
+    }
